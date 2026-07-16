@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Geist_Mono } from "next/font/google";
+import { Outfit, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -9,6 +9,11 @@ const outfit = Outfit({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
 });
 
@@ -25,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${outfit.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F4F7F9] text-gray-900 font-sans">{children}</body>
     </html>

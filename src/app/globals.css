@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair), Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 @media (prefers-color-scheme: dark) {
