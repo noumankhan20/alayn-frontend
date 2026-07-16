@@ -34,13 +34,13 @@ export default function Sidebar() {
     <div className="flex h-full w-full flex-col bg-[#0B1221] text-zinc-400">
       {/* Logo Section */}
       <div className="flex flex-col p-6">
-        <div className="bg-white p-2.5 rounded-lg inline-block w-40 mb-2">
+        <div className="w-40 mb-2">
           <Image 
             src="/image.png" 
             alt="ALAYN Logo" 
             width={140} 
             height={36} 
-            className="h-auto w-full object-contain"
+            className="h-auto w-full object-contain invert hue-rotate-180 mix-blend-screen"
             priority
           />
         </div>
