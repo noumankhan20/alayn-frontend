@@ -17,12 +17,14 @@ export default function Home() {
             title="Net Sales"
             value="£284,620"
             trend="+8.4%"
+            trendType="positive"
             subtext="vs last week"
           />
           <MetricCard 
             title="Labour Cost"
             value="26.8%"
             trend="-1.2 pts"
+            trendType="positive"
             subtext="vs target"
           />
           <MetricCard 
@@ -36,6 +38,7 @@ export default function Home() {
             title="Forecast Accuracy"
             value="94.6%"
             trend="+3.1%"
+            trendType="positive"
             subtext="Week-to-date"
           />
         </div>

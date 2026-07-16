@@ -115,7 +115,7 @@ async function getAccessToken(): Promise<string | null> {
     const body = await res.json();
     cachedToken = body.data.accessToken;
     return cachedToken;
-  } catch (err) {
+  } catch {
     console.warn("Failed to connect to backend auth api, falling back to mock data");
     return null;
   }
@@ -137,8 +137,7 @@ export async function fetchPerformanceData() {
     const comparisonBody = await comparisonRes.json();
     const comparisonList: BackendOutletComparison[] = comparisonBody.data || [];
 
-    // Map outlets to LocationPerformance table rows
-    const locations = comparisonList.map((item, idx) => {
+    const locations = comparisonList.map((item) => {
       const salesVal = item.totalSalesPaise / 100;
       // Generate some realistic-looking metrics since backend doesn't store all performance table details
       const targetSales = salesVal * (0.95 + Math.random() * 0.1); 
@@ -170,7 +169,6 @@ export async function fetchPerformanceData() {
     // 2. Fetch daily-summary for the first outlet to build the line chart
     let chartData = fallbackData.chart;
     let netSalesTotal = 284620;
-    let profitTotal = 191340;
     let orderTotalCount = 3112;
 
     if (comparisonList.length > 0) {
@@ -189,11 +187,9 @@ export async function fetchPerformanceData() {
         if (dailyList.length > 0) {
           // Calculate overall stats from backend data
           const totalSalesPaise = dailyList.reduce((sum, item) => sum + item.grossSalesPaise, 0);
-          const totalProfitPaise = dailyList.reduce((sum, item) => sum + item.grossProfitPaise, 0);
           const totalOrdersCount = dailyList.reduce((sum, item) => sum + item.orderCount, 0);
 
           netSalesTotal = totalSalesPaise / 100;
-          profitTotal = totalProfitPaise / 100;
           orderTotalCount = totalOrdersCount;
 
           // Map to 7 days
@@ -211,8 +207,6 @@ export async function fetchPerformanceData() {
         }
       }
     }
-
-    const gpMargin = netSalesTotal > 0 ? (profitTotal / netSalesTotal) * 100 : 67.2;
 
     // Build operational summary counts dynamically
     const openLocationsCount = comparisonList.length;
