@@ -40,7 +40,7 @@ export default function Sidebar() {
     <div className="flex h-full w-full flex-col bg-[#0B1221] text-zinc-400">
       {/* Logo Section */}
       <div className="flex flex-col p-6">
-        <div className="w-40 mb-2">
+        <div className="w-40">
           <Image 
             src="/Alayn_Logo.png" 
             alt="ALAYN Logo" 
@@ -50,11 +50,10 @@ export default function Sidebar() {
             priority
           />
         </div>
-        <p className="text-xs text-zinc-400 mt-1">Restaurant Operations</p>
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
