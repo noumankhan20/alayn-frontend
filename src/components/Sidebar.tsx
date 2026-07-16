@@ -21,16 +21,16 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { name: "Overview", icon: LayoutGrid, href: "/" },
   { name: "Performance", icon: TrendingUp, href: "/performance" },
-  { name: "Workforce", icon: Users, href: "#" },
-  { name: "Operations", icon: ClipboardList, href: "#" },
-  { name: "Insights", icon: Lightbulb, href: "#" },
-  { name: "Settings", icon: Settings, href: "#" },
+  { name: "Workforce", icon: Users, href: "/workforce" },
+  { name: "Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Insights", icon: Lightbulb, href: "/insights" },
+  { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
 const bottomNavItems = [
-  { name: "Help", icon: HelpCircle, href: "#" },
-  { name: "Profile", icon: User, href: "#" },
-  { name: "Organization", icon: Building2, href: "#" },
+  { name: "Help", icon: HelpCircle, href: "/help" },
+  { name: "Profile", icon: User, href: "/profile" },
+  { name: "Organization", icon: Building2, href: "/organization" },
 ];
 
 export default function Sidebar() {
@@ -42,11 +42,11 @@ export default function Sidebar() {
       <div className="flex flex-col p-6">
         <div className="w-40 mb-2">
           <Image 
-            src="/image.png" 
+            src="/Alayn_Logo.png" 
             alt="ALAYN Logo" 
             width={140} 
             height={36} 
-            className="h-auto w-full object-contain invert hue-rotate-180 mix-blend-screen"
+            className="h-auto w-full object-contain"
             priority
           />
         </div>
