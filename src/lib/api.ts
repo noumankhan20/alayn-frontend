@@ -35,9 +35,9 @@ export interface LocationData {
 // Fallback Mock Data matching the design requirements
 export const fallbackData = {
   kpis: {
-    netSales: { value: "£482,192", trend: "+4.2%", type: "positive" as const },
+    netSales: { value: "₹482,192", trend: "+4.2%", type: "positive" as const },
     transactions: { value: "24,510", trend: "+2.8%", type: "positive" as const },
-    avgOrderValue: { value: "£19.67", trend: "-1.2%", type: "negative" as const },
+    avgOrderValue: { value: "₹19.67", trend: "-1.2%", type: "negative" as const },
     salesVsForecast: { value: "102.4%", trend: "Ahead", type: "positive" as const },
     salesVsLy: { value: "+8.4%", trend: "YoY", type: "positive" as const }
   },
@@ -53,7 +53,7 @@ export const fallbackData = {
   locations: [
     {
       name: "London Soho",
-      sales: "£42,840",
+      sales: "₹42,840",
       variance: "+2.4%",
       varianceType: "positive" as const,
       labour: "25.4%",
@@ -63,7 +63,7 @@ export const fallbackData = {
     },
     {
       name: "Manchester Deansgate",
-      sales: "£31,200",
+      sales: "₹31,200",
       variance: "-4.1%",
       varianceType: "negative" as const,
       labour: "30.2%",
@@ -74,7 +74,7 @@ export const fallbackData = {
     },
     {
       name: "Birmingham Bullring",
-      sales: "£38,650",
+      sales: "₹38,650",
       variance: "+12.4%",
       varianceType: "positive" as const,
       labour: "24.1%",
@@ -84,7 +84,7 @@ export const fallbackData = {
     },
     {
       name: "Leeds Victoria",
-      sales: "£28,400",
+      sales: "₹28,400",
       variance: "--",
       varianceType: "neutral" as const,
       labour: "28.2%",
@@ -132,7 +132,7 @@ export async function fetchPerformanceData() {
     const comparisonRes = await fetch(`${BACKEND_URL}/analytics/outlet-comparison`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    
+
     if (!comparisonRes.ok) throw new Error("Failed to fetch outlet comparisons");
     const comparisonBody = await comparisonRes.json();
     const comparisonList: BackendOutletComparison[] = comparisonBody.data || [];
@@ -140,7 +140,7 @@ export async function fetchPerformanceData() {
     const locations = comparisonList.map((item) => {
       const salesVal = item.totalSalesPaise / 100;
       // Generate some realistic-looking metrics since backend doesn't store all performance table details
-      const targetSales = salesVal * (0.95 + Math.random() * 0.1); 
+      const targetSales = salesVal * (0.95 + Math.random() * 0.1);
       const varianceVal = ((salesVal - targetSales) / targetSales) * 100;
       const labourPercent = 22 + Math.random() * 9;
       const gpPercent = 60 + Math.random() * 12;
@@ -155,7 +155,7 @@ export async function fetchPerformanceData() {
 
       return {
         name: item.outletName,
-        sales: `£${salesVal.toLocaleString("en-GB", { maximumFractionDigits: 0 })}`,
+        sales: `₹${salesVal.toLocaleString("en-GB", { maximumFractionDigits: 0 })}`,
         variance: `${varianceVal >= 0 ? "+" : ""}${varianceVal.toFixed(1)}%`,
         varianceType: varianceVal >= 0 ? ("positive" as const) : ("negative" as const),
         labour: `${labourPercent.toFixed(1)}%`,
@@ -174,7 +174,7 @@ export async function fetchPerformanceData() {
     if (comparisonList.length > 0) {
       const activeOutletId = comparisonList[0].outletId;
       const dailyRes = await fetch(`${BACKEND_URL}/analytics/daily-summary?outletId=${activeOutletId}`, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           "x-outlet-id": activeOutletId
         }
@@ -183,7 +183,7 @@ export async function fetchPerformanceData() {
       if (dailyRes.ok) {
         const dailyBody = await dailyRes.json();
         const dailyList: BackendDailySummary[] = dailyBody.data || [];
-        
+
         if (dailyList.length > 0) {
           // Calculate overall stats from backend data
           const totalSalesPaise = dailyList.reduce((sum, item) => sum + item.grossSalesPaise, 0);
@@ -215,9 +215,9 @@ export async function fetchPerformanceData() {
 
     return {
       kpis: {
-        netSales: { value: `£${Math.round(netSalesTotal).toLocaleString()}`, trend: "+4.2%", type: "positive" as const },
+        netSales: { value: `₹${Math.round(netSalesTotal).toLocaleString()}`, trend: "+4.2%", type: "positive" as const },
         transactions: { value: orderTotalCount.toLocaleString(), trend: "+2.8%", type: "positive" as const },
-        avgOrderValue: { value: `£${avgValue.toFixed(2)}`, trend: "-1.2%", type: "negative" as const },
+        avgOrderValue: { value: `₹${avgValue.toFixed(2)}`, trend: "-1.2%", type: "negative" as const },
         salesVsForecast: { value: "102.4%", trend: "Ahead", type: "positive" as const },
         salesVsLy: { value: "+8.4%", trend: "YoY", type: "positive" as const }
       },

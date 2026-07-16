@@ -18,7 +18,7 @@ interface LocationData {
 const locationsData: LocationData[] = [
   {
     name: "London Soho",
-    sales: "£42,840",
+    sales: "₹42,840",
     variance: "+2.4%",
     varianceType: "positive",
     labour: "25.4%",
@@ -28,7 +28,7 @@ const locationsData: LocationData[] = [
   },
   {
     name: "Manchester Deansgate",
-    sales: "£31,200",
+    sales: "₹31,200",
     variance: "-4.1%",
     varianceType: "negative",
     labour: "30.2%",
@@ -39,7 +39,7 @@ const locationsData: LocationData[] = [
   },
   {
     name: "Birmingham Bullring",
-    sales: "£38,650",
+    sales: "₹38,650",
     variance: "+12.4%",
     varianceType: "positive",
     labour: "24.1%",
@@ -49,7 +49,7 @@ const locationsData: LocationData[] = [
   },
   {
     name: "Leeds Victoria",
-    sales: "£28,400",
+    sales: "₹28,400",
     variance: "--",
     varianceType: "neutral",
     labour: "28.2%",
@@ -100,13 +100,12 @@ export default function PerformanceOverview({ locations = locationsData }: { loc
                 <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                   {loc.sales}{" "}
                   <span
-                    className={`ml-1 text-xs font-semibold ${
-                      loc.varianceType === "positive"
+                    className={`ml-1 text-xs font-semibold ${loc.varianceType === "positive"
                         ? "text-emerald-500"
                         : loc.varianceType === "negative"
-                        ? "text-red-500"
-                        : "text-gray-400"
-                    }`}
+                          ? "text-red-500"
+                          : "text-gray-400"
+                      }`}
                   >
                     {loc.variance}
                   </span>
@@ -122,13 +121,12 @@ export default function PerformanceOverview({ locations = locationsData }: { loc
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
-                      loc.status === "ON TRACK"
+                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${loc.status === "ON TRACK"
                         ? "bg-emerald-50 text-emerald-700"
                         : loc.status === "ACTION NEEDED"
-                        ? "bg-red-50 text-red-700"
-                        : "bg-amber-50 text-amber-700"
-                    }`}
+                          ? "bg-red-50 text-red-700"
+                          : "bg-amber-50 text-amber-700"
+                      }`}
                   >
                     {loc.status}
                   </span>
@@ -155,11 +153,10 @@ export default function PerformanceOverview({ locations = locationsData }: { loc
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={`w-8 h-8 flex items-center justify-center rounded text-sm font-bold transition-colors ${
-                currentPage === page
+              className={`w-8 h-8 flex items-center justify-center rounded text-sm font-bold transition-colors ${currentPage === page
                   ? "bg-[#0B1221] text-white"
                   : "text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               {page}
             </button>

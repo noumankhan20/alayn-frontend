@@ -30,19 +30,19 @@ export default function RevenueChart() {
         <div className="flex gap-6 sm:gap-8 text-right">
           <div>
             <div className="text-sm text-gray-500">Actual</div>
-            <div className="text-lg font-bold text-gray-900">£284.6k</div>
+            <div className="text-lg font-bold text-gray-900">284.6k</div>
           </div>
           <div>
             <div className="text-sm text-gray-500">Forecast</div>
-            <div className="text-lg font-bold text-gray-900">£276.2k</div>
+            <div className="text-lg font-bold text-gray-900">₹276.2k</div>
           </div>
           <div>
             <div className="text-sm text-gray-500">Variance</div>
-            <div className="text-lg font-bold text-emerald-500">+£8.4k</div>
+            <div className="text-lg font-bold text-emerald-500">+₹8.4k</div>
           </div>
         </div>
       </div>
-      
+
       <div className="flex-1 w-full relative">
         {/* We use an absolute wrapper to let ResponsiveContainer size itself properly */}
         <div className="absolute inset-0">
@@ -52,38 +52,38 @@ export default function RevenueChart() {
               margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#6B7280', fontSize: 12 }} 
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
                 dy={10}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="actual" 
-                stroke="#0B1221" 
+              <Line
+                type="monotone"
+                dataKey="actual"
+                stroke="#0B1221"
                 strokeWidth={3}
                 dot={false}
-                activeDot={{ r: 6 }} 
+                activeDot={{ r: 6 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="target" 
-                stroke="#64748B" 
+              <Line
+                type="monotone"
+                dataKey="target"
+                stroke="#64748B"
                 strokeWidth={2}
                 strokeDasharray="4 4"
-                dot={false} 
+                dot={false}
               />
-              <Line 
-                type="monotone" 
-                dataKey="forecast" 
-                stroke="#CBD5E1" 
+              <Line
+                type="monotone"
+                dataKey="forecast"
+                stroke="#CBD5E1"
                 strokeWidth={2}
-                dot={false} 
+                dot={false}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -72,7 +72,7 @@ export default function PerformanceRevenueChart({
           <h3 className="text-lg font-bold text-gray-900">Revenue Trends</h3>
           <p className="text-sm text-gray-500">Real-time tracking of sales volume across standard intervals</p>
         </div>
-        
+
         {/* Styled Tab Bar Selector */}
         <div className="flex bg-gray-100 p-1.5 rounded-lg border border-gray-200">
           {tabs.map((tab) => (
@@ -91,7 +91,7 @@ export default function PerformanceRevenueChart({
           ))}
         </div>
       </div>
-      
+
       {/* Bar Chart Container */}
       <div className="flex-1 w-full relative min-h-[250px]">
         <div className="absolute inset-0">
@@ -101,20 +101,20 @@ export default function PerformanceRevenueChart({
               margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }} 
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
                 dy={10}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                formatter={(value) => [value ? `£${Number(value).toLocaleString()}` : "£0", "Sales"]}
+                formatter={(value) => [value ? `₹${Number(value).toLocaleString()}` : "₹0", "Sales"]}
               />
-              <Bar 
-                dataKey="sales" 
-                fill="#0B1221" 
+              <Bar
+                dataKey="sales"
+                fill="#0B1221"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={45}
               />

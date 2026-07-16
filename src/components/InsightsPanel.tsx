@@ -8,7 +8,7 @@ export default function InsightsPanel() {
         <Sparkles className="h-5 w-5 text-emerald-400" />
         <h3 className="text-lg font-bold">Alayn Insights</h3>
       </div>
-      
+
       <div className="space-y-4">
         {/* Insight 1 */}
         <div className="rounded-lg bg-white/5 p-4 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group">
@@ -31,7 +31,7 @@ export default function InsightsPanel() {
             <TrendingUp className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-gray-200 leading-snug mb-3">
-                Birmingham Bullring outperforming sales forecast by £4,280
+                Birmingham Bullring outperforming sales forecast by ₹4,280
               </p>
               <a href="#" className="text-sm font-medium text-emerald-400 flex items-center gap-1 group-hover:gap-2 transition-all">
                 View Performance <ArrowRight className="h-4 w-4" />

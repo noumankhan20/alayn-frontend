@@ -10,31 +10,31 @@ export default function Home() {
     <DashboardLayout>
       <div className="mx-auto max-w-7xl">
         <Hero />
-        
+
         {/* KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <MetricCard 
+          <MetricCard
             title="Net Sales"
-            value="£284,620"
+            value="₹284,620"
             trend="+8.4%"
             trendType="positive"
             subtext="vs last week"
           />
-          <MetricCard 
+          <MetricCard
             title="Labour Cost"
             value="26.8%"
             trend="-1.2 pts"
             trendType="positive"
             subtext="vs target"
           />
-          <MetricCard 
+          <MetricCard
             title="Gross Profit"
-            value="£191,340"
+            value="₹191,340"
             subtext="67.2% margin"
             hasProgress={true}
             progressValue={67.2}
           />
-          <MetricCard 
+          <MetricCard
             title="Forecast Accuracy"
             value="94.6%"
             trend="+3.1%"
