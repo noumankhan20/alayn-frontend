@@ -1,14 +1,33 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import MetricCard from "@/components/MetricCard";
 import { 
   PerformanceOverview, 
   PerformanceRevenueChart, 
-  PerformanceOperationsSummary 
+  PerformanceMetricCard,
+  PerformanceDrivers
 } from "@/components/PerformanceOverview";
-import InsightsPanel from "@/components/InsightsPanel";
+import { fetchPerformanceData, fallbackData } from "@/lib/api";
 
 export default function PerformancePage() {
+  const [data, setData] = useState<typeof fallbackData>(fallbackData);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const perfData = await fetchPerformanceData();
+        setData(perfData);
+      } catch (err) {
+        console.error("Failed to load performance page data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-7xl">
@@ -20,7 +39,7 @@ export default function PerformancePage() {
             </h1>
             <p className="text-sm text-gray-500 mt-2 flex items-center gap-1.5 font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-              All locations operations are synchronized and on track
+              {loading ? "Loading operational analytics..." : "All locations operations are synchronized and on track"}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -34,49 +53,55 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* KPI Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <MetricCard 
+        {/* 5-Column KPI Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <PerformanceMetricCard 
             title="Net Sales"
-            value="£284,620"
-            trend="+8.4%"
-            subtext="vs last week"
+            value={data.kpis.netSales.value}
+            trend={data.kpis.netSales.trend}
+            trendType={data.kpis.netSales.type}
           />
-          <MetricCard 
-            title="Labour Cost"
-            value="26.8%"
-            trend="-1.2 pts"
-            subtext="vs target"
+          <PerformanceMetricCard 
+            title="Transactions"
+            value={data.kpis.transactions.value}
+            trend={data.kpis.transactions.trend}
+            trendType={data.kpis.transactions.type}
           />
-          <MetricCard 
-            title="Gross Profit"
-            value="£191,340"
-            subtext="67.2% margin"
-            hasProgress={true}
-            progressValue={67.2}
+          <PerformanceMetricCard 
+            title="Avg Order Value"
+            value={data.kpis.avgOrderValue.value}
+            trend={data.kpis.avgOrderValue.trend}
+            trendType={data.kpis.avgOrderValue.type}
           />
-          <MetricCard 
-            title="Forecast Accuracy"
-            value="94.6%"
-            trend="+3.1%"
-            subtext="Week-to-date"
+          <PerformanceMetricCard 
+            title="Sales vs Forecast"
+            value={data.kpis.salesVsForecast.value}
+            trend={data.kpis.salesVsForecast.trend}
+            trendType={data.kpis.salesVsForecast.type}
+          />
+          <PerformanceMetricCard 
+            title="Sales vs LY"
+            value={data.kpis.salesVsLy.value}
+            trend={data.kpis.salesVsLy.trend}
+            trendType={data.kpis.salesVsLy.type}
           />
         </div>
 
-        {/* Row 1: Chart (2/3 width) and Insights + Summary (1/3 width) */}
+        {/* Row 1: Chart (2/3 width) and Drivers (1/3 width) */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
           <div className="xl:col-span-2 flex flex-col">
-            <PerformanceRevenueChart />
+            <PerformanceRevenueChart 
+              chartData={data.chart}
+            />
           </div>
-          <div className="flex flex-col gap-6">
-            <InsightsPanel />
-            <PerformanceOperationsSummary />
+          <div className="flex flex-col">
+            <PerformanceDrivers />
           </div>
         </div>
 
         {/* Row 2: Location Performance Table (Full width) */}
         <div className="w-full">
-          <PerformanceOverview />
+          <PerformanceOverview locations={data.locations} />
         </div>
       </div>
     </DashboardLayout>
