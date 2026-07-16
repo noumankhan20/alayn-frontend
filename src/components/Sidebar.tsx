@@ -1,5 +1,9 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { 
   LayoutGrid, 
   TrendingUp, 
@@ -15,21 +19,23 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { name: "Overview", icon: LayoutGrid, isActive: true },
-  { name: "Performance", icon: TrendingUp },
-  { name: "Workforce", icon: Users },
-  { name: "Operations", icon: ClipboardList },
-  { name: "Insights", icon: Lightbulb },
-  { name: "Settings", icon: Settings },
+  { name: "Overview", icon: LayoutGrid, href: "/" },
+  { name: "Performance", icon: TrendingUp, href: "/performance" },
+  { name: "Workforce", icon: Users, href: "#" },
+  { name: "Operations", icon: ClipboardList, href: "#" },
+  { name: "Insights", icon: Lightbulb, href: "#" },
+  { name: "Settings", icon: Settings, href: "#" },
 ];
 
 const bottomNavItems = [
-  { name: "Help", icon: HelpCircle },
-  { name: "Profile", icon: User },
-  { name: "Organization", icon: Building2 },
+  { name: "Help", icon: HelpCircle, href: "#" },
+  { name: "Profile", icon: User, href: "#" },
+  { name: "Organization", icon: Building2, href: "#" },
 ];
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <div className="flex h-full w-full flex-col bg-[#0B1221] text-zinc-400">
       {/* Logo Section */}
@@ -49,30 +55,33 @@ export default function Sidebar() {
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => (
-          <a
-            key={item.name}
-            href="#"
-            className={cn(
-              "group flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-colors relative",
-              item.isActive
-                ? "bg-white/10 text-white"
-                : "text-zinc-400 hover:bg-white/5 hover:text-white"
-            )}
-          >
-            {item.isActive && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D3232A] rounded-r-sm" />
-            )}
-            <item.icon
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
               className={cn(
-                "mr-3 h-5 w-5 flex-shrink-0",
-                item.isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
+                "group flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-colors relative",
+                isActive
+                  ? "bg-white/10 text-white"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
               )}
-              aria-hidden="true"
-            />
-            {item.name}
-          </a>
-        ))}
+            >
+              {isActive && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D3232A] rounded-r-sm" />
+              )}
+              <item.icon
+                className={cn(
+                  "mr-3 h-5 w-5 flex-shrink-0",
+                  isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
+                )}
+                aria-hidden="true"
+              />
+              {item.name}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom Section */}
@@ -84,9 +93,9 @@ export default function Sidebar() {
 
         <nav className="space-y-1 mt-6">
           {bottomNavItems.map((item) => (
-            <a
+            <Link
               key={item.name}
-              href="#"
+              href={item.href}
               className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors"
             >
               <item.icon
@@ -94,7 +103,7 @@ export default function Sidebar() {
                 aria-hidden="true"
               />
               {item.name}
-            </a>
+            </Link>
           ))}
         </nav>
       </div>
