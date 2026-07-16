@@ -59,7 +59,7 @@ const locationsData: LocationData[] = [
   },
 ];
 
-export default function PerformanceOverview() {
+export default function PerformanceOverview({ locations = locationsData }: { locations?: LocationData[] }) {
   const [currentPage, setCurrentPage] = useState(1);
 
   return (
@@ -92,7 +92,7 @@ export default function PerformanceOverview() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {locationsData.map((loc) => (
+            {locations.map((loc) => (
               <tr key={loc.name} className="hover:bg-gray-50/50 transition-colors group cursor-pointer">
                 <td className="px-6 py-4 font-bold text-gray-900 text-sm">
                   {loc.name}
