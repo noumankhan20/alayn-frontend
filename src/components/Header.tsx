@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, Bell, Menu } from "lucide-react";
+import Image from "next/image";
 
 
 interface HeaderProps {
@@ -25,9 +26,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
         {/* Left Side: Title & Selectors */}
         <div className="flex flex-1 items-center gap-x-6">
-          <h1 className="text-xl font-bold text-gray-900 hidden sm:block">
-            ALAYN Intelligence
-          </h1>
+          <div className="w-56 h-16 flex items-center justify-start hidden sm:block">
+            <Image
+              src="/image1.png"
+              alt="ALAYN Logo"
+              width={224}
+              height={64}
+              className="max-h-16 w-auto object-contain"
+              priority
+            />
+          </div>
           
           <div className="hidden md:flex items-center space-x-6 text-sm">
             <button className="font-semibold text-gray-900 border-b-2 border-gray-900 pb-4 mt-4">
