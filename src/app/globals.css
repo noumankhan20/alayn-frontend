@@ -2,7 +2,31 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1b2a4a;
+
+  /* ===== DESIGN TOKENS — Matched to Alayn logo palette ===== */
+
+  /* Light backgrounds */
+  --cream: #FFFFFF;
+  --cream-light: #F4F5F8;       /* Very subtle navy-tinted off-white */
+
+  /* Deep navy — logo's dominant color (wordmark + right stroke) */
+  --espresso: #1B2A4A;
+  --espresso-mid: #243556;
+
+  /* Crimson red — logo's accent (left stroke + tagline text) */
+  --amber: #C41E2A;
+  --amber-light: #D4293A;
+
+  /* Thread canvas */
+  --thread: rgba(196, 30, 42, 0.75);
+  --thread-warm: rgba(212, 41, 58, 0.6);
+
+  /* Muted blue-gray (echoes the navy) */
+  --muted: #6B7A90;
+
+  /* Borders — navy-tinted */
+  --border-warm: rgba(27, 42, 74, 0.1);
 }
 
 @theme inline {
@@ -13,15 +37,326 @@
   --font-serif: var(--font-playfair), Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
+}
+
+/* ==============================
+   LANDING PAGE STYLES
+   ============================== */
+
+.landing-root {
+  background: var(--cream);
+  color: var(--espresso);
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ---- Reveal Animations ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.35s; }
+.reveal-delay-4 { transition-delay: 0.5s; }
+.reveal-delay-5 { transition-delay: 0.65s; }
+.reveal-delay-6 { transition-delay: 0.8s; }
+
+/* ---- Thread Canvas ---- */
+.thread-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---- Navigation ---- */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+}
+
+.landing-nav.scrolled {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(27, 42, 74, 0.08);
+}
+
+/* ---- Hero ---- */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--cream);
+}
+
+.hero-headline {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--espresso);
+}
+
+/* ---- Section base ---- */
+.landing-section {
+  position: relative;
+  padding: 120px 0;
+}
+
+@media (max-width: 768px) {
+  .landing-section {
+    padding: 80px 0;
+  }
+}
+
+/* ---- Dark / Navy sections ---- */
+.section-dark {
+  background: var(--espresso);
+  color: #FFFFFF;
+}
+
+.section-dark .muted-text {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ---- Crimson accent line ---- */
+.accent-line {
+  display: inline-block;
+  width: 32px;
+  height: 1.5px;
+  background: var(--amber);
+  border-radius: 2px;
+}
+
+/* ---- Cards ---- */
+.value-card {
+  border: 1px solid var(--border-warm);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 32px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              background 0.3s ease;
+  cursor: default;
+}
+
+.value-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(27, 42, 74, 0.08);
+  background: #FFFFFF;
+}
+
+/* ---- Comparison table ---- */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-warm);
+  font-size: 0.875rem;
+}
+
+.compare-table th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.compare-table td:first-child {
+  font-weight: 500;
+  color: var(--espresso);
+}
+
+.compare-highlight {
+  background: rgba(196, 30, 42, 0.04);
+}
+
+/* ---- Buttons ---- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--espresso);
+  color: #FFFFFF;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(27, 42, 74, 0.22);
+  background: var(--espresso-mid);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--espresso);
+  padding: 13px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+  border: 1px solid rgba(27, 42, 74, 0.2);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  transform: translateY(-1px);
+  border-color: rgba(27, 42, 74, 0.4);
+  background: rgba(27, 42, 74, 0.03);
+}
+
+/* ---- Scroll indicator ---- */
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+
+.scroll-indicator {
+  animation: scroll-bounce 2s ease-in-out infinite;
+}
+
+/* ---- Orbit animations ---- */
+@keyframes orbit-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+
+.orbit-line {
+  animation: orbit-pulse 3s ease-in-out infinite;
+}
+
+/* ---- AI typewriter cursor ---- */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typewriter-cursor {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+/* ---- Noise texture ---- */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.02;
+  mix-blend-mode: multiply;
+}
+
+/* ---- Hover utilities ---- */
+.nav-login-btn {
+  transition: background 0.2s ease;
+}
+.nav-login-btn:hover {
+  background: rgba(27, 42, 74, 0.05);
+}
+
+.btn-primary-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  color: var(--espresso);
+  padding: 16px 36px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-primary-light:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
+.btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 15px 28px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.btn-ghost-dark:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-link {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.footer-link:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .scroll-indicator,
+  .orbit-line,
+  .typewriter-cursor {
+    animation: none;
+  }
 }

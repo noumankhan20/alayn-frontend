@@ -18,8 +18,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "ALAYN Intelligence",
-  description: "Restaurant Operations Dashboard",
+  title: "Alayn — The Operating System for Indian Cafés",
+  description: "Alayn connects staff, inventory, orders, waste, analytics and feedback into one AI-powered platform built specifically for café owners in India.",
 };
 
 export default function RootLayout({
