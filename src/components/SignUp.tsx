@@ -8,19 +8,18 @@ import {
     Mail,
     Phone,
     Lock,
-    Building2,
     Store,
     MapPin,
     Landmark,
     Map,
     Globe,
-    ChevronDown,
     Eye,
     EyeOff,
     ArrowRight,
     ArrowLeft,
     Check,
 } from "lucide-react";
+import { useRegisterMutation } from "@/redux/slices/authApiSlice"; // adjust this import path to match your project structure
 
 interface SignupFormState {
     // Step 1 — Account
@@ -29,10 +28,7 @@ interface SignupFormState {
     phone: string;
     password: string;
     confirmPassword: string;
-    // Step 2 — Restaurant
-    restaurantName: string;
-    businessType: string;
-    // Step 3 — First Outlet
+    // Step 2 — First Outlet
     outletName: string;
     address: string;
     city: string;
@@ -48,8 +44,6 @@ const INITIAL_FORM_STATE: SignupFormState = {
     phone: "",
     password: "",
     confirmPassword: "",
-    restaurantName: "",
-    businessType: "",
     outletName: "",
     address: "",
     city: "",
@@ -57,21 +51,9 @@ const INITIAL_FORM_STATE: SignupFormState = {
     country: "",
 };
 
-const BUSINESS_TYPES = [
-    "Fine Dining",
-    "Casual Dining",
-    "Quick Service (QSR)",
-    "Cafe",
-    "Cloud Kitchen",
-    "Bar & Lounge",
-    "Bakery",
-    "Other",
-];
-
 const STEPS = [
     { id: 1, label: "Account" },
-    { id: 2, label: "Restaurant" },
-    { id: 3, label: "First Outlet" },
+    { id: 2, label: "First Outlet" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -119,9 +101,10 @@ export default function SignupComponent() {
     const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState(false);
+
+    const [register, { isLoading }] = useRegisterMutation();
 
     const handleChange = (field: keyof SignupFormState) => (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -170,16 +153,6 @@ export default function SignupComponent() {
     const validateStep2 = (): boolean => {
         const errors: FormErrors = {};
 
-        if (!formData.restaurantName.trim()) errors.restaurantName = "Restaurant name is required.";
-        if (!formData.businessType) errors.businessType = "Select a business type.";
-
-        setFieldErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const validateStep3 = (): boolean => {
-        const errors: FormErrors = {};
-
         if (!formData.outletName.trim()) errors.outletName = "Outlet name is required.";
         if (!formData.address.trim()) errors.address = "Address is required.";
         if (!formData.city.trim()) errors.city = "City is required.";
@@ -193,14 +166,12 @@ export default function SignupComponent() {
     const goNext = () => {
         setSubmitError("");
         if (step === 1 && validateStep1()) setStep(2);
-        else if (step === 2 && validateStep2()) setStep(3);
     };
 
     const goBack = () => {
         setSubmitError("");
         setFieldErrors({});
         if (step === 2) setStep(1);
-        else if (step === 3) setStep(2);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -208,23 +179,33 @@ export default function SignupComponent() {
         setSubmitError("");
         setSubmitSuccess(false);
 
-        if (!validateStep3()) return;
-
-        setIsLoading(true);
+        if (!validateStep2()) return;
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            await register({
+                user: {
+                    name: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    phoneNo: formData.phone,
+                },
+                outlet: {
+                    name: formData.outletName,
+                    address: formData.address,
+                    city: formData.city,
+                    state: formData.state,
+                    country: formData.country,
+                },
+            }).unwrap();
 
-            // In production this creates a User (role: SUPER_ADMIN), an Outlet, and
-            // associates the restaurant/business details captured across the flow.
             setSubmitSuccess(true);
             setTimeout(() => {
                 window.location.href = "/login";
             }, 1200);
         } catch (err: any) {
-            setSubmitError(err.message || "Something went wrong. Please try again.");
-        } finally {
-            setIsLoading(false);
+            setSubmitError(
+                err?.data?.message || err?.message || "Something went wrong. Please try again."
+            );
         }
     };
 
@@ -233,12 +214,6 @@ export default function SignupComponent() {
 
     const errorInputClasses =
         "block w-full rounded-xl border-0 py-3.5 pl-11 pr-3 text-gray-900 ring-1 ring-inset ring-red-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#D3232A] sm:text-sm sm:leading-6 bg-red-50/30 focus:bg-white transition-all duration-200";
-
-    const selectClasses =
-        "block w-full appearance-none rounded-xl border-0 py-3.5 pl-11 pr-10 text-gray-900 ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-[#D3232A] sm:text-sm sm:leading-6 bg-gray-50/50 focus:bg-white transition-all duration-200";
-
-    const errorSelectClasses =
-        "block w-full appearance-none rounded-xl border-0 py-3.5 pl-11 pr-10 text-gray-900 ring-1 ring-inset ring-red-300 focus:ring-2 focus:ring-inset focus:ring-[#D3232A] sm:text-sm sm:leading-6 bg-red-50/30 focus:bg-white transition-all duration-200";
 
     const iconClasses = "h-5 w-5 text-gray-400";
 
@@ -312,8 +287,7 @@ export default function SignupComponent() {
                         </h2>
                         <p className="mt-2.5 text-sm text-gray-500 font-medium">
                             {step === 1 && "Let's start with your admin account details."}
-                            {step === 2 && "Tell us a bit about your restaurant."}
-                            {step === 3 && "Now, set up your first outlet."}
+                            {step === 2 && "Now, set up your first outlet."}
                         </p>
                     </div>
 
@@ -327,10 +301,10 @@ export default function SignupComponent() {
                                     <div className="flex items-center gap-2.5">
                                         <div
                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${isComplete
-                                                    ? "bg-[#D3232A] text-white"
-                                                    : isActive
-                                                        ? "bg-[#0B1221] text-white ring-4 ring-[#0B1221]/10"
-                                                        : "bg-gray-100 text-gray-400"
+                                                ? "bg-[#D3232A] text-white"
+                                                : isActive
+                                                    ? "bg-[#0B1221] text-white ring-4 ring-[#0B1221]/10"
+                                                    : "bg-gray-100 text-gray-400"
                                                 }`}
                                             aria-current={isActive ? "step" : undefined}
                                         >
@@ -504,86 +478,8 @@ export default function SignupComponent() {
                                 </div>
                             )}
 
-                            {/* STEP 2 — Restaurant */}
+                            {/* STEP 2 — First Outlet */}
                             {step === 2 && (
-                                <div className="space-y-5">
-                                    <Field id="restaurantName" label="Restaurant Name" icon={<Building2 className={iconClasses} />} error={fieldErrors.restaurantName}>
-                                        <input
-                                            id="restaurantName"
-                                            name="restaurantName"
-                                            type="text"
-                                            autoComplete="organization"
-                                            required
-                                            value={formData.restaurantName}
-                                            onChange={handleChange("restaurantName")}
-                                            placeholder="The Golden Fork"
-                                            aria-invalid={!!fieldErrors.restaurantName}
-                                            aria-describedby={fieldErrors.restaurantName ? "restaurantName-error" : undefined}
-                                            className={fieldErrors.restaurantName ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
-
-                                    <div>
-                                        <label htmlFor="businessType" className="block text-sm font-semibold leading-6 text-[#0B1221]">
-                                            Business Type
-                                        </label>
-                                        <div className="relative mt-2 rounded-xl shadow-sm">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10">
-                                                <Store className={iconClasses} />
-                                            </div>
-                                            <select
-                                                id="businessType"
-                                                name="businessType"
-                                                required
-                                                value={formData.businessType}
-                                                onChange={handleChange("businessType")}
-                                                aria-invalid={!!fieldErrors.businessType}
-                                                aria-describedby={fieldErrors.businessType ? "businessType-error" : undefined}
-                                                className={fieldErrors.businessType ? errorSelectClasses : selectClasses}
-                                            >
-                                                <option value="" disabled>
-                                                    Select a business type
-                                                </option>
-                                                {BUSINESS_TYPES.map((type) => (
-                                                    <option key={type} value={type}>
-                                                        {type}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5">
-                                                <ChevronDown className="h-4 w-4 text-gray-400" />
-                                            </div>
-                                        </div>
-                                        {fieldErrors.businessType && (
-                                            <p id="businessType-error" className="mt-1.5 text-xs font-medium text-[#D3232A]">
-                                                {fieldErrors.businessType}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={goBack}
-                                            className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 text-sm font-bold leading-6 text-[#0B1221] ring-1 ring-inset ring-gray-200 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1221] transition-all duration-200"
-                                        >
-                                            <ArrowLeft className="h-4 w-4" />
-                                            Back
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={goNext}
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#D3232A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-md hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3232A] transition-all duration-200 hover:-translate-y-[1px]"
-                                        >
-                                            Continue
-                                            <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* STEP 3 — First Outlet */}
-                            {step === 3 && (
                                 <div className="space-y-5">
                                     <Field id="outletName" label="Outlet Name" icon={<Store className={iconClasses} />} error={fieldErrors.outletName}>
                                         <input
