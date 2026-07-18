@@ -31,7 +31,7 @@ export default function LoginComponent() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white font-sans">
+    <div className="flex min-h-screen flex-col lg:flex-row bg-white font-sans">
       {/* LHS: Large Brand Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0B1221] relative overflow-hidden flex-col justify-center items-center p-12">
         {/* Subtle geometric design elements using Theme Red and Theme Blue */}
@@ -62,23 +62,41 @@ export default function LoginComponent() {
         </div>
       </div>
 
-      {/* RHS: Login Form */}
-      <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-16 xl:px-24 bg-[#F4F7F9] lg:bg-white">
-        <div className="mx-auto w-full max-w-md">
-          {/* Logo fallback for mobile view (shown when LHS is hidden) */}
-          <div className="lg:hidden flex justify-center mb-8 bg-[#0B1221] p-4 rounded-2xl shadow-sm">
+      {/* Mobile Header: compact brand bar (logo + wordmark inline) */}
+      <div className="lg:hidden relative overflow-hidden bg-[#0B1221] px-6 pt-8 pb-10">
+        <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-[#D3232A]/20 blur-3xl" />
+        <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-lg p-2">
             <Image
               src="/image.png"
               alt="ALAYN Logo"
-              width={180}
-              height={50}
-              className="max-h-12 w-auto object-contain"
+              width={40}
+              height={40}
+              className="w-auto h-auto max-h-8 object-contain"
               priority
+              onError={(e) => {
+                const target = e.target as HTMLElement;
+                target.style.display = "none";
+              }}
             />
           </div>
+          <div>
+            <h3 className="text-lg font-bold text-white tracking-wide font-serif leading-tight">
+              ALAYN <span className="text-[#D3232A]">AI</span>
+            </h3>
+            <p className="text-[11px] text-zinc-400 font-medium">
+              Restaurant operations platform
+            </p>
+          </div>
+        </div>
+      </div>
 
+      {/* RHS: Login Form (rises over the mobile header as a rounded sheet) */}
+      <div className="relative z-10 -mt-5 flex w-full flex-1 flex-col justify-center rounded-t-3xl bg-white px-6 py-8 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mt-0 lg:w-1/2 lg:rounded-none lg:px-16 lg:py-12 lg:shadow-none xl:px-24">
+        <div className="mx-auto w-full max-w-md">
           <div className="text-left">
-            <h2 className="text-3xl font-extrabold tracking-tight text-[#0B1221] font-serif">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B1221] font-serif">
               Welcome back
             </h2>
             <p className="mt-2.5 text-sm text-gray-500 font-medium">
@@ -86,7 +104,7 @@ export default function LoginComponent() {
             </p>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-8 sm:mt-10">
             <form className="space-y-6" onSubmit={handleSubmit}>
               {error && (
                 <div className="rounded-xl bg-red-50 p-4 text-sm text-[#D3232A] border border-red-100/80 font-medium">
