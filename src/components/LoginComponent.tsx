@@ -4,29 +4,42 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
-
+import { useLoginMutation } from "@/redux/slices/authApiSlice";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/redux/slices/authSlice";
 export default function LoginComponent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const [login, { isLoading }] = useLoginMutation();
   const [error, setError] = useState("");
-
+  const dispatch = useDispatch();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+
     setError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      if (!email.includes("@") || password.length < 6) {
-        throw new Error("Invalid credentials. Please verify your email and password.");
-      }
-      window.location.href = "/";
+      const response = await login({
+        email,
+        password,
+      }).unwrap();
+
+      dispatch(
+        setCredentials(response.data.user)
+      );
+
+      router.replace("/");
     } catch (err: any) {
-      setError(err.message || "Something went wrong.");
-    } finally {
-      setIsLoading(false);
+      setError(
+        err?.data?.error?.message ||
+        err?.data?.message ||
+        (typeof err?.data?.error === "string" ? err?.data?.error : null) ||
+        err?.message ||
+        "Invalid email or password."
+      );
     }
   };
 

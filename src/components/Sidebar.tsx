@@ -9,6 +9,7 @@ import {
   TrendingUp, 
   Users, 
   ClipboardList, 
+  Package,
   Lightbulb, 
   Settings, 
   HelpCircle, 
@@ -23,6 +24,7 @@ const navItems = [
   { name: "Performance", icon: TrendingUp, href: "/performance" },
   { name: "Workforce", icon: Users, href: "/workforce" },
   { name: "Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Inventory", icon: Package, href: "/inventory" },
   { name: "Insights", icon: Lightbulb, href: "/insights" },
   { name: "Settings", icon: Settings, href: "/settings" },
 ];

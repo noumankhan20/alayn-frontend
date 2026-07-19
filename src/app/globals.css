@@ -43,6 +43,70 @@ body {
   font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
 }
 
+/* Shared form input style used across the dashboard */
+.input {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #3f3f46;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: #D3232A;
+}
+
+/* Shared button styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem;
+  background-color: #D3232A;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+.btn-primary:hover { background-color: #b01e23; }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid #d4d4d8;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3f3f46;
+  background-color: #ffffff;
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+.btn-ghost:hover { background-color: #f4f4f5; }
+
+/* Form field label */
+.field-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #71717a;
+  margin-bottom: 0.25rem;
+}
+
+
+
 /* ==============================
    LANDING PAGE STYLES
    ============================== */
