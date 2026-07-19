@@ -204,7 +204,11 @@ export default function SignupComponent() {
             }, 1200);
         } catch (err: any) {
             setSubmitError(
-                err?.data?.message || err?.message || "Something went wrong. Please try again."
+                err?.data?.error?.message ||
+                err?.data?.message ||
+                (typeof err?.data?.error === "string" ? err?.data?.error : null) ||
+                err?.message ||
+                "Something went wrong. Please try again."
             );
         }
     };
