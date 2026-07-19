@@ -50,7 +50,7 @@ body {
 .landing-root {
   background: var(--cream);
   color: var(--espresso);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 html {
@@ -106,12 +106,7 @@ html {
 /* ---- Hero ---- */
 .hero-section {
   position: relative;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  overflow: clip;
   background: var(--cream);
 }
 
@@ -339,7 +334,7 @@ html {
 
 .footer-link {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
   transition: color 0.2s ease;
 }

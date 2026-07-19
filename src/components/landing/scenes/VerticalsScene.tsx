@@ -1,0 +1,190 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FieldScene, useField, DEFAULT_NODES, type FieldNode } from "../motion/GlobalField";
+
+const VERTICALS = [
+  { 
+    name: "Restaurants", 
+    labels: ["Tables", "Kitchen", "Orders", "Stock", "Staff", "Guests"], 
+    outcome: "Optimize table turns, coordinate kitchen fires, and link guest history to profiles.",
+    data: { metric1: "42 mins", label1: "Avg. Table Turn", metric2: "92.4%", label2: "Kitchen Prep Accuracy" }
+  },
+  { 
+    name: "Cafés", 
+    labels: ["Orders", "Kitchen", "Stock", "Staff", "Loyalty", "Payments"], 
+    outcome: "Coordinate heavy morning rushes, automate oat milk restocks, and track daily tallies.",
+    data: { metric1: "3.2 mins", label1: "Avg. Service Time", metric2: "₹82K", label2: "Morning Rush Gross" }
+  },
+  { 
+    name: "QSR", 
+    labels: ["Orders", "Speed", "Stock", "Staff", "Delivery", "Payments"], 
+    outcome: "Optimize drive-thrus, manage third-party delivery dispatch, and coordinate payments.",
+    data: { metric1: "90s", label1: "Order-to-Pack Time", metric2: "4.8/5.0", label2: "Delivery Dispatch Rating" }
+  },
+  { 
+    name: "Cloud Kitchens", 
+    labels: ["Orders", "Kitchen", "Delivery", "Stock", "Staff", "Payments"], 
+    outcome: "Manage 4 brands under one kitchen, aggregate ticket printer outputs, and optimize inventory.",
+    data: { metric1: "4 Brands", label1: "Coordinated Matrix", metric2: "0.2s", label2: "Omnichannel Sync Delay" }
+  },
+  { 
+    name: "Bakeries", 
+    labels: ["Orders", "Production", "Stock", "Staff", "Wholesale", "Payments"], 
+    outcome: "Calculate recipe preps, manage wholesale distributor orders, and track shelf waste.",
+    data: { metric1: "₹420", label1: "Wholesale Margin Peak", metric2: "2% target", label2: "Daily Bread Waste" }
+  },
+  { 
+    name: "Hotel Dining", 
+    labels: ["Reservations", "Housekeeping", "F&B", "Staff", "Guests", "Payments"], 
+    outcome: "Link room folios to restaurant tabs, automate morning room service, and coordinate staff.",
+    data: { metric1: "0.4s", label1: "Room Tab Verification", metric2: "98%", label2: "Room Service Sync Rate" }
+  },
+];
+
+export default function VerticalsScene() {
+  const [active, setActive] = useState(0);
+  const { setLabels } = useField();
+
+  useEffect(() => {
+    const v = VERTICALS[active];
+    const nodes: FieldNode[] = DEFAULT_NODES.map((n, i) => ({ ...n, label: v.labels[i] }));
+    setLabels(nodes);
+    return () => setLabels(null);
+  }, [active, setLabels]);
+
+  const activeVertical = VERTICALS[active];
+
+  return (
+    <FieldScene
+      id="verticals"
+      domId="scene-verticals"
+      chaos={0.03}
+      sync={0.6}
+      presence={0.75}
+      className="landing-section"
+      style={{ background: "#FFFFFF", minHeight: "100vh", display: "flex", alignItems: "center" }}
+      ariaLabel="Built for every hospitality business"
+    >
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px", width: "100%" }}>
+        
+        <div style={{ textAlign: "center", marginBottom: "50px" }}>
+          <h2 style={{
+            fontFamily: "var(--font-playfair), Georgia, serif",
+            fontWeight: 800,
+            fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
+            lineHeight: 1.1,
+            letterSpacing: "-0.03em",
+            color: "var(--espresso)",
+            marginBottom: "24px",
+          }}>
+            One operating system.
+            <br />
+            <span style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: "400" }}>
+              Every kind of business.
+            </span>
+          </h2>
+        </div>
+
+        {/* Buttons selection grid */}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px", marginBottom: "48px" }}>
+          {VERTICALS.map((v, i) => (
+            <button
+              key={v.name}
+              onClick={() => setActive(i)}
+              style={{
+                padding: "10px 24px",
+                borderRadius: "30px",
+                border: "1px solid",
+                borderColor: active === i ? "var(--amber)" : "var(--border-warm)",
+                background: active === i ? "rgba(196, 30, 42, 0.05)" : "transparent",
+                color: active === i ? "var(--amber)" : "var(--muted)",
+                fontSize: "0.9375rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              }}
+            >
+              {v.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Morphing Mockup Dashboard below */}
+        <div style={{
+          background: "#F4F5F8",
+          borderRadius: "24px",
+          border: "1px solid var(--border-warm)",
+          padding: "44px",
+          maxWidth: "960px",
+          margin: "0 auto",
+          boxShadow: "0 24px 72px rgba(27, 42, 74, 0.06)",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "40px" }}>
+            
+            {/* Context Details */}
+            <div>
+              <span style={{ display: "inline-block", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--amber)", marginBottom: "14px" }}>
+                Target Architecture
+              </span>
+              
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 12 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <h3 style={{ fontSize: "1.75rem", fontWeight: 750, color: "var(--espresso)", margin: "0 0 16px" }}>
+                    Alayn for {activeVertical.name}
+                  </h3>
+                  <p style={{ fontSize: "1.0625rem", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
+                    {activeVertical.outcome}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Simulated Live Analytics Widgets */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -12, scale: 0.97 }}
+                  transition={{ duration: 0.28, type: "spring", stiffness: 100, damping: 15 }}
+                  style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+                >
+                  {/* Metric Card 1 */}
+                  <div style={{ background: "#FFFFFF", border: "1px solid var(--border-warm)", borderRadius: "16px", padding: "20px 24px" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block", marginBottom: "4px" }}>
+                      {activeVertical.data.label1}
+                    </span>
+                    <span style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--espresso)" }}>
+                      {activeVertical.data.metric1}
+                    </span>
+                  </div>
+
+                  {/* Metric Card 2 */}
+                  <div style={{ background: "#FFFFFF", border: "1px solid var(--border-warm)", borderRadius: "16px", padding: "20px 24px" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--muted)", display: "block", marginBottom: "4px" }}>
+                      {activeVertical.data.label2}
+                    </span>
+                    <span style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--espresso)" }}>
+                      {activeVertical.data.metric2}
+                    </span>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </FieldScene>
+  );
+}

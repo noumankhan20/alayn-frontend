@@ -47,6 +47,7 @@ export default function Sidebar() {
             width={208} 
             height={53} 
             className="h-auto w-full object-contain"
+            style={{ height: "auto" }}
             priority
           />
         </div>

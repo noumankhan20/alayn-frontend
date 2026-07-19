@@ -39,7 +39,7 @@ export default function LandingFooter() {
               alt="Alayn Logo"
               width={256}
               height={64}
-              style={{ height: "64px" }}
+              style={{ height: "64px", width: "auto" }}
               className="w-auto object-contain"
             />
           </div>
@@ -47,7 +47,7 @@ export default function LandingFooter() {
             style={{
               margin: 0,
               fontSize: "0.8125rem",
-              color: "rgba(249, 246, 241, 0.35)",
+              color: "rgba(249, 246, 241, 0.6)",
               lineHeight: 1.5,
             }}
           >
@@ -84,7 +84,7 @@ export default function LandingFooter() {
           style={{
             margin: 0,
             fontSize: "0.8125rem",
-            color: "rgba(249, 246, 241, 0.25)",
+            color: "rgba(249, 246, 241, 0.5)",
             width: "100%",
             borderTop: "1px solid rgba(249, 246, 241, 0.06)",
             paddingTop: "24px",

@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { useMagnetic, springSnappy } from "./motion/primitives";
 
 export default function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
+  const { ref: signupRef, x, y } = useMagnetic(0.2);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
@@ -44,7 +47,7 @@ export default function LandingNav() {
             alt="Alayn Logo"
             width={288}
             height={72}
-            style={{ height: "72px" }}
+            style={{ height: "72px", width: "auto" }}
             className="w-auto object-contain"
             priority
           />
@@ -69,36 +72,39 @@ export default function LandingNav() {
             Log in
           </Link>
 
-          <Link
-            href="/signup"
-            id="nav-signup"
-            className="btn-primary"
-            style={{
-              padding: "9px 20px",
-              fontSize: "0.875rem",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            Get started
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden="true"
+          <motion.div style={{ x, y }} transition={springSnappy}>
+            <Link
+              ref={signupRef as React.Ref<HTMLAnchorElement>}
+              href="/signup"
+              id="nav-signup"
+              className="btn-primary"
+              style={{
+                padding: "9px 20px",
+                fontSize: "0.875rem",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
             >
-              <path
-                d="M3 7h8M8 4l3 3-3 3"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
+              Get started
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 7h8M8 4l3 3-3 3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+          </motion.div>
         </div>
       </div>
     </nav>
