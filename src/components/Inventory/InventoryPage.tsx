@@ -22,6 +22,7 @@ import {
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { fetchInventoryItems, InventoryItem } from "@/lib/api";
+import { useBranch } from "@/lib/BranchContext";
 
 import InventoryStatCard  from "./InventoryStatCard";
 import InventoryItemTable from "./InventoryItemTable";

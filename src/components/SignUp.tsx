@@ -28,12 +28,11 @@ interface SignupFormState {
     phone: string;
     password: string;
     confirmPassword: string;
-    // Step 2 — First Outlet
-    outletName: string;
-    address: string;
-    city: string;
-    state: string;
-    country: string;
+    // Step 2 — Business
+    businessName: string;
+    locationsCount: string;
+    businessType: string;
+    contactDetail: string;
 }
 
 type FormErrors = Partial<Record<keyof SignupFormState, string>>;
@@ -44,16 +43,15 @@ const INITIAL_FORM_STATE: SignupFormState = {
     phone: "",
     password: "",
     confirmPassword: "",
-    outletName: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
+    businessName: "",
+    locationsCount: "",
+    businessType: "",
+    contactDetail: "",
 };
 
 const STEPS = [
     { id: 1, label: "Account" },
-    { id: 2, label: "First Outlet" },
+    { id: 2, label: "Business" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -153,11 +151,14 @@ export default function SignupComponent() {
     const validateStep2 = (): boolean => {
         const errors: FormErrors = {};
 
-        if (!formData.outletName.trim()) errors.outletName = "Outlet name is required.";
-        if (!formData.address.trim()) errors.address = "Address is required.";
-        if (!formData.city.trim()) errors.city = "City is required.";
-        if (!formData.state.trim()) errors.state = "State is required.";
-        if (!formData.country.trim()) errors.country = "Country is required.";
+        if (!formData.businessName.trim()) errors.businessName = "Business name is required.";
+        if (!formData.locationsCount.trim()) errors.locationsCount = "Number of locations is required.";
+        if (!formData.businessType.trim()) errors.businessType = "Business type is required.";
+        if (!formData.contactDetail.trim()) {
+            errors.contactDetail = "Contact detail is required.";
+        } else if (formData.contactDetail.length < 10) {
+            errors.contactDetail = "Contact detail must be at least 10 characters.";
+        }
 
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
@@ -189,12 +190,11 @@ export default function SignupComponent() {
                     password: formData.password,
                     phoneNo: formData.phone,
                 },
-                outlet: {
-                    name: formData.outletName,
-                    address: formData.address,
-                    city: formData.city,
-                    state: formData.state,
-                    country: formData.country,
+                tenant: {
+                    name: formData.businessName,
+                    locationsCount: formData.locationsCount,
+                    businessType: formData.businessType,
+                    contactDetail: formData.contactDetail,
                 },
             }).unwrap();
 
@@ -485,98 +485,69 @@ export default function SignupComponent() {
                             {/* STEP 2 — First Outlet */}
                             {step === 2 && (
                                 <div className="space-y-5">
-                                    <Field id="outletName" label="Outlet Name" icon={<Store className={iconClasses} />} error={fieldErrors.outletName}>
+                                    <Field id="businessName" label="Business / Restaurant Name" icon={<Store className={iconClasses} />} error={fieldErrors.businessName}>
                                         <input
-                                            id="outletName"
-                                            name="outletName"
+                                            id="businessName"
+                                            name="businessName"
                                             type="text"
                                             autoComplete="off"
                                             required
-                                            value={formData.outletName}
-                                            onChange={handleChange("outletName")}
-                                            placeholder="Golden Fork — Bandra"
-                                            aria-invalid={!!fieldErrors.outletName}
-                                            aria-describedby={fieldErrors.outletName ? "outletName-error" : undefined}
-                                            className={fieldErrors.outletName ? errorInputClasses : inputClasses}
+                                            value={formData.businessName}
+                                            onChange={handleChange("businessName")}
+                                            placeholder="Microsoft Cafe"
+                                            aria-invalid={!!fieldErrors.businessName}
+                                            aria-describedby={fieldErrors.businessName ? "businessName-error" : undefined}
+                                            className={fieldErrors.businessName ? errorInputClasses : inputClasses}
                                         />
                                     </Field>
 
-                                    <div>
-                                        <label htmlFor="address" className="block text-sm font-semibold leading-6 text-[#0B1221]">
-                                            Address
-                                        </label>
-                                        <div className="relative mt-2 rounded-xl shadow-sm">
-                                            <div className="pointer-events-none absolute top-3.5 left-0 flex items-start pl-3.5">
-                                                <MapPin className={iconClasses} />
-                                            </div>
-                                            <textarea
-                                                id="address"
-                                                name="address"
-                                                autoComplete="street-address"
-                                                required
-                                                rows={3}
-                                                value={formData.address}
-                                                onChange={handleChange("address")}
-                                                placeholder="123 Market Street"
-                                                aria-invalid={!!fieldErrors.address}
-                                                aria-describedby={fieldErrors.address ? "address-error" : undefined}
-                                                className={`${fieldErrors.address ? errorInputClasses : inputClasses} resize-none`}
-                                            />
-                                        </div>
-                                        {fieldErrors.address && (
-                                            <p id="address-error" className="mt-1.5 text-xs font-medium text-[#D3232A]">
-                                                {fieldErrors.address}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        <Field id="city" label="City" icon={<Landmark className={iconClasses} />} error={fieldErrors.city}>
-                                            <input
-                                                id="city"
-                                                name="city"
-                                                type="text"
-                                                autoComplete="address-level2"
-                                                required
-                                                value={formData.city}
-                                                onChange={handleChange("city")}
-                                                placeholder="Mumbai"
-                                                aria-invalid={!!fieldErrors.city}
-                                                aria-describedby={fieldErrors.city ? "city-error" : undefined}
-                                                className={fieldErrors.city ? errorInputClasses : inputClasses}
-                                            />
-                                        </Field>
-
-                                        <Field id="state" label="State" icon={<Map className={iconClasses} />} error={fieldErrors.state}>
-                                            <input
-                                                id="state"
-                                                name="state"
-                                                type="text"
-                                                autoComplete="address-level1"
-                                                required
-                                                value={formData.state}
-                                                onChange={handleChange("state")}
-                                                placeholder="Maharashtra"
-                                                aria-invalid={!!fieldErrors.state}
-                                                aria-describedby={fieldErrors.state ? "state-error" : undefined}
-                                                className={fieldErrors.state ? errorInputClasses : inputClasses}
-                                            />
-                                        </Field>
-                                    </div>
-
-                                    <Field id="country" label="Country" icon={<Globe className={iconClasses} />} error={fieldErrors.country}>
-                                        <input
-                                            id="country"
-                                            name="country"
-                                            type="text"
-                                            autoComplete="country-name"
+                                    <Field id="locationsCount" label="Number of Locations" icon={<Store className={iconClasses} />} error={fieldErrors.locationsCount}>
+                                        <select
+                                            id="locationsCount"
+                                            name="locationsCount"
                                             required
-                                            value={formData.country}
-                                            onChange={handleChange("country")}
-                                            placeholder="India"
-                                            aria-invalid={!!fieldErrors.country}
-                                            aria-describedby={fieldErrors.country ? "country-error" : undefined}
-                                            className={fieldErrors.country ? errorInputClasses : inputClasses}
+                                            value={formData.locationsCount}
+                                            onChange={handleChange("locationsCount")}
+                                            className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                        >
+                                            <option value="">Select location range</option>
+                                            <option value="1">1 Location</option>
+                                            <option value="2-5">2-5 Locations</option>
+                                            <option value="6-10">6-10 Locations</option>
+                                            <option value="10+">10+ Locations</option>
+                                        </select>
+                                    </Field>
+
+                                    <Field id="businessType" label="Business Type" icon={<Store className={iconClasses} />} error={fieldErrors.businessType}>
+                                        <select
+                                            id="businessType"
+                                            name="businessType"
+                                            required
+                                            value={formData.businessType}
+                                            onChange={handleChange("businessType")}
+                                            className={fieldErrors.businessType ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                        >
+                                            <option value="">Select business type</option>
+                                            <option value="restaurant">Restaurant</option>
+                                            <option value="cafe">Café</option>
+                                            <option value="bar">Bar</option>
+                                            <option value="qsr">QSR (Quick Service Restaurant)</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </Field>
+
+                                    <Field id="contactDetail" label="Company Contact Detail (Email / Phone)" icon={<Phone className={iconClasses} />} error={fieldErrors.contactDetail}>
+                                        <input
+                                            id="contactDetail"
+                                            name="contactDetail"
+                                            type="text"
+                                            required
+                                            value={formData.contactDetail}
+                                            onChange={handleChange("contactDetail")}
+                                            placeholder="contact@company.com or +91 98765 43210"
+                                            aria-invalid={!!fieldErrors.contactDetail}
+                                            aria-describedby={fieldErrors.contactDetail ? "contactDetail-error" : undefined}
+                                            className={fieldErrors.contactDetail ? errorInputClasses : inputClasses}
                                         />
                                     </Field>
 
@@ -598,7 +569,7 @@ export default function SignupComponent() {
                                                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                             ) : (
                                                 <>
-                                                    Create Restaurant
+                                                    Create Business
                                                     <ArrowRight className="h-4 w-4" />
                                                 </>
                                             )}

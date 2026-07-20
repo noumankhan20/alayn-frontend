@@ -1,13 +1,15 @@
 import React from "react";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Bell, Menu, MapPin } from "lucide-react";
 import Image from "next/image";
-
+import { useBranch } from "@/lib/BranchContext";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
+  const { branches, activeBranch, setActiveBranch } = useBranch();
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
       {/* Mobile Menu Button */}
@@ -38,9 +40,27 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
           
           <div className="hidden md:flex items-center space-x-6 text-sm">
-            <button className="font-semibold text-gray-900 border-b-2 border-gray-900 pb-4 mt-4">
-              All Locations
-            </button>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#D3232A]" />
+              {branches.length > 0 ? (
+                <select
+                  value={activeBranch?.id || ""}
+                  onChange={(e) => {
+                    const match = branches.find((b) => b.id === e.target.value);
+                    if (match) setActiveBranch(match);
+                  }}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm focus:border-[#D3232A] focus:outline-none focus:ring-1 focus:ring-[#D3232A] cursor-pointer"
+                >
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-xs font-bold text-gray-400">No Location</span>
+              )}
+            </div>
             <div className="flex space-x-4 text-gray-500 font-medium">
               <button className="hover:text-gray-900 transition-colors">This Week</button>
               <button className="hover:text-gray-900 transition-colors">vs Last Week</button>

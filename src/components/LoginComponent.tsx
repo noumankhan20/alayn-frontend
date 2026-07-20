@@ -27,8 +27,11 @@ export default function LoginComponent() {
         password,
       }).unwrap();
 
+      console.log("Login response:", response);
+
+      const userPayload = response?.data?.user || response?.user || response;
       dispatch(
-        setCredentials(response.data.user)
+        setCredentials(userPayload)
       );
 
       router.replace("/");

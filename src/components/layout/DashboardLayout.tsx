@@ -3,9 +3,14 @@
 import React, { useState } from "react";
 import Sidebar from "../Sidebar";
 import Header from "../Header";
+import { useBranch } from "@/lib/BranchContext";
+import CreateFirstOutletModal from "../CreateFirstOutletModal";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { branches, loading, isDemo } = useBranch();
+
+  const showRegisterModal = !loading && !isDemo && branches.length === 0;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F4F7F9]">
@@ -33,6 +38,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {showRegisterModal && <CreateFirstOutletModal />}
     </div>
   );
 }

@@ -1,15 +1,33 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 interface AuthState {
-    user: null;
+    user: any;
     // token: string | null;
     isAuthenticated: boolean;
 }
 
+const getInitialUser = () => {
+    if (typeof window === "undefined") return null;
+    try {
+        const item = localStorage.getItem("auth_user");
+        return item ? JSON.parse(item) : null;
+    } catch {
+        return null;
+    }
+};
+
+const getInitialIsAuthenticated = () => {
+    if (typeof window === "undefined") return false;
+    try {
+        return !!localStorage.getItem("auth_user");
+    } catch {
+        return false;
+    }
+};
+
 const initialState: AuthState = {
-    user: null,
-    // token: null,
-    isAuthenticated: false,
+    user: getInitialUser(),
+    isAuthenticated: getInitialIsAuthenticated(),
 };
 
 const authSlice = createSlice({
