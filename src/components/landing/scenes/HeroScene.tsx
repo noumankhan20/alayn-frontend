@@ -1,263 +1,126 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { FieldScene } from "../motion/GlobalField";
+import { Assemble, useMagnetic, springSnappy } from "../motion/primitives";
 
-const MotionLink = motion.create(Link);
+/**
+ * Hero for independent restaurants, cafés and cloud kitchens running on
+ * notebooks, WhatsApp and memory — matches the vertical scope in
+ * VerticalsScene further down the page (restaurants/cafés/QSR/cloud
+ * kitchens/bakeries/hotel dining), not narrowed to cafés specifically. Not
+ * a shipped screenshot yet, so the product surface below is a single,
+ * clearly-scoped mock: swap it for a real screenshot once the pilot build
+ * exists. Background is a CSS-only aurora (see .hero-aurora in
+ * globals.css) — transform-only animation, no canvas, no WebGL, no
+ * per-pixel cost.
+ */
+
+const SNAPSHOT = [
+  { label: "Orders", value: "128", detail: "synced today", state: "ok" as const },
+  { label: "Stock", value: "Low", detail: "1 item flagged before it runs out", state: "attention" as const },
+  { label: "Staff", value: "6", detail: "on shift now", state: "ok" as const },
+  { label: "Waste", value: "₹340", detail: "tracked this week", state: "ok" as const },
+];
+
+function MagneticLink({
+  href,
+  className,
+  id,
+  children,
+}: {
+  href: string;
+  className: string;
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { ref, x, y } = useMagnetic(0.2);
+  return (
+    <motion.div style={{ x, y, display: "inline-block" }} transition={springSnappy}>
+      <Link ref={ref as React.Ref<HTMLAnchorElement>} href={href} id={id} className={className}>
+        {children}
+      </Link>
+    </motion.div>
+  );
+}
 
 export default function HeroScene() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  // Smooth the scroll input with a heavy, calm spring to make the transitions feel fluid and expensive
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 12, // Extremely calm, heavy spring
-    damping: 24,
-    mass: 2.2
-  });
-
-  // Force the network convergence to complete much earlier (by 40% scroll) so it is fully visible on screen
-  const convergeProgress = useTransform(smoothProgress, [0, 0.42], [0, 1]);
-
-  // Typography gains confidence and settles as the thread converges.
-  const textOpacity = useTransform(smoothProgress, [0.15, 0.45], [0, 1]);
-  const textY = useTransform(smoothProgress, [0.15, 0.45], [6, 0]); // Minimal 6px settle
-  
-  // CTA settles in place without translating, just quietly gaining confidence
-  const ctaOpacity = useTransform(smoothProgress, [0.35, 0.6], [0, 1]);
-
-  // Gaining confidence: Button background solidifies, text becomes white, border fades into solid fill
-  const buttonBg = useTransform(smoothProgress, [0.4, 0.6], ["rgba(27, 42, 74, 0)", "rgba(27, 42, 74, 1)"]);
-  const buttonColor = useTransform(smoothProgress, [0.4, 0.6], ["rgba(27, 42, 74, 0.85)", "rgba(255, 255, 255, 1)"]);
-  const buttonBorder = useTransform(smoothProgress, [0.4, 0.6], ["1px solid rgba(27, 42, 74, 0.2)", "1px solid rgba(27, 42, 74, 0)"]);
-
+  // The syncing row rotates so the panel reads as live without any element
+  // actually moving — cheapest possible sense of activity.
+  const [syncing, setSyncing] = useState(0);
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const t = setInterval(() => setSyncing((p) => (p + 1) % SNAPSHOT.length), 2400);
+    return () => clearInterval(t);
+  }, []);
 
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    window.addEventListener("resize", handleResize);
-
-    // Precise grid setup (The Systems Field)
-    const columns = 28;
-    const rows = 18;
-    const points: { x: number; y: number; ox: number; oy: number }[] = [];
-
-    for (let c = 0; c < columns; c++) {
-      for (let r = 0; r < rows; r++) {
-        const x = (c / (columns - 1)) * width;
-        const y = (r / (rows - 1)) * height;
-        points.push({ x, y, ox: x, oy: y });
-      }
-    }
-
-    // Coordinate badges
-    const badges = [
-      { label: "Orders Layer", x: 0.15, y: 0.28, color: "rgba(196, 30, 42, 0.9)", tx: 0, ty: 0 },
-      { label: "Kitchen System", x: 0.82, y: 0.22, color: "rgba(27, 42, 74, 0.9)", tx: 0, ty: 0 },
-      { label: "Inventory Index", x: 0.22, y: 0.72, color: "rgba(27, 42, 74, 0.9)", tx: 0, ty: 0 },
-      { label: "Staff Roster", x: 0.78, y: 0.78, color: "rgba(196, 30, 42, 0.9)", tx: 0, ty: 0 },
-    ];
-
-    let mouse = { x: -1000, y: -1000 };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-    };
-
-    const handleMouseLeave = () => {
-      mouse.x = -1000;
-      mouse.y = -1000;
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mouseleave", handleMouseLeave);
-
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      
-      const scrollVal = convergeProgress.get(); // Driven by the accelerated convergeProgress
-      const actualScroll = smoothProgress.get();
-
-      // Draw mathematical background grid
-      ctx.beginPath();
-      ctx.strokeStyle = "rgba(27, 42, 74, 0.015)";
-      ctx.lineWidth = 1;
-      
-      for (let c = 0; c < columns; c++) {
-        const x = (c / (columns - 1)) * width;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-      }
-      for (let r = 0; r < rows; r++) {
-        const y = (r / (rows - 1)) * height;
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-      }
-      ctx.stroke();
-
-      // Draw HUD reticles and coordinates
-      points.forEach((p) => {
-        const dx = mouse.x - p.ox;
-        const dy = mouse.y - p.oy;
-        const dist = Math.hypot(dx, dy);
-
-        // Grid warp effect under mouse
-        if (dist < 180 && actualScroll < 0.1) {
-          const force = (180 - dist) / 180;
-          p.x = p.ox - (dx / dist) * force * 16;
-          p.y = p.oy - (dy / dist) * force * 16;
-        } else {
-          // Spring back to original positions or converge on scroll
-          const targetX = p.ox + (width / 2 - p.ox) * scrollVal * 0.45;
-          const targetY = p.oy + (height * 0.14 - p.oy) * scrollVal * 0.45;
-          p.x += (targetX - p.x) * 0.12;
-          p.y += (targetY - p.y) * 0.12;
-        }
-
-        // Draw node dot
-        ctx.fillStyle = `rgba(27, 42, 74, ${0.08 * (1 - actualScroll)})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw elegant coordinate badges
-      badges.forEach((b) => {
-        // Linear interpolation to converge
-        const startX = b.x * width;
-        const startY = b.y * height;
-        const targetX = width / 2;
-        const targetY = height * 0.14; // Correctly offset to the clear space below the navbar (14% height)
-
-        b.tx = startX + (targetX - startX) * scrollVal;
-        b.ty = startY + (targetY - startY) * scrollVal; // Corrected typo (used to use startX/targetX)
-
-        const isRed = b.color.includes("196");
-
-        ctx.save();
-        // Faint laser coordinate line connecting to center hub
-        ctx.beginPath();
-        ctx.moveTo(b.tx, b.ty);
-        ctx.lineTo(width / 2, height * 0.14);
-        ctx.strokeStyle = `rgba(27, 42, 74, ${0.04 * (1 - actualScroll)})`;
-        ctx.lineWidth = 0.75;
-        ctx.stroke();
-
-        // Draw delicate coordinate frame
-        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-        ctx.beginPath();
-        ctx.roundRect(b.tx - 65, b.ty - 16, 130, 32, 6);
-        ctx.fill();
-
-        ctx.strokeStyle = b.color;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Tiny red active light
-        ctx.beginPath();
-        ctx.arc(b.tx - 48, b.ty, 3, 0, Math.PI * 2);
-        ctx.fillStyle = isRed ? "#C41E2A" : "#1B2A4A";
-        ctx.fill();
-
-        // Label text (Show ALAYN when fully converged)
-        const labelText = scrollVal > 0.8 ? "ALAYN" : b.label.toUpperCase();
-        ctx.font = "bold 9px monospace, Courier, sans-serif";
-        ctx.fillStyle = "#1B2A4A"; // Hardcoded Hex to support Canvas fillStyle rendering
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(labelText, b.tx - 38, b.ty);
-        ctx.restore();
-      });
-
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [smoothProgress, convergeProgress]);
+  // The alert card appears a beat after the panel, then stays — it's the
+  // proof of the "you always know what needs you" claim.
+  const [showAlert, setShowAlert] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShowAlert(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <FieldScene
       id="boot"
       domId="scene-boot"
       chaos={0}
-      sync={0}
-      presence={0.03}
+      sync={0.25}
+      presence={0.25}
       className="hero-section"
       ariaLabel="Alayn"
-      style={{ background: "#FFFFFF", padding: 0, overflow: "clip" }}
+      style={{
+        background: "#FFFFFF",
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        position: "relative",
+        overflow: "clip",
+        padding: "150px 24px 110px",
+      }}
     >
-      <div ref={containerRef} style={{ height: "200vh", position: "relative" }}>
-        
-        {/* Sticky Canvas and Typography */}
+      {/* Aurora wash — three blurred blobs, transform-only animation */}
+      <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
+        <div className="hero-aurora hero-aurora-a" />
+        <div className="hero-aurora hero-aurora-b" />
+        <div className="hero-aurora hero-aurora-c" />
+      </div>
+
+      <div style={{ position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
         <div
           style={{
-            position: "sticky",
-            top: 0,
-            height: "100vh",
-            overflow: "hidden",
-            width: "100%",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))",
+            gap: "72px",
+            alignItems: "center",
           }}
         >
-          {/* Intelligent Coordinate Grid Canvas */}
-          <canvas
-            ref={canvasRef}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              zIndex: 1,
-              pointerEvents: "auto",
-            }}
-          />
+          {/* Left — the pitch */}
+          <div>
+            <Assemble
+              as="span"
+              style={{
+                display: "inline-block",
+                fontSize: "0.6875rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--amber)",
+                marginBottom: "18px",
+              }}
+            >
+              For Restaurants, Cafés &amp; Cloud Kitchens
+            </Assemble>
 
-          <motion.div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              maxWidth: "880px",
-              margin: "0 auto",
-              padding: "0 24px",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              pointerEvents: "none",
-              opacity: textOpacity,
-              y: textY,
-            }}
-          >
-            <h1
+            <Assemble
+              as="h1"
+              delay={0.06}
               style={{
                 fontFamily: "var(--font-playfair), Georgia, serif",
-                fontSize: "clamp(2.5rem, 7.5vw, 5.5rem)",
+                fontSize: "clamp(2.6rem, 5.6vw, 4.5rem)",
                 lineHeight: 1.05,
                 fontWeight: 800,
                 color: "var(--espresso)",
@@ -265,52 +128,186 @@ export default function HeroScene() {
                 marginBottom: "24px",
               }}
             >
-              The AI Operating System
+              Everything your kitchen runs on.
               <br />
-              <span style={{ 
-                fontStyle: "italic", 
-                color: "var(--amber)", 
-                fontWeight: "400"
-              }}>
-                for Hospitality.
-              </span>
-            </h1>
+              <em style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: 400 }}>
+                Finally in one place.
+              </em>
+            </Assemble>
 
-            <p
+            <Assemble
+              as="p"
+              delay={0.12}
               style={{
-                fontSize: "clamp(1.05rem, 2.8vw, 1.35rem)",
-                lineHeight: 1.6,
+                fontSize: "clamp(1.05rem, 1.5vw, 1.1875rem)",
+                lineHeight: 1.65,
                 color: "var(--muted)",
-                maxWidth: "600px",
-                margin: "0 auto 44px",
-                fontWeight: 500,
+                maxWidth: "480px",
+                marginBottom: "38px",
               }}
             >
-              Quietly coordinating orders, kitchen, staff, payments and guests in one single fluid flow field — in real time.
-            </p>
+              Orders, stock, staff and prep — tracked as they happen, not
+              remembered at closing. The kind of system restaurants and cafés
+              abroad have run on for years, built for how hospitality
+              actually works here.
+            </Assemble>
 
-            <motion.div 
-              style={{ pointerEvents: "auto", opacity: ctaOpacity }}
+            <Assemble
+              as="div"
+              delay={0.18}
+              style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", marginBottom: "34px" }}
             >
-              <MotionLink
-                href="/signup"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="btn-primary"
-                style={{ 
-                  fontSize: "1.05rem", 
-                  padding: "16px 36px", 
-                  borderRadius: "30px", 
-                  background: buttonBg as any,
-                  color: buttonColor as any,
-                  border: buttonBorder as any,
-                  boxShadow: "0 20px 40px rgba(27,42,74,0.12)"
+              <MagneticLink href="/signup" id="cta-hero" className="btn-primary">
+                Get early access
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </MagneticLink>
+
+              <a
+                href="#how-it-works"
+                style={{
+                  fontSize: "0.9375rem",
+                  fontWeight: 500,
+                  color: "var(--espresso)",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  opacity: 0.7,
                 }}
               >
-                Experience Alayn
-              </MotionLink>
-            </motion.div>
-          </motion.div>
+                See how it works
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+            </Assemble>
+
+            <Assemble as="p" delay={0.24} style={{ fontSize: "0.8125rem", color: "var(--muted)", opacity: 0.75, margin: 0 }}>
+              We&apos;re building this now — tell us what breaks in your day and help shape it
+            </Assemble>
+          </div>
+
+          {/* Right — floating product surface (Stripe pattern).
+              MOCK UI — this whole block is the swap point for a real product
+              screenshot once the pilot build exists (~2 weeks out). Replace
+              the panel's contents with an <Image> of the actual app; keep
+              the floating alert card as an annotation over it if it still reads well. */}
+          <Assemble as="div" delay={0.16} style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{ position: "relative", width: "100%", maxWidth: "440px" }}>
+              {/* Main panel */}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.82)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid rgba(255,255,255,0.9)",
+                  borderRadius: "20px",
+                  padding: "22px",
+                  boxShadow: "0 24px 70px rgba(27,42,74,0.13), 0 2px 8px rgba(27,42,74,0.04)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+                  <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--espresso)" }}>
+                    Today
+                  </span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.6875rem", color: "var(--muted)" }}>
+                    <motion.span
+                      animate={{ opacity: [1, 0.25, 1] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1FA97C" }}
+                    />
+                    Live
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                  {SNAPSHOT.map((row, i) => {
+                    const isAttention = row.state === "attention";
+                    return (
+                      <div
+                        key={row.label}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "12px",
+                          padding: "12px 14px",
+                          borderRadius: "11px",
+                          background: isAttention ? "rgba(196,30,42,0.06)" : "rgba(244,245,248,0.75)",
+                          border: `1px solid ${isAttention ? "rgba(196,30,42,0.18)" : "transparent"}`,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                          <motion.span
+                            animate={syncing === i ? { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] } : { scale: 1, opacity: 0.45 }}
+                            transition={{ duration: 1.2, ease: "easeInOut" }}
+                            style={{
+                              width: "6px",
+                              height: "6px",
+                              borderRadius: "50%",
+                              background: isAttention ? "var(--amber)" : "var(--espresso)",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--espresso)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {row.label}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+                          {isAttention && (
+                            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--amber)" }}>
+                              {row.detail}
+                            </span>
+                          )}
+                          <span style={{ fontSize: "0.8125rem", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
+                            {row.value}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Floating alert card — the "before it becomes a problem" proof.
+                  Sized with min()/clamp() so it never overflows on phones,
+                  which is the primary surface this page is opened on. */}
+              <AnimatePresence>
+                {showAlert && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 14, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 150, damping: 20 }}
+                    style={{
+                      position: "absolute",
+                      bottom: "clamp(-22px, -4vw, -30px)",
+                      left: "clamp(-8px, -3vw, -26px)",
+                      width: "min(270px, 78vw)",
+                      background: "#FFFFFF",
+                      border: "1px solid var(--border-warm)",
+                      borderRadius: "14px",
+                      padding: "14px 16px",
+                      boxShadow: "0 18px 44px rgba(27,42,74,0.16)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
+                      <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--amber)" }} />
+                      <span style={{ fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--amber)" }}>
+                        Inventory
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.8125rem", lineHeight: 1.5, color: "var(--espresso)" }}>
+                      A key ingredient is running low. You&apos;ll know
+                      today — not when you run out mid-service.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </Assemble>
         </div>
       </div>
     </FieldScene>

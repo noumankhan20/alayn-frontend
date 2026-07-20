@@ -18,16 +18,16 @@ const BRIEFING_LINES = [
     color: "#C41E2A", // Brand Crimson
     action: "Approve restocking order (1-click)"
   },
-  { 
-    label: "Staff Coordination", 
-    text: "Evening kitchen shift is short-staffed. Arjun is flagged as available for roster adjustment.", 
-    color: "#6366f1", // Indigo
+  {
+    label: "Staff Coordination",
+    text: "Evening kitchen shift is short-staffed. Arjun is flagged as available for roster adjustment.",
+    color: "#1B2A4A", // Brand Navy — was off-palette indigo
     action: "Send automated availability invite"
   },
-  { 
-    label: "Waste Optimization", 
-    text: "Waste cost reached ₹2,140 yesterday, concentrated in morning prep. Standardizing prep portions recommended.", 
-    color: "#a855f7", // Purple
+  {
+    label: "Waste Optimization",
+    text: "Waste cost reached ₹2,140 yesterday, concentrated in morning prep. Standardizing prep portions recommended.",
+    color: "#1B2A4A", // Brand Navy — was off-palette purple
     action: "Adjust kitchen prep metrics"
   },
 ];
@@ -53,6 +53,15 @@ export default function RunningScene() {
 
   const displaySignals = useCountUp(signalsProcessed);
 
+  // Read via ref inside the draw loop instead of closing over `activeLine`
+  // state — keeps the canvas effect's own dependency array empty below, so
+  // the particle system mounts once instead of tearing down and respawning
+  // every 4.5s (which made the particles visibly jump on every line change).
+  const activeLineRef = useRef(0);
+  useEffect(() => {
+    activeLineRef.current = activeLine;
+  }, [activeLine]);
+
   // Background visualizer canvas inside card
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,10 +69,14 @@ export default function RunningScene() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = (canvas.width = canvas.clientWidth || 300);
-    let height = (canvas.height = 300);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let width = canvas.clientWidth || 300;
+    let height = 300;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    let animationFrameId: number;
+    let animationFrameId: number = 0;
 
     const particles = Array.from({ length: 15 }, () => ({
       x: Math.random() * width,
@@ -73,11 +86,17 @@ export default function RunningScene() {
       vy: (Math.random() - 0.5) * 0.8,
     }));
 
+    let isIntersecting = false;
+
     const draw = () => {
+      if (!isIntersecting) {
+        animationFrameId = 0;
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
 
       // Draw active line color coordinate connection
-      const activeColor = BRIEFING_LINES[activeLine].color;
+      const activeColor = BRIEFING_LINES[activeLineRef.current].color;
 
       ctx.beginPath();
       ctx.strokeStyle = "rgba(255,255,255,0.04)";
@@ -109,9 +128,29 @@ export default function RunningScene() {
       animationFrameId = requestAnimationFrame(draw);
     };
 
-    draw();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [activeLine]);
+    const observer = new IntersectionObserver(([entry]) => {
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        if (!animationFrameId) {
+          animationFrameId = requestAnimationFrame(draw);
+        }
+      } else {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = 0;
+        }
+      }
+    }, { threshold: 0 });
+
+    observer.observe(canvas);
+
+    return () => {
+      observer.disconnect();
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, []);
 
   return (
     <FieldScene

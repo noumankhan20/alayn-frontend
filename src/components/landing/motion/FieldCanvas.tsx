@@ -65,10 +65,11 @@ export default function FieldCanvas({
     let raf = 0;
     let startTs = 0;
 
+    let wasCleared = false;
+
     const draw = (time: number) => {
       const W = window.innerWidth;
       const H = window.innerHeight;
-      ctx.clearRect(0, 0, W, H);
 
       let wSum = 0;
       let chaos = 0;
@@ -83,13 +84,24 @@ export default function FieldCanvas({
       const blended: FieldTarget =
         wSum > 0.001
           ? { chaos: chaos / wSum, sync: sync / wSum, presence: presence / wSum }
-          : currentRef.current;
+          : { chaos: currentRef.current.chaos, sync: currentRef.current.sync, presence: 0 };
 
       const cur = currentRef.current;
       const ease = 0.045;
       cur.chaos += (blended.chaos - cur.chaos) * ease;
       cur.sync += (blended.sync - cur.sync) * ease;
       cur.presence += (blended.presence - cur.presence) * ease;
+
+      if (wSum === 0 && cur.presence < 0.005) {
+        if (!wasCleared) {
+          ctx.clearRect(0, 0, W, H);
+          wasCleared = true;
+        }
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      wasCleared = false;
+      ctx.clearRect(0, 0, W, H);
 
       const activeNodes = nodesOverrideRef.current ?? DEFAULT_NODES;
       if (routes.length === 0 || routes[0].a.id !== activeNodes[0]?.id) buildRoutes(activeNodes);
