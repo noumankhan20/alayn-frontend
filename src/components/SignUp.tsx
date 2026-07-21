@@ -9,15 +9,10 @@ import {
     Phone,
     Lock,
     Store,
-    MapPin,
-    Landmark,
-    Map,
-    Globe,
     Eye,
     EyeOff,
     ArrowRight,
     ArrowLeft,
-    Check,
 } from "lucide-react";
 import { useRegisterMutation } from "@/redux/slices/authApiSlice";
 import AuthShowcase from "@/components/auth/AuthShowcase";
@@ -57,10 +52,6 @@ const STEPS = [
 
 type StepId = (typeof STEPS)[number]["id"];
 
-// Defined outside the component so it keeps a stable identity across renders.
-// (Declaring this inside SignupComponent would recreate the component type on
-// every render, causing React to remount the input — and drop focus — on
-// every keystroke.)
 function Field({
     id,
     label,
@@ -76,17 +67,17 @@ function Field({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
+            <label htmlFor={id} className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-1">
                 {label}
             </label>
-            <div className="relative mt-2 group">
+            <div className="relative mt-1 group">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
                     {icon}
                 </div>
                 {children}
             </div>
             {error && (
-                <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-[#C41E2A]">
+                <p id={`${id}-error`} className="mt-1 text-xs font-medium text-[#C41E2A]">
                     {error}
                 </p>
             )}
@@ -215,29 +206,29 @@ export default function SignupComponent() {
     };
 
     const inputClasses =
-        "block w-full border-b border-[#1B2A4A]/20 py-3.5 pl-11 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 sm:text-sm [&>option]:text-[#1B2A4A]";
+        "block w-full border-b border-[#1B2A4A]/20 py-2 pl-9 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 text-xs sm:text-sm [&>option]:text-[#1B2A4A]";
 
     const errorInputClasses =
-        "block w-full border-b border-[#C41E2A]/50 py-3.5 pl-11 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 sm:text-sm [&>option]:text-[#1B2A4A]";
+        "block w-full border-b border-[#C41E2A]/50 py-2 pl-9 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 text-xs sm:text-sm [&>option]:text-[#1B2A4A]";
 
-    const iconClasses = "h-4.5 w-4.5 text-[#1B2A4A]/40 group-focus-within:text-[#1B2A4A] transition-colors";
+    const iconClasses = "h-4 w-4 text-[#1B2A4A]/40 group-focus-within:text-[#1B2A4A] transition-colors";
 
     return (
-        <div className="relative flex flex-col lg:flex-row min-h-screen bg-white font-sans overflow-hidden">
+        <div className="relative flex flex-col lg:flex-row h-screen max-h-screen bg-white font-sans overflow-hidden">
             {/* Back Button */}
             <Link 
                 href="/" 
-                className="absolute top-6 left-6 z-50 flex items-center gap-2 text-[#1B2A4A]/60 hover:text-[#1B2A4A] bg-[#F4F5F8] hover:bg-[#E8ECF1] px-4 py-2.5 rounded-xl border border-[#1B2A4A]/10 transition-all duration-300 group shadow-sm"
+                className="absolute top-4 left-4 z-50 flex items-center gap-1.5 text-[#1B2A4A]/60 hover:text-[#1B2A4A] bg-[#F4F5F8] hover:bg-[#E8ECF1] px-3 py-1.5 rounded-lg border border-[#1B2A4A]/10 transition-all duration-300 group shadow-2xs"
             >
-                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="text-sm font-bold">Back</span>
+                <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                <span className="text-xs font-bold">Back</span>
             </Link>
 
             {/* Left Pane: Form */}
-            <div className="flex-1 lg:flex-initial lg:w-[45%] xl:w-[40%] flex flex-col justify-start px-6 py-16 lg:py-24 z-10 relative bg-white border-r border-[#1B2A4A]/10 overflow-y-auto no-scrollbar max-h-screen">
-                <div className="w-full max-w-md mx-auto relative z-10 my-auto">
+            <div className="flex-1 lg:flex-initial lg:w-[45%] xl:w-[40%] flex flex-col justify-between px-6 sm:px-10 py-6 lg:py-8 z-10 relative bg-white border-r border-[#1B2A4A]/10 overflow-y-auto no-scrollbar h-full">
+                <div className="w-full max-w-sm mx-auto relative z-10 my-auto">
                     {/* Logo */}
-                    <div className="flex justify-center lg:justify-start mb-12">
+                    <div className="flex justify-center mb-6 pt-2">
                         <Link href="/">
                             <Image
                                 src="/gptlogo.png"
@@ -245,10 +236,10 @@ export default function SignupComponent() {
                                 width={1280}
                                 height={297}
                                 style={{ 
-                                  height: "56px", 
+                                  height: "46px", 
                                   width: "auto",
-                                  transform: "scale(1.8)",
-                                  transformOrigin: "left center"
+                                  transform: "scale(1.75)",
+                                  transformOrigin: "center center"
                                 }}
                                 className="w-auto object-contain"
                                 priority
@@ -256,27 +247,27 @@ export default function SignupComponent() {
                         </Link>
                     </div>
 
-                    <div className="text-center lg:text-left mb-10">
-                        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1B2A4A] font-serif">
+                    <div className="text-center lg:text-left mb-4">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1B2A4A] font-serif">
                             Create your restaurant
                         </h2>
-                        <p className="mt-2 text-sm text-[#6B7A90] font-medium leading-relaxed">
+                        <p className="mt-1 text-xs text-[#6B7A90] font-medium leading-normal">
                             {step === 1 && "Let's start with your admin account details."}
                             {step === 2 && "Now, set up your first outlet."}
                         </p>
                     </div>
 
                     {/* Step Indicator */}
-                    <div className="mb-10 flex gap-4 w-full" aria-label="Signup progress">
+                    <div className="mb-5 flex gap-3 w-full" aria-label="Signup progress">
                         {STEPS.map((s) => {
                             const isComplete = step > s.id;
                             const isActive = step === s.id;
                             return (
-                                <div key={s.id} className="flex-1 flex flex-col gap-2">
+                                <div key={s.id} className="flex-1 flex flex-col gap-1">
                                     <div className={`h-1 rounded-full transition-all duration-500 ${
                                         isComplete || isActive ? "bg-[#C41E2A]" : "bg-[#1B2A4A]/10"
                                     }`} />
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                    <span className={`text-[9px] font-bold uppercase tracking-wider ${
                                         isComplete || isActive ? "text-[#C41E2A]" : "text-[#1B2A4A]/30"
                                     }`}>
                                         Step {s.id}: {s.label}
@@ -286,22 +277,22 @@ export default function SignupComponent() {
                         })}
                     </div>
 
-                    <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+                    <form className="space-y-3.5" onSubmit={handleSubmit} noValidate>
                         {submitError && (
-                            <div role="alert" className="rounded-xl bg-[#C41E2A]/10 p-4 text-sm text-[#C41E2A] border border-[#C41E2A]/20 font-medium">
+                            <div role="alert" className="rounded-lg bg-[#C41E2A]/10 p-2.5 text-xs text-[#C41E2A] border border-[#C41E2A]/20 font-medium">
                                 {submitError}
                             </div>
                         )}
 
                         {submitSuccess && (
-                            <div role="status" className="rounded-xl bg-[#1B2A4A]/5 p-4 text-sm text-[#1B2A4A] border border-[#1B2A4A]/10 font-medium">
+                            <div role="status" className="rounded-lg bg-[#1B2A4A]/5 p-2.5 text-xs text-[#1B2A4A] border border-[#1B2A4A]/10 font-medium">
                                 Restaurant created successfully. Redirecting to sign in...
                             </div>
                         )}
 
                         {/* STEP 1 — Account */}
                         {step === 1 && (
-                            <div className="space-y-5">
+                            <div className="space-y-3">
                                 <Field id="fullName" label="Full Name" icon={<User className={iconClasses} />} error={fieldErrors.fullName}>
                                     <input
                                         id="fullName"
@@ -351,11 +342,11 @@ export default function SignupComponent() {
                                 </Field>
 
                                 <div>
-                                    <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
+                                    <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-1">
                                         Password
                                     </label>
                                     <div className="relative group">
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
                                             <Lock className={iconClasses} />
                                         </div>
                                         <input
@@ -369,30 +360,30 @@ export default function SignupComponent() {
                                             placeholder="••••••••"
                                             aria-invalid={!!fieldErrors.password}
                                             aria-describedby={fieldErrors.password ? "password-error" : undefined}
-                                            className={(fieldErrors.password ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
+                                            className={(fieldErrors.password ? errorInputClasses : inputClasses).replace("pr-3", "pr-8")}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             aria-label={showPassword ? "Hide password" : "Show password"}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-2 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
                                         >
-                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                         </button>
                                     </div>
                                     {fieldErrors.password && (
-                                        <p id="password-error" className="mt-1.5 text-xs font-medium text-[#C41E2A]">
+                                        <p id="password-error" className="mt-1 text-xs font-medium text-[#C41E2A]">
                                             {fieldErrors.password}
                                         </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="confirmPassword" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
+                                    <label htmlFor="confirmPassword" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-1">
                                         Confirm Password
                                     </label>
                                     <div className="relative group">
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
                                             <Lock className={iconClasses} />
                                         </div>
                                         <input
@@ -406,32 +397,32 @@ export default function SignupComponent() {
                                             placeholder="••••••••"
                                             aria-invalid={!!fieldErrors.confirmPassword}
                                             aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
-                                            className={(fieldErrors.confirmPassword ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
+                                            className={(fieldErrors.confirmPassword ? errorInputClasses : inputClasses).replace("pr-3", "pr-8")}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
+                                            className="absolute inset-y-0 right-0 flex items-center pr-2 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
                                         >
-                                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                                         </button>
                                     </div>
                                     {fieldErrors.confirmPassword && (
-                                        <p id="confirmPassword-error" className="mt-1.5 text-xs font-medium text-[#C41E2A]">
+                                        <p id="confirmPassword-error" className="mt-1 text-xs font-medium text-[#C41E2A]">
                                             {fieldErrors.confirmPassword}
                                         </p>
                                     )}
                                 </div>
 
-                                <div className="pt-2">
+                                <div className="pt-1">
                                     <button
                                         type="button"
                                         onClick={goNext}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] transition-all duration-300 hover:-translate-y-[1px] mt-2 cursor-pointer"
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold leading-5 text-white shadow-xs hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] transition-all duration-300 hover:-translate-y-[1px] mt-1 cursor-pointer"
                                     >
                                         Continue
-                                        <ArrowRight className="h-4 w-4" />
+                                        <ArrowRight className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
                             </div>
@@ -439,7 +430,7 @@ export default function SignupComponent() {
 
                         {/* STEP 2 — First Outlet */}
                         {step === 2 && (
-                            <div className="space-y-5">
+                            <div className="space-y-3">
                                 <Field id="businessName" label="Business / Restaurant Name" icon={<Store className={iconClasses} />} error={fieldErrors.businessName}>
                                     <input
                                         id="businessName"
@@ -463,7 +454,7 @@ export default function SignupComponent() {
                                         required
                                         value={formData.locationsCount}
                                         onChange={handleChange("locationsCount")}
-                                        className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                        className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-9", "pl-3") : inputClasses.replace("pl-9", "pl-3")}
                                     >
                                         <option value="">Select location range</option>
                                         <option value="1">1 Location</option>
@@ -480,7 +471,7 @@ export default function SignupComponent() {
                                         required
                                         value={formData.businessType}
                                         onChange={handleChange("businessType")}
-                                        className={fieldErrors.businessType ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                        className={fieldErrors.businessType ? errorInputClasses.replace("pl-9", "pl-3") : inputClasses.replace("pl-9", "pl-3")}
                                     >
                                         <option value="">Select business type</option>
                                         <option value="restaurant">Restaurant</option>
@@ -506,26 +497,26 @@ export default function SignupComponent() {
                                     />
                                 </Field>
 
-                                <div className="flex gap-3 pt-4">
+                                <div className="flex gap-2.5 pt-2">
                                     <button
                                         type="button"
                                         onClick={goBack}
-                                        className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 text-sm font-bold leading-6 text-[#1B2A4A] border border-[#1B2A4A]/20 hover:bg-[#F4F5F8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A4A]/20 transition-all duration-300 cursor-pointer"
+                                        className="flex items-center justify-center gap-1.5 rounded-xl bg-white px-3.5 py-2.5 text-xs font-bold leading-5 text-[#1B2A4A] border border-[#1B2A4A]/20 hover:bg-[#F4F5F8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A4A]/20 transition-all duration-300 cursor-pointer"
                                     >
-                                        <ArrowLeft className="h-4 w-4" />
+                                        <ArrowLeft className="h-3.5 w-3.5" />
                                         Back
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:-translate-y-[1px] cursor-pointer"
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold leading-5 text-white shadow-xs hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:-translate-y-[1px] cursor-pointer"
                                     >
                                         {isLoading ? (
-                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                         ) : (
                                             <>
                                                 Create Business
-                                                <ArrowRight className="h-4 w-4" />
+                                                <ArrowRight className="h-3.5 w-3.5" />
                                             </>
                                         )}
                                     </button>
@@ -533,13 +524,22 @@ export default function SignupComponent() {
                             </div>
                         )}
 
-                        <p className="text-center lg:text-left text-sm text-[#6B7A90] font-medium mt-8">
+                        <p className="text-center lg:text-left text-xs text-[#6B7A90] font-medium mt-4">
                             Already have an account?{" "}
                             <Link href="/login" className="font-semibold text-[#C41E2A] hover:text-[#b01e23] transition-colors">
                                 Sign In
                             </Link>
                         </p>
                     </form>
+                </div>
+
+                {/* Footer */}
+                <div className="w-full max-w-sm mx-auto mt-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-[#6B7A90] font-medium border-t border-[#1B2A4A]/10 pt-4">
+                    <span>© 2026 Alayn. All rights reserved.</span>
+                    <div className="flex gap-3">
+                        <Link href="#" className="hover:text-[#1B2A4A] transition-colors">Privacy</Link>
+                        <Link href="#" className="hover:text-[#1B2A4A] transition-colors">Terms</Link>
+                    </div>
                 </div>
             </div>
 

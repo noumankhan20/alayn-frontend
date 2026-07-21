@@ -1,18 +1,78 @@
-import React from "react";
-import { Search, Bell, Menu, MapPin } from "lucide-react";
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { Search, Bell, Menu, MapPin, Plus, User, Settings, LogOut, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useBranch } from "@/lib/BranchContext";
+import Link from "next/link";
+import { useAppSelector, useAppDispatch } from "@/redux/store/hooks";
+import { logout } from "@/redux/slices/authSlice";
+import { useGetOutletsQuery } from "@/redux/slices/outletApiSlice";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface HeaderProps {
   onMenuClick: () => void;
+  onOpenCreateOutlet?: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const { branches, activeBranch, setActiveBranch } = useBranch();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  // Read outlets directly from RTK Query Redux cache — no re-fetch, no localStorage
+  const { data: outlets = [], isLoading: outletsLoading } = useGetOutletsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  const [activeOutletId, setActiveOutletId] = useState<string>("");
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Sync active outlet: prefer saved id, fall back to first outlet
+  useEffect(() => {
+    if (outlets.length === 0) return;
+    const savedId = typeof window !== "undefined" ? localStorage.getItem("alayn_active_branch_id") : null;
+    const matched = savedId ? outlets.find((o) => o.id === savedId) : null;
+    const next = matched || outlets[0];
+    setActiveOutletId(next.id);
+    localStorage.setItem("alayn_active_branch_id", next.id);
+  }, [outlets]);
+
+  const handleOutletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "__CREATE__") {
+      window.location.href = "/outlets/create";
+      return;
+    }
+    setActiveOutletId(val);
+    localStorage.setItem("alayn_active_branch_id", val);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setProfileDropdownOpen(false);
+    window.location.href = "/login";
+  };
+
+  const initial = mounted && user?.name ? user.name.charAt(0).toUpperCase() : "O";
+  const isLoadingOutlets = !mounted || (isAuthenticated && outletsLoading && outlets.length === 0);
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu */}
       <button
         type="button"
         className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
@@ -22,11 +82,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <Menu className="h-6 w-6" aria-hidden="true" />
       </button>
 
-      {/* Separator */}
       <div className="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true" />
 
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-        {/* Left Side: Title & Selectors */}
+        {/* Left: Logo + Outlet Selector */}
         <div className="flex flex-1 items-center gap-x-6">
           <div className="w-56 h-16 flex items-center justify-start hidden sm:block">
             <Image
@@ -38,39 +97,41 @@ export default function Header({ onMenuClick }: HeaderProps) {
               priority
             />
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-6 text-sm">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-[#D3232A]" />
-              {branches.length > 0 ? (
+              {isLoadingOutlets ? (
+                <Skeleton width={140} height={28} borderRadius={8} />
+              ) : outlets.length > 0 ? (
                 <select
-                  value={activeBranch?.id || ""}
-                  onChange={(e) => {
-                    const match = branches.find((b) => b.id === e.target.value);
-                    if (match) setActiveBranch(match);
-                  }}
+                  value={activeOutletId}
+                  onChange={handleOutletChange}
                   className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm focus:border-[#D3232A] focus:outline-none focus:ring-1 focus:ring-[#D3232A] cursor-pointer"
                 >
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
+                  {outlets.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
                     </option>
                   ))}
+                  <option value="__CREATE__">+ Add New Outlet</option>
                 </select>
               ) : (
-                <span className="text-xs font-bold text-gray-400">No Location</span>
+                <Link
+                  href="/outlets/create"
+                  className="text-xs font-bold text-[#D3232A] hover:underline flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Create First Outlet
+                </Link>
               )}
-            </div>
-            <div className="flex space-x-4 text-gray-500 font-medium">
-              <button className="hover:text-gray-900 transition-colors">This Week</button>
-              <button className="hover:text-gray-900 transition-colors">vs Last Week</button>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Search, Notifications, Profile */}
+        {/* Right: Search, Bell, Profile */}
         <div className="flex items-center gap-x-4 lg:gap-x-6">
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search className="h-4 w-4 text-gray-400" aria-hidden="true" />
             </div>
@@ -81,29 +142,74 @@ export default function Header({ onMenuClick }: HeaderProps) {
             />
           </div>
 
-          <button
-            type="button"
-            className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500"
-          >
+          <button type="button" className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
             <span className="sr-only">View notifications</span>
             <Bell className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          {/* Profile dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              className="-m-1.5 flex items-center p-1.5"
-              id="user-menu-button"
-            >
-              <span className="sr-only">Open user menu</span>
-              <div className="h-8 w-8 rounded-full bg-gray-200 border border-gray-300 overflow-hidden">
-                {/* Fallback avatar */}
-                <svg className="h-full w-full text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+          {/* Profile Dropdown */}
+          <div className="relative" ref={profileRef}>
+            {!mounted ? (
+              <Skeleton circle width={32} height={32} />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                className="-m-1.5 flex items-center gap-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                id="user-menu-button"
+              >
+                <div
+                  className="h-8 w-8 rounded-full bg-[#D3232A] flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                  suppressHydrationWarning
+                >
+                  {initial}
+                </div>
+                <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+              </button>
+            )}
+
+            {profileDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-2 border-b border-gray-100 mb-1">
+                  <p className="text-xs font-bold text-gray-900 truncate" suppressHydrationWarning>
+                    {mounted ? (user?.name || "Owner") : "Owner"}
+                  </p>
+                  <p className="text-[11px] text-gray-400 font-medium truncate" suppressHydrationWarning>
+                    {mounted ? (user?.email || "") : ""}
+                  </p>
+                  <span className="inline-block mt-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D3232A]">
+                    {user?.role || "BUSINESS_OWNER"}
+                  </span>
+                </div>
+
+                <Link
+                  href="/profile"
+                  onClick={() => setProfileDropdownOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                  <User className="h-4 w-4 text-gray-400" />
+                  Profile
+                </Link>
+
+                <Link
+                  href="/settings"
+                  onClick={() => setProfileDropdownOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                  <Settings className="h-4 w-4 text-gray-400" />
+                  Settings
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors mt-1"
+                >
+                  <LogOut className="h-4 w-4 text-red-500" />
+                  Log Out
+                </button>
               </div>
-            </button>
+            )}
           </div>
         </div>
       </div>
