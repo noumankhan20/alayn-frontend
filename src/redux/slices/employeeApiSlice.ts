@@ -4,7 +4,7 @@ export const employeeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEmployees: builder.query({
       query: (params) => ({
-        url: "/api/v1/employees",
+        url: "/employees",
         method: "GET",
         params,
       }),
@@ -12,7 +12,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     createEmployee: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/employees",
+        url: "/employees",
         method: "POST",
         body,
       }),
@@ -20,7 +20,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     updateEmployee: builder.mutation({
       query: ({ id, ...body }) => ({
-        url: `/api/v1/employees/${id}`,
+        url: `/employees/${id}`,
         method: "PATCH",
         body,
       }),
@@ -28,7 +28,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     uploadDocument: builder.mutation({
       query: ({ id, formData }) => ({
-        url: `/api/v1/employees/${id}/documents`,
+        url: `/employees/${id}/documents`,
         method: "POST",
         body: formData,
       }),
@@ -36,14 +36,14 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     getLeaveRequests: builder.query({
       query: () => ({
-        url: "/api/v1/leave-requests",
+        url: "/leave-requests",
         method: "GET",
       }),
       providesTags: ["Leave"],
     }),
     createLeaveRequest: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/leave-requests",
+        url: "/leave-requests",
         method: "POST",
         body,
       }),
@@ -51,7 +51,7 @@ export const employeeApi = baseApi.injectEndpoints({
     }),
     updateLeaveStatus: builder.mutation({
       query: ({ id, status }) => ({
-        url: `/api/v1/leave-requests/${id}`,
+        url: `/leave-requests/${id}`,
         method: "PATCH",
         body: { status },
       }),

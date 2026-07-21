@@ -25,23 +25,37 @@ export const dashboardApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getKpis: builder.query<KpiResponse, { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/kpi",
+        url: "/dashboard/kpi",
         params: outletId ? { outletId } : undefined,
       }),
+      transformResponse: (response: { data?: KpiResponse } | KpiResponse) => {
+        if ("data" in response && response.data) return response.data;
+        return response as KpiResponse;
+      },
       providesTags: ["Dashboard"],
     }),
     getSalesForecast: builder.query<SalesForecastPoint[], { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/sales-forecast",
+        url: "/dashboard/sales-forecast",
         params: outletId ? { outletId } : undefined,
       }),
+      transformResponse: (response: { data?: SalesForecastPoint[] } | SalesForecastPoint[]) => {
+        if ("data" in response && Array.isArray(response.data)) return response.data;
+        if (Array.isArray(response)) return response;
+        return [];
+      },
       providesTags: ["Dashboard"],
     }),
     getInventoryForecast: builder.query<InventoryForecastPoint[], { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/inventory-forecast",
+        url: "/dashboard/inventory-forecast",
         params: outletId ? { outletId } : undefined,
       }),
+      transformResponse: (response: { data?: InventoryForecastPoint[] } | InventoryForecastPoint[]) => {
+        if ("data" in response && Array.isArray(response.data)) return response.data;
+        if (Array.isArray(response)) return response;
+        return [];
+      },
       providesTags: ["Dashboard"],
     }),
   }),

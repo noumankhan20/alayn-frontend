@@ -2,25 +2,20 @@ import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError 
 import { logout, setCredentials } from "../slices/authSlice";
 
 const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-const BASE_URL = RAW_URL.endsWith("/") ? RAW_URL.slice(0, -1) : RAW_URL;
+// Configurable API Version for easy scalability (e.g. v1, v2)
+export const API_VERSION = "v1";
+const BASE_DOMAIN = RAW_URL.replace(/\/$/, "").replace(/\/api\/v\d+$/, "");
+export const BASE_URL = `${BASE_DOMAIN}/api/${API_VERSION}`;
+
+/** Normalizes endpoint paths by stripping any redundant leading /api/vX or /api/v1 */
+const normalizePath = (url: string): string => {
+    const cleaned = url.replace(/^\/?(api\/v\d+\/)+/, "").replace(/^\/+/, "");
+    return `/${cleaned}`;
+};
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: BASE_URL || "http://localhost:5000/api/v1",
+    baseUrl: BASE_URL,
     credentials: "include",
-
-    prepareHeaders: (headers) => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("alayn_access_token");
-            if (token) {
-                headers.set("authorization", `Bearer ${token}`);
-            }
-            const outletId = localStorage.getItem("alayn_active_branch_id");
-            if (outletId) {
-                headers.set("x-outlet-id", outletId);
-            }
-        }
-        return headers;
-    },
     prepareHeaders: (headers) => {
         if (typeof window !== "undefined") {
             const token = localStorage.getItem("alayn_access_token") ||
@@ -42,12 +37,20 @@ const baseQueryWithReauth: BaseQueryFn<
     unknown,
     FetchBaseQueryError
 > = async (args, api, extraOptions) => {
-    let result = await baseQuery(args, api, extraOptions);
+    // Normalize string or FetchArgs URL to prevent double /api/v1
+    let normalizedArgs: string | FetchArgs = args;
+    if (typeof args === "string") {
+        normalizedArgs = normalizePath(args);
+    } else if (args && typeof args === "object" && args.url) {
+        normalizedArgs = { ...args, url: normalizePath(args.url) };
+    }
+
+    let result = await baseQuery(normalizedArgs, api, extraOptions);
 
     if (result.error && result.error.status === 401) {
-        const urlStr = typeof args === "string" ? args : args.url;
+        const urlStr = typeof normalizedArgs === "string" ? normalizedArgs : normalizedArgs.url;
         // Don't loop refresh if refresh or login itself returned 401
-        if (urlStr.includes("/auth/refresh") || urlStr.includes("/auth/login")) {
+        if (urlStr.includes("auth/refresh") || urlStr.includes("auth/login")) {
             return result;
         }
 
@@ -56,7 +59,7 @@ const baseQueryWithReauth: BaseQueryFn<
         // Try to get a new access token via refresh endpoint
         const refreshResult = await baseQuery(
             {
-                url: "/api/v1/auth/refresh",
+                url: "/auth/refresh",
                 method: "POST",
                 body: storedRefreshToken ? { refreshToken: storedRefreshToken } : undefined,
                 headers: storedRefreshToken ? { "x-refresh-token": storedRefreshToken } : undefined,
@@ -84,10 +87,10 @@ const baseQueryWithReauth: BaseQueryFn<
                 api.dispatch(setCredentials({ user, accessToken: newAccessToken, refreshToken: newRefreshToken }));
             }
 
-            // Retry the original query with updated headers
-            result = await baseQuery(args, api, extraOptions);
+            // Retry original query with normalized args
+            result = await baseQuery(normalizedArgs, api, extraOptions);
         } else {
-            // Refresh failed - log out the user
+            // Refresh failed - log out user
             api.dispatch(logout());
         }
     }
@@ -107,13 +110,6 @@ export const baseApi = createApi({
         "Inventory",
         "Attendance",
         "Dashboard",
-        "PurchaseOrder",
-        "Supplier",
-        "Waste",
-        "MenuItems",
-        "MenuCategories",
-        "Orders",
-        "KitchenTickets",
         "Shift",
         "Leave",
     ],

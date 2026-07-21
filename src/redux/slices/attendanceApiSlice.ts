@@ -4,7 +4,7 @@ export const attendanceApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     clockIn: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/attendance/check-in",
+        url: "/attendance/check-in",
         method: "POST",
         body,
       }),
@@ -12,7 +12,7 @@ export const attendanceApi = baseApi.injectEndpoints({
     }),
     clockOut: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/attendance/check-out",
+        url: "/attendance/check-out",
         method: "POST",
         body,
       }),
@@ -20,7 +20,7 @@ export const attendanceApi = baseApi.injectEndpoints({
     }),
     getAttendanceLogs: builder.query({
       query: () => ({
-        url: "/api/v1/attendance",
+        url: "/attendance",
         method: "GET",
       }),
       providesTags: ["Attendance"],

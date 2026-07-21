@@ -50,7 +50,7 @@ export const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query<Order[], { status?: string; outletId?: string } | void>({
       query: (params) => ({
-        url: "/api/v1/orders",
+        url: "/orders",
         method: "GET",
         params: params || undefined,
       }),
@@ -59,7 +59,7 @@ export const orderApi = baseApi.injectEndpoints({
 
     getKitchenTickets: builder.query<Order[], void>({
       query: () => ({
-        url: "/api/v1/kitchen/tickets",
+        url: "/kitchen/tickets",
         method: "GET",
       }),
       providesTags: ["KitchenTickets"],
@@ -67,7 +67,7 @@ export const orderApi = baseApi.injectEndpoints({
 
     createOrder: builder.mutation<Order, CreateOrderPayload>({
       query: (body) => ({
-        url: "/api/v1/orders",
+        url: "/orders",
         method: "POST",
         body,
       }),
@@ -76,7 +76,7 @@ export const orderApi = baseApi.injectEndpoints({
 
     updateOrderStatus: builder.mutation<Order, { id: string; status: Order["status"] }>({
       query: ({ id, status }) => ({
-        url: `/api/v1/orders/${id}/status`,
+        url: `/orders/${id}/status`,
         method: "PATCH",
         body: { status },
       }),
