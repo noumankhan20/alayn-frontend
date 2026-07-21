@@ -112,6 +112,10 @@ export const baseApi = createApi({
         "Dashboard",
         "Shift",
         "Leave",
+        "MenuItems",
+        "MenuCategories",
+        "Orders",
+        "KitchenTickets",
     ],
 
     endpoints: () => ({}),

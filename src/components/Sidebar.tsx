@@ -45,7 +45,8 @@ const ownerNavItems: NavItem[] = [
   { name: "Workforce", icon: Users, href: "/workforce" },
   { name: "Smart Inventory", icon: Package, href: "/inventory" },
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
-  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support & Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Management", icon: Trash2, href: "/waste" },
   { name: "Settings", icon: Settings, href: "/settings" },
@@ -55,7 +56,9 @@ const managerNavItems: NavItem[] = [
   { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
   { name: "Workforce Directory", icon: Users, href: "/workforce" },
   { name: "Inventory", icon: Package, href: "/inventory" },
-  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Logs", icon: Trash2, href: "/waste" },
 ];
@@ -63,14 +66,14 @@ const managerNavItems: NavItem[] = [
 const staffNavItems: NavItem[] = [
   { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
   { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
-  { name: "POS Terminal", icon: CreditCard, href: "/operations" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
   { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
 ];
 
 const kitchenNavItems: NavItem[] = [
   { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
   { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
-  { name: "Kitchen Dispatch", icon: ChefHat, href: "/operations" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
 ];
 

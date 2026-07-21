@@ -3,43 +3,88 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Package, Sliders, Truck, Trash2 } from "lucide-react";
+import { Package, Sliders, Truck, Trash2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { name: "Stock Items", href: "/inventory", icon: Package },
-  { name: "Adjust Stock", href: "/inventory/adjust", icon: Sliders },
-  { name: "Procurement & POs", href: "/inventory/procurement", icon: Truck },
-  { name: "Waste Management", href: "/inventory/waste", icon: Trash2 },
+  {
+    name: "Stock Items",
+    href: "/inventory",
+    icon: Package,
+    desc: "Live Inventory & SKUs",
+  },
+  {
+    name: "Adjust Stock",
+    href: "/inventory/adjust",
+    icon: Sliders,
+    desc: "Record Usage / Add / Waste",
+  },
+  {
+    name: "Procurement & POs",
+    href: "/inventory/procurement",
+    icon: Truck,
+    desc: "Suppliers & Purchase Orders",
+  },
+  {
+    name: "Waste Management",
+    href: "/inventory/waste",
+    icon: Trash2,
+    desc: "Spoilage Logs & Cost Analysis",
+  },
 ];
 
 export default function InventoryNavTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="flex border-b border-zinc-200/80 bg-white px-2 sm:px-4 pt-1 shadow-xs overflow-x-auto scrollbar-none">
-      <div className="flex space-x-1 sm:space-x-2 whitespace-nowrap">
-
+    <div className="w-full rounded-2xl border border-zinc-200 bg-white p-1.5 sm:p-2 shadow-xs">
+      <nav aria-label="Inventory Navigation" className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
           const Icon = tab.icon;
+
           return (
             <Link
               key={tab.href}
               href={tab.href}
               className={cn(
-                "inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors relative",
+                "flex-1 min-w-[180px] sm:min-w-0 flex items-center justify-between rounded-xl px-3.5 py-2.5 transition-all text-left group",
                 isActive
-                  ? "border-[#D3232A] text-[#D3232A]"
-                  : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"
+                  ? "bg-[#D3232A] text-white shadow-sm font-semibold"
+                  : "bg-zinc-50/80 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-zinc-100"
               )}
             >
-              <Icon className={cn("h-4 w-4", isActive ? "text-[#D3232A]" : "text-zinc-400")} />
-              {tab.name}
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "rounded-lg p-1.5 transition-colors",
+                    isActive ? "bg-white/20 text-white" : "bg-white text-zinc-500 shadow-2xs group-hover:text-zinc-800"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold leading-tight">{tab.name}</p>
+                  <p
+                    className={cn(
+                      "text-[10px] leading-tight mt-0.5",
+                      isActive ? "text-white/80" : "text-zinc-400 group-hover:text-zinc-500"
+                    )}
+                  >
+                    {tab.desc}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                className={cn(
+                  "h-3.5 w-3.5 opacity-60 transition-transform group-hover:translate-x-0.5",
+                  isActive ? "text-white" : "text-zinc-400"
+                )}
+              />
             </Link>
           );
         })}
-      </div>
+      </nav>
     </div>
   );
 }
