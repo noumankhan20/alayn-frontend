@@ -39,16 +39,20 @@ export default function InventoryItemTable({ items, onAdjust, canManage }: Props
           return (
             <tr
               key={item.id}
-              className={`border-b border-zinc-100 hover:bg-zinc-50/70 transition-colors ${
-                idx % 2 === 0 ? "" : "bg-zinc-50/30"
+              className={`border-b border-zinc-100 transition-colors ${
+                isLow
+                  ? "bg-red-50/80 hover:bg-red-100/70 border-l-4 border-l-red-500"
+                  : idx % 2 === 0
+                  ? "hover:bg-zinc-50/70"
+                  : "bg-zinc-50/30 hover:bg-zinc-50/70"
               }`}
             >
               <td className="px-5 py-3">
-                <p className="font-semibold text-zinc-900 leading-tight">{item.name}</p>
-                <p className="text-[11px] font-mono text-zinc-400 mt-0.5">{item.sku}</p>
+                <p className={`font-semibold leading-tight ${isLow ? "text-red-950" : "text-zinc-900"}`}>{item.name}</p>
+                <p className={`text-[11px] font-mono mt-0.5 ${isLow ? "text-red-600" : "text-zinc-400"}`}>{item.sku}</p>
               </td>
               <td className="px-5 py-3">
-                <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isLow ? "bg-red-100 text-red-700" : "bg-zinc-100 text-zinc-600"}`}>
                   {item.category}
                 </span>
               </td>
@@ -56,18 +60,18 @@ export default function InventoryItemTable({ items, onAdjust, canManage }: Props
                 ₹{(item.unitCostPaise / 100).toFixed(2)}
               </td>
               <td className="px-5 py-3 text-center">
-                <span className={`text-base font-bold tabular-nums ${isLow ? "text-amber-600" : "text-zinc-800"}`}>
+                <span className={`text-base font-bold tabular-nums ${isLow ? "text-red-600 animate-pulse" : "text-zinc-800"}`}>
                   {item.currentStock}
                 </span>
-                <span className="text-[11px] text-zinc-400 ml-1">{item.unit}</span>
+                <span className={`text-[11px] ml-1 ${isLow ? "text-red-600 font-semibold" : "text-zinc-400"}`}>{item.unit}</span>
               </td>
               <td className="px-5 py-3 text-center text-zinc-500 text-xs tabular-nums">
                 {item.reorderThreshold} {item.unit}
               </td>
               <td className="px-5 py-3 text-center">
                 {isLow ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                    <AlertTriangle className="h-3 w-3" /> Low
+                  <span className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 shadow-xs">
+                    <AlertTriangle className="h-3 w-3 text-red-600" /> Low Stock
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -80,7 +84,7 @@ export default function InventoryItemTable({ items, onAdjust, canManage }: Props
                   <button
                     id={`adjust-btn-${item.id}`}
                     onClick={() => onAdjust(item)}
-                    className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-[#D3232A] hover:text-white transition-colors"
+                    className="rounded-md bg-white border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-[#D3232A] hover:text-white hover:border-[#D3232A] transition-colors shadow-xs"
                   >
                     Adjust
                   </button>
@@ -89,6 +93,7 @@ export default function InventoryItemTable({ items, onAdjust, canManage }: Props
             </tr>
           );
         })}
+
       </tbody>
     </table>
   );

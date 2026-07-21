@@ -2,8 +2,22 @@ import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError 
 import { logout, setCredentials } from "../slices/authSlice";
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL,
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
     credentials: "include",
+
+    prepareHeaders: (headers) => {
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("alayn_access_token");
+            if (token) {
+                headers.set("authorization", `Bearer ${token}`);
+            }
+            const outletId = localStorage.getItem("alayn_active_branch_id");
+            if (outletId) {
+                headers.set("x-outlet-id", outletId);
+            }
+        }
+        return headers;
+    },
 });
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -17,7 +31,7 @@ const baseQueryWithReauth: BaseQueryFn<
         // Try to get a new access token via refresh endpoint
         const refreshResult = await baseQuery(
             {
-                url: "/api/v1/auth/refresh",
+                url: "/auth/refresh",
                 method: "POST",
             },
             api,
@@ -53,6 +67,9 @@ export const baseApi = createApi({
         "Inventory",
         "Attendance",
         "Dashboard",
+        "PurchaseOrder",
+        "Supplier",
+        "Waste",
     ],
 
     endpoints: () => ({}),

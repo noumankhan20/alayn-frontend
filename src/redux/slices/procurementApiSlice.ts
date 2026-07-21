@@ -1,0 +1,90 @@
+import { baseApi } from "../store/baseApi";
+import { InventoryItemApi } from "./inventoryApiSlice";
+
+export interface SupplierApi {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  outletId?: string;
+  createdAt?: string;
+}
+
+export interface PurchaseOrderItemApi {
+  id?: string;
+  purchaseOrderId?: string;
+  itemId: string;
+  orderedQuantity: number;
+  receivedQuantity?: number;
+  unitCostPaise: number;
+  item?: InventoryItemApi;
+}
+
+export interface PurchaseOrderApi {
+  id: string;
+  supplierId: string;
+  status: "DRAFT" | "SENT" | "PARTIALLY_RECEIVED" | "RECEIVED" | "CLOSED";
+  totalAmountPaise: number;
+  outletId?: string;
+  createdAt?: string;
+  actualSupplier?: SupplierApi;
+  items: PurchaseOrderItemApi[];
+}
+
+export const procurementApiSlice = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getSuppliers: builder.query<SupplierApi[], void>({
+      query: () => "/purchase-orders/suppliers",
+      providesTags: ["Supplier"],
+      transformResponse: (response: any) => response?.data ?? response ?? [],
+    }),
+    createSupplier: builder.mutation<SupplierApi, Omit<SupplierApi, "id" | "createdAt">>({
+      query: (data) => ({
+        url: "/purchase-orders/suppliers",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Supplier"],
+    }),
+    getPurchaseOrders: builder.query<PurchaseOrderApi[], void>({
+      query: () => "/purchase-orders",
+      providesTags: ["PurchaseOrder"],
+      transformResponse: (response: any) => response?.data ?? response ?? [],
+    }),
+    createPurchaseOrder: builder.mutation<
+      PurchaseOrderApi,
+      { supplierId: string; items: { itemId: string; orderedQuantity: number; unitCostPaise: number }[] }
+    >({
+      query: (data) => ({
+        url: "/purchase-orders",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["PurchaseOrder"],
+    }),
+    receivePOItem: builder.mutation<
+      PurchaseOrderApi,
+      {
+        id: string;
+        items: { itemId: string; receivedQuantity: number; batchNumber: string; expiryDate: string }[];
+      }
+    >({
+      query: ({ id, items }) => ({
+        url: `/purchase-orders/${id}/receive`,
+        method: "PATCH",
+        body: { items },
+      }),
+      invalidatesTags: ["PurchaseOrder", "Inventory"],
+    }),
+  }),
+});
+
+export const {
+  useGetSuppliersQuery,
+  useCreateSupplierMutation,
+  useGetPurchaseOrdersQuery,
+  useCreatePurchaseOrderMutation,
+  useReceivePOItemMutation,
+} = procurementApiSlice;
