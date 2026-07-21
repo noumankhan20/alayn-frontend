@@ -18,6 +18,7 @@ import {
   X,
   Filter,
 } from "lucide-react";
+import { useAppSelector } from "@/redux/store/hooks";
 
 const DEMO_LEAVE_REQUESTS = [
   {
@@ -43,6 +44,12 @@ const DEMO_LEAVE_REQUESTS = [
 ];
 
 export default function LeaveApprovalsPage() {
+  const user = useAppSelector((state) => state.auth.user);
+  const isManagerOrOwner =
+    user?.role === "BUSINESS_OWNER" ||
+    user?.role === "MANAGER" ||
+    user?.role === "SUPER_ADMIN";
+
   const { data: leaveApiData, isLoading: isLeavesLoading } = useGetLeaveRequestsQuery(undefined);
   const { data: empApiData } = useGetEmployeesQuery(undefined);
   const [createLeaveRequest, { isLoading: isSubmitting }] = useCreateLeaveRequestMutation();
@@ -106,17 +113,21 @@ export default function LeaveApprovalsPage() {
         {/* Header Title */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Leave Approvals & Requests</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isManagerOrOwner ? "Leave Approvals & Requests" : "My Leave Requests"}
+            </h1>
             <p className="text-sm text-gray-500">
-              Review, approve, or reject employee leave applications.
+              {isManagerOrOwner
+                ? "Review, approve, or reject employee leave applications."
+                : "Submit time-off requests and track the approval status of your applications."}
             </p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Request Leave
+            {isManagerOrOwner ? "Request Leave" : "Apply for Leave"}
           </button>
         </div>
 
@@ -263,25 +274,31 @@ export default function LeaveApprovalsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {l.status === "REQUESTED" ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleStatusUpdate(l.id, "APPROVED")}
-                              disabled={isUpdating}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleStatusUpdate(l.id, "REJECTED")}
-                              disabled={isUpdating}
-                              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
-                          </div>
+                        {isManagerOrOwner ? (
+                          l.status === "REQUESTED" ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleStatusUpdate(l.id, "APPROVED")}
+                                disabled={isUpdating}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleStatusUpdate(l.id, "REJECTED")}
+                                disabled={isUpdating}
+                                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )
                         ) : (
-                          <span className="text-xs text-gray-400 italic">No action needed</span>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {l.status === "REQUESTED" ? "Pending Approval" : "Processed"}
+                          </span>
                         )}
                       </td>
                     </tr>
