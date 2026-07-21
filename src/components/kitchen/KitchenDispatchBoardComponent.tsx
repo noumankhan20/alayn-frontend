@@ -7,6 +7,7 @@ import {
   Order,
 } from "@/redux/slices/orderApiSlice";
 import { ChefHat, Clock, CheckCircle2, Flame, ArrowRight, RefreshCw, Utensils } from "lucide-react";
+import DashboardLayout from "../layout/DashboardLayout";
 
 export default function KitchenDispatchBoardComponent() {
   const { data: tickets = [], isLoading, refetch, isFetching } = useGetKitchenTicketsQuery(undefined, {
@@ -35,7 +36,8 @@ export default function KitchenDispatchBoardComponent() {
   ];
 
   return (
-    <div className="p-6 max-w-[1800px] mx-auto space-y-6 bg-[#F4F5F8] min-h-screen text-[#1B2A4A]">
+    <DashboardLayout>
+      <div className="p-6 max-w-[1800px] mx-auto space-y-6 bg-[#F4F5F8] min-h-screen text-[#1B2A4A]">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div>
@@ -151,5 +153,6 @@ export default function KitchenDispatchBoardComponent() {
         })}
       </div>
     </div>
+    </DashboardLayout>
   );
 }

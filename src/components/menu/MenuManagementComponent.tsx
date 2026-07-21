@@ -10,6 +10,8 @@ import {
   MenuItem,
 } from "@/redux/slices/menuApiSlice";
 import { Plus, Search, Tag, UtensilsCrossed, CheckCircle2, XCircle, Upload, Image as ImageIcon } from "lucide-react";
+import DashboardLayout from "../layout/DashboardLayout";
+import { getImageUrl } from "@/lib/utils";
 
 export default function MenuManagementComponent() {
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
@@ -107,7 +109,8 @@ export default function MenuManagementComponent() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6 bg-[#F4F5F8] min-h-screen text-[#1B2A4A]">
+    <DashboardLayout>
+      <div className="p-6 max-w-[1600px] mx-auto space-y-6 bg-[#F4F5F8] min-h-screen text-[#1B2A4A]">
       {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div>
@@ -164,7 +167,7 @@ export default function MenuManagementComponent() {
                 }`}
               >
                 {cat.imageUrl && (
-                  <img src={cat.imageUrl} alt="" className="w-4 h-4 rounded-full object-cover" />
+                  <img src={getImageUrl(cat.imageUrl)} alt="" className="w-4 h-4 rounded-full object-cover" />
                 )}
                 {cat.name} ({count})
               </button>
@@ -209,7 +212,7 @@ export default function MenuManagementComponent() {
               {item.imageUrl ? (
                 <div className="h-36 w-full relative overflow-hidden bg-gray-100">
                   <img
-                    src={item.imageUrl}
+                    src={getImageUrl(item.imageUrl)}
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                   />
@@ -450,5 +453,6 @@ export default function MenuManagementComponent() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }
