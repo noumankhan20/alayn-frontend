@@ -33,10 +33,13 @@ export const wasteApiSlice = baseApi.injectEndpoints({
       },
       providesTags: ["Waste"],
       transformResponse: (response: any) => {
-        if (response?.data) return response.data;
+        if (response?.data && Array.isArray(response.data)) {
+          return { data: response.data, total: response?.meta?.total ?? response.data.length };
+        }
         if (Array.isArray(response)) return { data: response, total: response.length };
         return { data: [], total: 0 };
       },
+
     }),
     logWaste: builder.mutation<
       WasteLogApi,

@@ -112,7 +112,15 @@ export const baseApi = createApi({
         "Dashboard",
         "Shift",
         "Leave",
+        "PurchaseOrder",
+        "Supplier",
+        "Waste",
+        "MenuItems",
+        "MenuCategories",
+        "Orders",
+        "KitchenTickets",
     ],
+
 
     endpoints: () => ({}),
 });
