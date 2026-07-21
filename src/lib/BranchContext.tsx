@@ -14,7 +14,15 @@ interface BranchContextType {
 
 const BranchContext = createContext<BranchContextType | undefined>(undefined);
 
+export const ALL_OUTLETS_BRANCH: Branch = {
+  id: "all",
+  name: "All Outlets",
+  address: "All Locations Overview",
+  tenantId: "all",
+};
+
 const DEMO_BRANCHES: Branch[] = [
+  ALL_OUTLETS_BRANCH,
   { id: "demo-soho", name: "London Soho", address: "12 Wardour St, London", tenantId: "demo-tenant" },
   { id: "demo-deansgate", name: "Manchester Deansgate", address: "123 Deansgate, Manchester", tenantId: "demo-tenant" },
   { id: "demo-bullring", name: "Birmingham Bullring", address: "Bullring Shopping Centre, Birmingham", tenantId: "demo-tenant" },
@@ -23,7 +31,7 @@ const DEMO_BRANCHES: Branch[] = [
 
 export function BranchProvider({ children }: { children: React.ReactNode }) {
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranch, setActiveBranchState] = useState<Branch | null>(null);
+  const [activeBranch, setActiveBranchState] = useState<Branch | null>(ALL_OUTLETS_BRANCH);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
 
@@ -32,35 +40,32 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await fetchBranches();
       if (data && data.length > 0) {
-        setBranches(data);
+        const fullBranchList = [ALL_OUTLETS_BRANCH, ...data];
+        setBranches(fullBranchList);
         setIsDemo(false);
         
         // Restore active branch selection from localstorage if valid
         const savedId = localStorage.getItem("alayn_active_branch_id");
-        const matched = data.find((b) => b.id === savedId);
-        const nextBranch = matched || data[0];
+        const matched = fullBranchList.find((b) => b.id === savedId);
+        const nextBranch = matched || ALL_OUTLETS_BRANCH;
         setActiveBranchState(nextBranch);
         localStorage.setItem("alayn_active_branch_id", nextBranch.id);
       } else {
-        // If logged in but no branches are returned, we don't fall back to demo automatically,
-        // we keep branches empty so they can register their first outlet.
-        // Wait, how do we know if we are logged in? If getAccessToken() exists.
         const token = localStorage.getItem("alayn_access_token");
         if (token) {
-          setBranches([]);
-          setActiveBranchState(null);
+          setBranches([ALL_OUTLETS_BRANCH]);
+          setActiveBranchState(ALL_OUTLETS_BRANCH);
           setIsDemo(false);
         } else {
-          // If no token, we are in Demo mode (public landing pages / demo view)
           setBranches(DEMO_BRANCHES);
-          setActiveBranchState(DEMO_BRANCHES[0]);
+          setActiveBranchState(ALL_OUTLETS_BRANCH);
           setIsDemo(true);
         }
       }
     } catch (err) {
       console.error("Failed to load branches:", err);
       setBranches(DEMO_BRANCHES);
-      setActiveBranchState(DEMO_BRANCHES[0]);
+      setActiveBranchState(ALL_OUTLETS_BRANCH);
       setIsDemo(true);
     } finally {
       setLoading(false);

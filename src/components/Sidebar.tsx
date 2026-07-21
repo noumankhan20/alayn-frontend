@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { name: "Overview", icon: LayoutGrid, href: "/" },
+  { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
   { name: "Performance", icon: TrendingUp, href: "/performance" },
   { name: "Workforce", icon: Users, href: "/workforce" },
   { name: "Operations", icon: ClipboardList, href: "/operations" },
