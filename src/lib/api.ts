@@ -103,7 +103,7 @@ export interface Branch {
   id: string;
   name: string;
   address: string;
-  tenantId: string;
+  businessId: string;
 }
 
 export interface InventoryItem {
