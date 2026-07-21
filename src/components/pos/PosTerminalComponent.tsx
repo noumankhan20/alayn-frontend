@@ -17,6 +17,8 @@ import {
   Utensils,
   Image as ImageIcon,
 } from "lucide-react";
+import DashboardLayout from "../layout/DashboardLayout";
+import { getImageUrl } from "@/lib/utils";
 
 interface CartItem {
   menuItem: MenuItem;
@@ -117,7 +119,8 @@ export default function PosTerminalComponent() {
   };
 
   return (
-    <div className="h-auto min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] p-4 max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-hidden bg-[#F4F5F8] text-[#1B2A4A]">
+    <DashboardLayout>
+      <div className="h-auto min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] p-4 max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-4 overflow-y-auto lg:overflow-hidden bg-[#F4F5F8] text-[#1B2A4A]">
       {/* LEFT: Menu Selection Grid */}
       <div className="flex-1 flex flex-col min-h-0 bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         {/* Top Controls */}
@@ -175,7 +178,14 @@ export default function PosTerminalComponent() {
               }`}
             >
               {c.imageUrl && (
-                <img src={c.imageUrl} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />
+                <img
+                  src={getImageUrl(c.imageUrl)}
+                  alt=""
+                  className="w-3.5 h-3.5 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = "none";
+                  }}
+                />
               )}
               {c.name}
             </button>
@@ -203,7 +213,14 @@ export default function PosTerminalComponent() {
                 {/* Optional Image thumbnail in POS grid */}
                 {item.imageUrl && (
                   <div className="h-24 w-full bg-gray-100 relative overflow-hidden">
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                    <img
+                      src={getImageUrl(item.imageUrl)}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = "none";
+                      }}
+                    />
                   </div>
                 )}
                 
@@ -418,5 +435,6 @@ export default function PosTerminalComponent() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

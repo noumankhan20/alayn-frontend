@@ -21,6 +21,8 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/redux/store/hooks";
@@ -45,7 +47,8 @@ const ownerNavItems: NavItem[] = [
   { name: "Workforce", icon: Users, href: "/workforce" },
   { name: "Smart Inventory", icon: Package, href: "/inventory" },
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
-  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support & Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Management", icon: Trash2, href: "/waste" },
   { name: "Settings", icon: Settings, href: "/settings" },
@@ -55,7 +58,9 @@ const managerNavItems: NavItem[] = [
   { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
   { name: "Workforce Directory", icon: Users, href: "/workforce" },
   { name: "Inventory", icon: Package, href: "/inventory" },
-  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Logs", icon: Trash2, href: "/waste" },
 ];
@@ -63,14 +68,14 @@ const managerNavItems: NavItem[] = [
 const staffNavItems: NavItem[] = [
   { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
   { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
-  { name: "POS Terminal", icon: CreditCard, href: "/operations" },
+  { name: "POS Terminal", icon: CreditCard, href: "/pos" },
   { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
 ];
 
 const kitchenNavItems: NavItem[] = [
   { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
   { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
-  { name: "Kitchen Dispatch", icon: ChefHat, href: "/operations" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
 ];
 
@@ -144,42 +149,57 @@ function SidebarComponent({ isCollapsed = false, onToggleCollapse }: SidebarProp
       className="flex h-full flex-col bg-[#0B1221] border-r border-white/[0.05] relative select-none w-full"
       aria-label="Sidebar navigation"
     >
-      {/* ── Collapse toggle ────────────────────────── */}
-      {onToggleCollapse && (
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="absolute -right-[14px] top-[26px] z-50 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#1A2335] text-zinc-300 shadow-lg hover:bg-[#D3232A] hover:text-white hover:border-[#D3232A] transition-colors duration-150"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronLeft className="h-3.5 w-3.5" />
-          )}
-        </button>
-      )}
-
-      {/* ── Logo ──────────────────────────────────── */}
+      {/* ── Logo & Integrated Collapse Toggle ───────── */}
       <div
         className={cn(
           "flex h-16 shrink-0 items-center border-b border-white/[0.05]",
-          isCollapsed ? "justify-center px-0" : "px-5"
+          isCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}
       >
         {isCollapsed ? (
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D3232A] text-white font-serif font-extrabold text-xl shadow-sm">
-            A
+          <div className="group relative flex items-center justify-center w-11 h-11 rounded-xl hover:bg-white/[0.06] transition-colors">
+            <Image
+              src="/whitealogo.png"
+              alt="Alayn AI"
+              width={64}
+              height={64}
+              className="w-10 h-10 object-contain scale-[2.2] shadow-sm transition-opacity group-hover:opacity-20"
+              priority
+            />
+            {onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+                className="absolute inset-0 flex items-center justify-center text-zinc-300 opacity-0 group-hover:opacity-100 hover:text-white transition-all duration-150 cursor-pointer"
+              >
+                <PanelLeftOpen className="h-5 w-5" />
+              </button>
+            )}
           </div>
         ) : (
-          <Image
-            src="/whitelogo.png"
-            alt="Alayn AI"
-            width={160}
-            height={44}
-            className="w-[140px] h-auto object-contain"
-            priority
-          />
+          <>
+            <Image
+              src="/whitelogo.png"
+              alt="Alayn AI"
+              width={160}
+              height={44}
+              className="w-[130px] h-auto object-contain"
+              priority
+            />
+            {onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/[0.08] hover:text-white transition-colors duration-150 cursor-pointer"
+              >
+                <PanelLeftClose className="h-5 w-5" />
+              </button>
+            )}
+          </>
         )}
       </div>
 

@@ -6,6 +6,7 @@ export interface MenuItem {
   description?: string;
   price: number;
   imageUrl?: string;
+  isVeg?: boolean;
   isAvailable: boolean;
   categoryId: string;
   category?: {
@@ -26,12 +27,13 @@ export interface MenuCategory {
 
 export const menuApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMenuItems: builder.query<MenuItem[], { categoryId?: string; search?: string } | void>({
+    getMenuItems: builder.query<MenuItem[], { categoryId?: string; search?: string; isAvailable?: boolean | string; isVeg?: boolean | string } | void>({
       query: (params) => ({
         url: "/menu/items",
         method: "GET",
         params: params || undefined,
       }),
+      transformResponse: (response: any) => (response?.data ?? response ?? []) as MenuItem[],
       providesTags: ["MenuItems"],
     }),
 
@@ -40,6 +42,7 @@ export const menuApi = baseApi.injectEndpoints({
         url: "/menu/categories",
         method: "GET",
       }),
+      transformResponse: (response: any) => (response?.data ?? response ?? []) as MenuCategory[],
       providesTags: ["MenuCategories"],
     }),
 
@@ -49,6 +52,7 @@ export const menuApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       invalidatesTags: ["MenuCategories"],
     }),
 
@@ -58,6 +62,7 @@ export const menuApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       invalidatesTags: ["MenuItems"],
     }),
 
@@ -67,6 +72,7 @@ export const menuApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       invalidatesTags: ["MenuItems"],
     }),
 
@@ -76,10 +82,12 @@ export const menuApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: { isAvailable },
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       invalidatesTags: ["MenuItems"],
     }),
   }),
 });
+
 
 export const {
   useGetMenuItemsQuery,
