@@ -18,7 +18,7 @@ const getInitialUser = () => {
 const getInitialIsAuthenticated = () => {
     if (typeof window === "undefined") return false;
     try {
-        return !!localStorage.getItem("auth_user") || !!localStorage.getItem("alayn_access_token");
+        return !!localStorage.getItem("auth_user");
     } catch {
         return false;
     }
@@ -29,6 +29,12 @@ const initialState: AuthState = {
     isAuthenticated: getInitialIsAuthenticated(),
 };
 
+const isLoginFulfilled = (action: any): boolean =>
+    action?.type === "api/executeMutation/fulfilled" && action?.meta?.arg?.endpointName === "login";
+
+const isGetMeFulfilled = (action: any): boolean =>
+    action?.type === "api/executeQuery/fulfilled" && action?.meta?.arg?.endpointName === "getMe";
+
 const authSlice = createSlice({
     name: "auth",
 
@@ -38,20 +44,14 @@ const authSlice = createSlice({
         setCredentials: (state, action) => {
             const payload = action.payload;
             const user = payload?.user || payload;
-            const token = payload?.accessToken || payload?.token;
-            const refreshToken = payload?.refreshToken;
 
             state.user = user;
             state.isAuthenticated = true;
 
             try {
                 localStorage.setItem("auth_user", JSON.stringify(user));
-                if (token) {
-                    localStorage.setItem("alayn_access_token", token);
-                }
-                if (refreshToken) {
-                    localStorage.setItem("alayn_refresh_token", refreshToken);
-                }
+                localStorage.removeItem("alayn_access_token");
+                localStorage.removeItem("alayn_refresh_token");
             } catch {
                 // ignore
             }
@@ -66,10 +66,48 @@ const authSlice = createSlice({
                 localStorage.removeItem("alayn_refresh_token");
                 localStorage.removeItem("alayn_active_branch_id");
                 localStorage.removeItem("alayn_cached_branches");
+                if (typeof document !== "undefined") {
+                    document.cookie = "token=; Max-Age=0; path=/;";
+                    document.cookie = "refreshToken=; Max-Age=0; path=/;";
+                }
             } catch {
                 // ignore
             }
         },
+    },
+    extraReducers: (builder) => {
+        builder.addMatcher(
+            isLoginFulfilled,
+            (state, action: any) => {
+                const payload = action.payload?.data || action.payload;
+                const user = payload?.user || payload;
+
+                state.isAuthenticated = true;
+                state.user = user;
+                try {
+                    localStorage.setItem("auth_user", JSON.stringify(user));
+                    localStorage.removeItem("alayn_access_token");
+                    localStorage.removeItem("alayn_refresh_token");
+                } catch {
+                    // ignore
+                }
+            }
+        );
+        builder.addMatcher(
+            isGetMeFulfilled,
+            (state, action: any) => {
+                const user = action.payload?.data || action.payload;
+                state.isAuthenticated = true;
+                state.user = user;
+                try {
+                    localStorage.setItem("auth_user", JSON.stringify(user));
+                    localStorage.removeItem("alayn_access_token");
+                    localStorage.removeItem("alayn_refresh_token");
+                } catch {
+                    // ignore
+                }
+            }
+        );
     },
 });
 

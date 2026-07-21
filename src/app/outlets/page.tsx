@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import AuthGuard from "@/components/auth/AuthGuard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import { 
@@ -23,12 +24,7 @@ import { useBranch } from "@/lib/BranchContext";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-export default function OutletsLedgerPage(props?: {
-  params?: Promise<any>;
-  searchParams?: Promise<any>;
-}) {
-  if (props?.params) React.use(props.params);
-  if (props?.searchParams) React.use(props.searchParams);
+export default function OutletsLedgerPage() {
 
   const user = useAppSelector((state) => state.auth.user);
   const { data: outletsData, isLoading, refetch } = useGetOutletsQuery();
@@ -55,34 +51,37 @@ export default function OutletsLedgerPage(props?: {
   // Access Restricted Guard for Managers / Staff / Kitchen
   if (!isAuthorized) {
     return (
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto py-12 text-center">
-          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100 flex flex-col items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-[#D3232A] mb-6 shadow-xs">
-              <ShieldAlert className="h-8 w-8" />
+      <AuthGuard>
+        <DashboardLayout>
+          <div className="max-w-2xl mx-auto py-12 text-center">
+            <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100 flex flex-col items-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-[#D3232A] mb-6 shadow-xs">
+                <ShieldAlert className="h-8 w-8" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 font-serif mb-3">
+                Access Restricted
+              </h1>
+              <p className="text-sm text-zinc-500 max-w-md font-medium leading-relaxed mb-8">
+                The Outlet Ledger view is reserved exclusively for <strong>Business Owners</strong> and <strong>Super Admins</strong>.
+              </p>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#D3232A] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#b01e23] transition-all"
+              >
+                Return to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 font-serif mb-3">
-              Access Restricted
-            </h1>
-            <p className="text-sm text-zinc-500 max-w-md font-medium leading-relaxed mb-8">
-              The Outlet Ledger view is reserved exclusively for <strong>Business Owners</strong> and <strong>Super Admins</strong>.
-            </p>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#D3232A] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#b01e23] transition-all"
-            >
-              Return to Dashboard
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
-        </div>
-      </DashboardLayout>
+        </DashboardLayout>
+      </AuthGuard>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 pb-12">
+    <AuthGuard>
+      <DashboardLayout>
+        <div className="space-y-6 pb-12">
         {/* Top Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0B1221] p-6 lg:p-7 rounded-2xl text-white shadow-sm border border-slate-800">
           <div>
@@ -245,5 +244,6 @@ export default function OutletsLedgerPage(props?: {
         </div>
       </div>
     </DashboardLayout>
+  </AuthGuard>
   );
 }

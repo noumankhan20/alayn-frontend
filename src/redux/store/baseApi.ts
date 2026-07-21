@@ -2,7 +2,6 @@ import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError 
 import { logout, setCredentials } from "../slices/authSlice";
 
 const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-// Configurable API Version for easy scalability (e.g. v1, v2)
 export const API_VERSION = "v1";
 const BASE_DOMAIN = RAW_URL.replace(/\/$/, "").replace(/\/api\/v\d+$/, "");
 export const BASE_URL = `${BASE_DOMAIN}/api/${API_VERSION}`;
@@ -18,11 +17,6 @@ const baseQuery = fetchBaseQuery({
     credentials: "include",
     prepareHeaders: (headers) => {
         if (typeof window !== "undefined") {
-            const token = localStorage.getItem("alayn_access_token") ||
-                (localStorage.getItem("auth_user") ? JSON.parse(localStorage.getItem("auth_user")!)?.accessToken : null);
-            if (token) {
-                headers.set("authorization", `Bearer ${token}`);
-            }
             const outletId = localStorage.getItem("alayn_active_branch_id");
             if (outletId) {
                 headers.set("x-outlet-id", outletId);
@@ -31,6 +25,18 @@ const baseQuery = fetchBaseQuery({
         return headers;
     },
 });
+
+let isRefreshing = false;
+let refreshSubscribers: (() => void)[] = [];
+
+const subscribeTokenRefresh = (cb: () => void) => {
+    refreshSubscribers.push(cb);
+};
+
+const onRefreshed = () => {
+    refreshSubscribers.forEach((cb) => cb());
+    refreshSubscribers = [];
+};
 
 const baseQueryWithReauth: BaseQueryFn<
     string | FetchArgs,
@@ -54,43 +60,49 @@ const baseQueryWithReauth: BaseQueryFn<
             return result;
         }
 
-        const storedRefreshToken = typeof window !== "undefined" ? localStorage.getItem("alayn_refresh_token") : null;
+        if (isRefreshing) {
+            return new Promise((resolve) => {
+                subscribeTokenRefresh(async () => {
+                    resolve(await baseQuery(normalizedArgs, api, extraOptions));
+                });
+            });
+        }
 
-        // Try to get a new access token via refresh endpoint
-        const refreshResult = await baseQuery(
-            {
-                url: "/auth/refresh",
-                method: "POST",
-                body: storedRefreshToken ? { refreshToken: storedRefreshToken } : undefined,
-                headers: storedRefreshToken ? { "x-refresh-token": storedRefreshToken } : undefined,
-            },
-            api,
-            extraOptions
-        );
+        isRefreshing = true;
 
-        if (refreshResult.data) {
-            const refreshData = (refreshResult.data as any)?.data || refreshResult.data;
-            const newAccessToken = refreshData?.accessToken;
-            const newRefreshToken = refreshData?.refreshToken;
-            const user = refreshData?.user;
+        try {
+            // Try to get a new access token via HTTP-Only cookie refresh endpoint
+            const refreshResult = await baseQuery(
+                {
+                    url: "/auth/refresh",
+                    method: "POST",
+                },
+                api,
+                extraOptions
+            );
 
-            if (typeof window !== "undefined") {
-                if (newAccessToken) {
-                    localStorage.setItem("alayn_access_token", newAccessToken);
+            if (refreshResult.data) {
+                const refreshData = (refreshResult.data as any)?.data || refreshResult.data;
+                const user = refreshData?.user;
+
+                if (user) {
+                    api.dispatch(setCredentials({ user }));
                 }
-                if (newRefreshToken) {
-                    localStorage.setItem("alayn_refresh_token", newRefreshToken);
-                }
-            }
 
-            if (user) {
-                api.dispatch(setCredentials({ user, accessToken: newAccessToken, refreshToken: newRefreshToken }));
-            }
+                isRefreshing = false;
+                onRefreshed();
 
-            // Retry original query with normalized args
-            result = await baseQuery(normalizedArgs, api, extraOptions);
-        } else {
-            // Refresh failed - log out user
+                // Retry original query with normalized args
+                result = await baseQuery(normalizedArgs, api, extraOptions);
+            } else {
+                isRefreshing = false;
+                refreshSubscribers = [];
+                // Refresh failed - log out user
+                api.dispatch(logout());
+            }
+        } catch {
+            isRefreshing = false;
+            refreshSubscribers = [];
             api.dispatch(logout());
         }
     }
@@ -116,6 +128,9 @@ export const baseApi = createApi({
         "MenuCategories",
         "Orders",
         "KitchenTickets",
+        "Supplier",
+        "PurchaseOrder",
+        "Waste",
     ],
 
     endpoints: () => ({}),

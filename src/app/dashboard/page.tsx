@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import AuthGuard from "@/components/auth/AuthGuard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import KPIWidget from "@/components/dashboard/KPIWidget";
 import SalesForecastChart from "@/components/dashboard/SalesForecastChart";
 import InventoryForecastChart from "@/components/dashboard/InventoryForecastChart";
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import { useBranch } from "@/lib/BranchContext";
-import { getAccessToken } from "@/lib/api";
 import { useCreateOutletMutation } from "@/redux/slices/outletApiSlice";
 import {
   IndianRupee,
@@ -35,12 +35,7 @@ import {
   useGetInventoryForecastQuery,
 } from "@/redux/slices/dashboardApiSlice";
 
-export default function MasterDashboardPage(props?: {
-  params?: Promise<any>;
-  searchParams?: Promise<any>;
-}) {
-  if (props?.params) React.use(props.params);
-  if (props?.searchParams) React.use(props.searchParams);
+export default function MasterDashboardPage() {
 
   const { activeBranch, branches, loading, isDemo, refreshBranches } = useBranch();
   const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
@@ -106,8 +101,9 @@ export default function MasterDashboardPage(props?: {
   };
 
   return (
-    <DashboardLayout>
-      {isInitialLoading ? (
+    <AuthGuard>
+      <DashboardLayout>
+        {isInitialLoading ? (
         <DashboardSkeleton />
       ) : hasNoOutlets ? (
         <div className="max-w-3xl mx-auto py-4 sm:py-8">
@@ -411,6 +407,7 @@ export default function MasterDashboardPage(props?: {
           </div>
         </div>
       )}
-    </DashboardLayout>
+      </DashboardLayout>
+    </AuthGuard>
   );
 }

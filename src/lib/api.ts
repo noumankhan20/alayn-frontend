@@ -6,36 +6,6 @@ const API_VERSION = "v1";
 const BASE_DOMAIN = RAW_URL.replace(/\/$/, "").replace(/\/api\/v\d+$/, "");
 const BACKEND_URL = `${BASE_DOMAIN}/api/${API_VERSION}`;
 
-const TOKEN_KEY = "alayn_access_token";
-
-// ── Token management (SSR-safe) ───────────────────────────────────────────────
-
-function readToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const cached = localStorage.getItem(TOKEN_KEY);
-    if (cached) return cached;
-    const authUserStr = localStorage.getItem("auth_user");
-    if (authUserStr) {
-      const parsed = JSON.parse(authUserStr);
-      return parsed?.accessToken || parsed?.token || null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function writeToken(tok: string) {
-  if (typeof window === "undefined") return;
-  try { localStorage.setItem(TOKEN_KEY, tok); } catch { /* noop */ }
-}
-
-/** Returns the cached access token from state / localStorage. */
-export async function getAccessToken(): Promise<string | null> {
-  return readToken();
-}
-
 // ── Shared request helper ─────────────────────────────────────────────────────
 
 interface RequestOptions {
@@ -49,12 +19,7 @@ async function apiRequest<T>(
   opts: RequestOptions = {},
   isRetry = false
 ): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number }> {
-  const token = await getAccessToken();
-
   const headers: Record<string, string> = {};
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.outletId) headers["x-outlet-id"] = opts.outletId;
 
@@ -74,28 +39,17 @@ async function apiRequest<T>(
 
     if (!res.ok) {
       if (res.status === 401 && !isRetry && !path.includes("/auth/")) {
-        const storedRefreshToken = typeof window !== "undefined" ? localStorage.getItem("alayn_refresh_token") : null;
         try {
           const refreshRes = await fetch(`${BACKEND_URL}/auth/refresh`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...(storedRefreshToken ? { "x-refresh-token": storedRefreshToken } : {})
             },
             credentials: "include",
-            body: storedRefreshToken ? JSON.stringify({ refreshToken: storedRefreshToken }) : undefined,
           });
           if (refreshRes.ok) {
-            const refreshJson = await refreshRes.json();
-            const refreshData = refreshJson?.data || refreshJson;
-            if (refreshData?.accessToken) {
-              writeToken(refreshData.accessToken);
-              if (refreshData.refreshToken && typeof window !== "undefined") {
-                localStorage.setItem("alayn_refresh_token", refreshData.refreshToken);
-              }
-              // Retry original request
-              return apiRequest<T>(path, opts, true);
-            }
+            // Retry original request with refreshed HTTP-Only cookies
+            return apiRequest<T>(path, opts, true);
           }
         } catch {
           // ignore refresh error
@@ -247,17 +201,14 @@ export async function fetchDefaultInventoryOutletId(): Promise<string | null> {
 // ── Performance / Analytics ───────────────────────────────────────────────────
 
 export async function fetchPerformanceData() {
-  const token = await getAccessToken();
-  if (!token) return fallbackData;
+  const comparisonResult = await apiRequest<BackendOutletComparison[]>("/analytics/outlet-comparison");
+  if (!comparisonResult.ok) {
+    console.warn("fetchPerformanceData outlet comparison failed:", comparisonResult.error);
+    return fallbackData;
+  }
 
   try {
-    const comparisonRes = await fetch(`${BACKEND_URL}/analytics/outlet-comparison`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!comparisonRes.ok) throw new Error("Failed to fetch outlet comparisons");
-
-    const comparisonBody = await comparisonRes.json();
-    const comparisonList: BackendOutletComparison[] = comparisonBody.data || [];
+    const comparisonList: BackendOutletComparison[] = comparisonResult.data || [];
 
     const locations = comparisonList.map((item) => {
       const salesVal = item.totalSalesPaise / 100;
@@ -290,14 +241,13 @@ export async function fetchPerformanceData() {
 
     if (comparisonList.length > 0) {
       const activeOutletId = comparisonList[0].outletId;
-      const dailyRes = await fetch(
-        `${BACKEND_URL}/analytics/daily-summary?outletId=${activeOutletId}`,
-        { headers: { Authorization: `Bearer ${token}`, "x-outlet-id": activeOutletId } },
+      const dailyResult = await apiRequest<BackendDailySummary[]>(
+        `/analytics/daily-summary?outletId=${activeOutletId}`,
+        { outletId: activeOutletId }
       );
 
-      if (dailyRes.ok) {
-        const dailyBody = await dailyRes.json();
-        const dailyList: BackendDailySummary[] = dailyBody.data || [];
+      if (dailyResult.ok) {
+        const dailyList: BackendDailySummary[] = dailyResult.data || [];
         if (dailyList.length > 0) {
           netSalesTotal = dailyList.reduce((s, i) => s + i.grossSalesPaise, 0) / 100;
           orderTotalCount = dailyList.reduce((s, i) => s + i.orderCount, 0);

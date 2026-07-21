@@ -7,12 +7,7 @@ import { useBranch } from "@/lib/BranchContext";
 import { useCreateOutletMutation } from "@/redux/slices/outletApiSlice";
 import Link from "next/link";
 
-export default function CreateOutletPage(props?: {
-  params?: Promise<any>;
-  searchParams?: Promise<any>;
-}) {
-  if (props?.params) React.use(props.params);
-  if (props?.searchParams) React.use(props.searchParams);
+export default function CreateOutletPage() {
 
   const { refreshBranches, branches } = useBranch();
   const [createOutlet, { isLoading: loading }] = useCreateOutletMutation();
