@@ -18,7 +18,7 @@ export const ALL_OUTLETS_BRANCH: Branch = {
   id: "all",
   name: "All Outlets",
   address: "All Locations Overview",
-  tenantId: "all",
+  businessId: "all",
 };
 
 const DEMO_BRANCHES: Branch[] = [
