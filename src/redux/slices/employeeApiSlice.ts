@@ -34,6 +34,14 @@ export const employeeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Employee"],
     }),
+    bulkUploadEmployees: builder.mutation({
+      query: (formData: FormData) => ({
+        url: "/employees/bulk-upload",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Employee"],
+    }),
     getLeaveRequests: builder.query({
       query: () => ({
         url: "/leave-requests",
@@ -65,6 +73,7 @@ export const {
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useUploadDocumentMutation,
+  useBulkUploadEmployeesMutation,
   useGetLeaveRequestsQuery,
   useCreateLeaveRequestMutation,
   useUpdateLeaveStatusMutation,

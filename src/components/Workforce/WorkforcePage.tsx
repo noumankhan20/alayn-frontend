@@ -8,6 +8,7 @@ import {
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useUploadDocumentMutation,
+  useBulkUploadEmployeesMutation,
 } from "@/redux/slices/employeeApiSlice";
 import { useGetOutletsQuery } from "@/redux/slices/outletApiSlice";
 import {
@@ -26,6 +27,8 @@ import {
   Building2,
   Mail,
   Lock,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
 
 const DEMO_EMPLOYEES = [
@@ -77,6 +80,7 @@ export default function WorkforcePage() {
   const [createEmployee, { isLoading: isCreating }] = useCreateEmployeeMutation();
   const [updateEmployee, { isLoading: isUpdating }] = useUpdateEmployeeMutation();
   const [uploadDocument, { isLoading: isUploading }] = useUploadDocumentMutation();
+  const [bulkUpload, { isLoading: isBulkUploading }] = useBulkUploadEmployeesMutation();
 
   const employees = apiData?.data || (isLoading ? [] : DEMO_EMPLOYEES);
   const outlets: any[] = Array.isArray(outletsData)
@@ -89,8 +93,13 @@ export default function WorkforcePage() {
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [editEmployeeItem, setEditEmployeeItem] = useState<any>(null);
   const [docUploadItem, setDocUploadItem] = useState<any>(null);
+
+  // Bulk upload states
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkResult, setBulkResult] = useState<any>(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -106,6 +115,44 @@ export default function WorkforcePage() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+
+  const handleDownloadTemplate = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      "Name,Email,Password,Phone,Role,JoiningDate\n" +
+      "Rahul Verma,rahul.verma@alayn.com,Password123!,9876543210,MANAGER,2024-01-15\n" +
+      "Priya Patel,priya.patel@alayn.com,Password123!,9812345678,STAFF,2024-03-01\n" +
+      "Amit Kumar,amit.kumar@alayn.com,Password123!,9711122233,KITCHEN,2024-02-10\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "alayn_employee_bulk_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkFile) return;
+    setBulkResult(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", bulkFile);
+      const res = await bulkUpload(fd).unwrap();
+      const resData = res?.data || res;
+      setBulkResult(resData);
+      setFeedbackMsg(
+        `Bulk registration completed! ${resData.successCount} employee(s) registered successfully.`
+      );
+      if (!resData.errors || resData.errors.length === 0) {
+        setShowBulkModal(false);
+        setBulkFile(null);
+      }
+    } catch (err: any) {
+      setFeedbackMsg(err?.data?.message || "Failed to process bulk upload file");
+    }
+  };
 
   const handleOpenAddModal = () => {
     setFormData({
@@ -200,13 +247,26 @@ export default function WorkforcePage() {
               Manage staff profiles, roles, documents, and directory records.
             </p>
           </div>
-          <button
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            Add Employee
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setBulkFile(null);
+                setBulkResult(null);
+                setShowBulkModal(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            >
+              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+              Bulk Upload (Excel)
+            </button>
+            <button
+              onClick={handleOpenAddModal}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Add Employee
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -947,6 +1007,94 @@ export default function WorkforcePage() {
                     className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50"
                   >
                     {isUploading ? "Uploading..." : "Upload Document"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Bulk Upload Modal */}
+        {showBulkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+            <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200 my-8">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Bulk Upload Employees</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Import employees via Excel or CSV spreadsheet</p>
+                </div>
+                <button
+                  onClick={() => setShowBulkModal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleBulkSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-900">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-purple-600 shrink-0" />
+                    <span>Download sample template format file.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="inline-flex items-center gap-1 bg-white border border-purple-300 px-2.5 py-1 rounded font-medium text-purple-700 hover:bg-purple-100 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <Download className="h-3 w-3" />
+                    Template (.csv)
+                  </button>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-300 hover:border-[#D3232A] rounded-xl p-6 text-center bg-gray-50/50 transition-colors cursor-pointer relative">
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setBulkFile(e.target.files[0]);
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm font-medium text-gray-700">
+                    {bulkFile ? bulkFile.name : "Click to upload or drag & drop Excel / CSV file"}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Supports .xlsx, .xls, .csv up to 10MB</p>
+                </div>
+
+                {bulkResult && (
+                  <div className="space-y-2 rounded-lg border border-gray-200 p-3 bg-gray-50 text-xs">
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-emerald-700">Success: {bulkResult.successCount}</span>
+                      <span className="text-rose-700">Skipped: {bulkResult.skippedCount}</span>
+                    </div>
+                    {bulkResult.errors && bulkResult.errors.length > 0 && (
+                      <div className="max-h-28 overflow-y-auto space-y-1 pt-1 border-t border-gray-200">
+                        {bulkResult.errors.map((err: any, idx: number) => (
+                          <div key={idx} className="text-rose-600 text-[11px]">
+                            Row {err.row}: {err.message} {err.email ? `(${err.email})` : ""}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!bulkFile || isBulkUploading}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isBulkUploading ? "Processing Excel File..." : "Upload & Register"}
                   </button>
                 </div>
               </form>
