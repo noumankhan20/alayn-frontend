@@ -191,7 +191,7 @@ export default function SignupComponent() {
                     password: formData.password,
                     phoneNo: formData.phone,
                 },
-                tenant: {
+                business: {
                     name: formData.businessName,
                     locationsCount: formData.locationsCount,
                     businessType: formData.businessType,

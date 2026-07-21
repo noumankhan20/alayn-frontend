@@ -22,11 +22,10 @@ export const ALL_OUTLETS_BRANCH: Branch = {
 };
 
 const DEMO_BRANCHES: Branch[] = [
-  ALL_OUTLETS_BRANCH,
-  { id: "demo-soho", name: "London Soho", address: "12 Wardour St, London", tenantId: "demo-tenant" },
-  { id: "demo-deansgate", name: "Manchester Deansgate", address: "123 Deansgate, Manchester", tenantId: "demo-tenant" },
-  { id: "demo-bullring", name: "Birmingham Bullring", address: "Bullring Shopping Centre, Birmingham", tenantId: "demo-tenant" },
-  { id: "demo-victoria", name: "Leeds Victoria", address: "Victoria Gate, Leeds", tenantId: "demo-tenant" }
+  { id: "demo-soho", name: "London Soho", address: "12 Wardour St, London", businessId: "demo-business" },
+  { id: "demo-deansgate", name: "Manchester Deansgate", address: "123 Deansgate, Manchester", businessId: "demo-business" },
+  { id: "demo-bullring", name: "Birmingham Bullring", address: "Bullring Shopping Centre, Birmingham", businessId: "demo-business" },
+  { id: "demo-victoria", name: "Leeds Victoria", address: "Victoria Gate, Leeds", businessId: "demo-business" }
 ];
 
 export function BranchProvider({ children }: { children: React.ReactNode }) {
