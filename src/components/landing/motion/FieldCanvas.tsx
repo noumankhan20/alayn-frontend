@@ -55,10 +55,15 @@ export default function FieldCanvas({
     };
     buildRoutes(DEFAULT_NODES);
 
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
@@ -68,9 +73,6 @@ export default function FieldCanvas({
     let wasCleared = false;
 
     const draw = (time: number) => {
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-
       let wSum = 0;
       let chaos = 0;
       let sync = 0;
@@ -187,6 +189,8 @@ export default function FieldCanvas({
         height: "100vh",
         pointerEvents: "none",
         zIndex: 0,
+        willChange: "transform",
+        transform: "translateZ(0)",
       }}
     />
   );

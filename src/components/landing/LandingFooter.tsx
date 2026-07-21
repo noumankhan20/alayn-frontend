@@ -39,7 +39,12 @@ export default function LandingFooter() {
               alt="Alayn — AI Operating System for Hospitality"
               width={1280}
               height={297}
-              style={{ height: "46px", width: "auto" }}
+              style={{ 
+                height: "64px", 
+                width: "auto",
+                transform: "scale(1.5)",
+                transformOrigin: "left center"
+              }}
               className="w-auto object-contain"
             />
           </div>

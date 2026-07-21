@@ -43,15 +43,17 @@ export default function LandingNav() {
           aria-label="Alayn home"
         >
           <Image
-            src="/newlogo.png"
+            src="/gptlogo.png"
             alt="Alayn — AI Operating System for Hospitality"
             width={1280}
             height={297}
-            // gptlogo.png (previously here) is a blurred draft-preview
-            // export, not a clean asset — that's why it always looked soft/
-            // small no matter the size. alaynlogo.png is the real,
-            // tightly-cropped, transparent-background lockup.
-            style={{ height: "42px", width: "auto" }}
+           
+            style={{ 
+              height: "56px", 
+              width: "auto",
+              transform: "scale(1.8)",
+              transformOrigin: "left center"
+            }}
             className="w-auto object-contain"
             priority
           />

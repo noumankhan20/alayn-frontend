@@ -21,13 +21,13 @@ const BRIEFING_LINES = [
   {
     label: "Staff Coordination",
     text: "Evening kitchen shift is short-staffed. Arjun is flagged as available for roster adjustment.",
-    color: "#1B2A4A", // Brand Navy — was off-palette indigo
+    color: "#ffff", // Brand Navy — was off-palette indigo
     action: "Send automated availability invite"
   },
   {
     label: "Waste Optimization",
     text: "Waste cost reached ₹2,140 yesterday, concentrated in morning prep. Standardizing prep portions recommended.",
-    color: "#1B2A4A", // Brand Navy — was off-palette purple
+    color: "#ffff", // Brand Navy — was off-palette purple
     action: "Adjust kitchen prep metrics"
   },
 ];
