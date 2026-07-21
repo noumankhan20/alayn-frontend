@@ -35,7 +35,7 @@ export default function LoginComponent() {
         setCredentials(userPayload)
       );
 
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(
         err?.data?.error?.message ||

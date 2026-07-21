@@ -4,6 +4,15 @@ import { logout, setCredentials } from "../slices/authSlice";
 const baseQuery = fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL,
     credentials: "include",
+    prepareHeaders: (headers) => {
+        if (typeof window !== "undefined") {
+            const outletId = localStorage.getItem("alayn_active_branch_id");
+            if (outletId) {
+                headers.set("x-outlet-id", outletId);
+            }
+        }
+        return headers;
+    },
 });
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -53,6 +62,8 @@ export const baseApi = createApi({
         "Inventory",
         "Attendance",
         "Dashboard",
+        "Shift",
+        "Leave",
     ],
 
     endpoints: () => ({}),

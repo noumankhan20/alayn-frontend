@@ -1,0 +1,675 @@
+"use client";
+
+import React, { useState } from "react";
+import DashboardLayout from "../layout/DashboardLayout";
+import WorkforceHeaderNav from "./WorkforceHeaderNav";
+import {
+  useGetEmployeesQuery,
+  useCreateEmployeeMutation,
+  useUpdateEmployeeMutation,
+  useUploadDocumentMutation,
+} from "@/redux/slices/employeeApiSlice";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  FileText,
+  Plus,
+  Search,
+  Filter,
+  Upload,
+  Edit2,
+  X,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+
+const DEMO_EMPLOYEES = [
+  {
+    id: "demo-1",
+    name: "Rohan Sharma",
+    phone: "+91 98765 43210",
+    role: "MANAGER",
+    joiningDate: "2024-01-15",
+    status: "ACTIVE",
+    documents: [{ id: "d1", name: "Aadhar_Card.pdf" }],
+  },
+  {
+    id: "demo-2",
+    name: "Priya Patel",
+    phone: "+91 98123 45678",
+    role: "STAFF",
+    joiningDate: "2024-03-01",
+    status: "ACTIVE",
+    documents: [],
+  },
+  {
+    id: "demo-3",
+    name: "Amit Kumar",
+    phone: "+91 97111 22233",
+    role: "KITCHEN",
+    joiningDate: "2024-02-10",
+    status: "ACTIVE",
+    documents: [{ id: "d2", name: "Contract_Signed.pdf" }],
+  },
+  {
+    id: "demo-4",
+    name: "Sneha Reddy",
+    phone: "+91 99887 76655",
+    role: "STAFF",
+    joiningDate: "2023-11-20",
+    status: "INACTIVE",
+    documents: [],
+  },
+];
+
+export default function WorkforcePage() {
+  const { data: apiData, isLoading } = useGetEmployeesQuery(undefined);
+  const [createEmployee, { isLoading: isCreating }] = useCreateEmployeeMutation();
+  const [updateEmployee, { isLoading: isUpdating }] = useUpdateEmployeeMutation();
+  const [uploadDocument, { isLoading: isUploading }] = useUploadDocumentMutation();
+
+  const employees = apiData?.data || (isLoading ? [] : DEMO_EMPLOYEES);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editEmployeeItem, setEditEmployeeItem] = useState<any>(null);
+  const [docUploadItem, setDocUploadItem] = useState<any>(null);
+
+  // Form states
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    role: "STAFF",
+    joiningDate: new Date().toISOString().split("T")[0],
+    status: "ACTIVE",
+  });
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+
+  const filteredEmployees = employees.filter((emp: any) => {
+    const matchesSearch =
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.phone.includes(searchTerm);
+    const matchesRole = roleFilter === "ALL" || emp.role === roleFilter;
+    const matchesStatus = statusFilter === "ALL" || emp.status === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const activeCount = employees.filter((e: any) => e.status === "ACTIVE").length;
+  const inactiveCount = employees.filter((e: any) => e.status === "INACTIVE").length;
+  const docsCount = employees.reduce(
+    (acc: number, e: any) => acc + (e.documents?.length || 0),
+    0
+  );
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await createEmployee(formData).unwrap();
+      setFeedbackMsg("Employee created successfully!");
+      setShowAddModal(false);
+      setFormData({
+        name: "",
+        phone: "",
+        role: "STAFF",
+        joiningDate: new Date().toISOString().split("T")[0],
+        status: "ACTIVE",
+      });
+    } catch (err: any) {
+      setFeedbackMsg(err?.data?.message || "Failed to create employee");
+    }
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editEmployeeItem) return;
+    try {
+      await updateEmployee({
+        id: editEmployeeItem.id,
+        ...formData,
+      }).unwrap();
+      setFeedbackMsg("Employee updated successfully!");
+      setEditEmployeeItem(null);
+    } catch (err: any) {
+      setFeedbackMsg(err?.data?.message || "Failed to update employee");
+    }
+  };
+
+  const handleDocSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!docUploadItem || !selectedFile) return;
+    try {
+      const fd = new FormData();
+      fd.append("document", selectedFile);
+      await uploadDocument({ id: docUploadItem.id, formData: fd }).unwrap();
+      setFeedbackMsg("Document uploaded successfully!");
+      setDocUploadItem(null);
+      setSelectedFile(null);
+    } catch (err: any) {
+      setFeedbackMsg(err?.data?.message || "Failed to upload document");
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header Title */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Workforce Management</h1>
+            <p className="text-sm text-gray-500">
+              Manage staff profiles, roles, documents, and directory records.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setFormData({
+                name: "",
+                phone: "",
+                role: "STAFF",
+                joiningDate: new Date().toISOString().split("T")[0],
+                status: "ACTIVE",
+              });
+              setShowAddModal(true);
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Employee
+          </button>
+        </div>
+
+        {/* Navigation Tabs */}
+        <WorkforceHeaderNav />
+
+        {/* Feedback Message Banner */}
+        {feedbackMsg && (
+          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+            <span>{feedbackMsg}</span>
+            <button onClick={() => setFeedbackMsg(null)}>
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Staff
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-gray-900">{employees.length}</p>
+              </div>
+              <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
+                <Users className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Active Employees
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-emerald-600">{activeCount}</p>
+              </div>
+              <div className="rounded-lg bg-emerald-50 p-3 text-emerald-600">
+                <UserCheck className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Inactive Staff
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-rose-600">{inactiveCount}</p>
+              </div>
+              <div className="rounded-lg bg-rose-50 p-3 text-rose-600">
+                <UserX className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Uploaded Docs
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-indigo-600">{docsCount}</p>
+              </div>
+              <div className="rounded-lg bg-indigo-50 p-3 text-indigo-600">
+                <FileText className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter & Search Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search employee by name or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A] focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+              >
+                <option value="ALL">All Roles</option>
+                <option value="BUSINESS_OWNER">Business Owner</option>
+                <option value="MANAGER">Manager</option>
+                <option value="STAFF">Staff</option>
+                <option value="KITCHEN">Kitchen</option>
+              </select>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Employees Table */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-700 uppercase text-xs tracking-wider border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 font-semibold">Employee Name</th>
+                  <th className="px-6 py-3 font-semibold">Phone</th>
+                  <th className="px-6 py-3 font-semibold">Role</th>
+                  <th className="px-6 py-3 font-semibold">Joining Date</th>
+                  <th className="px-6 py-3 font-semibold">Status</th>
+                  <th className="px-6 py-3 font-semibold">Documents</th>
+                  <th className="px-6 py-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      Loading workforce directory...
+                    </td>
+                  </tr>
+                ) : filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      No employees found matching your criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEmployees.map((emp: any) => (
+                    <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900">{emp.name}</td>
+                      <td className="px-6 py-4 text-gray-600">{emp.phone}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            emp.role === "MANAGER"
+                              ? "bg-purple-100 text-purple-800"
+                              : emp.role === "KITCHEN"
+                              ? "bg-amber-100 text-amber-800"
+                              : emp.role === "BUSINESS_OWNER"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {emp.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {new Date(emp.joiningDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            emp.status === "ACTIVE"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-rose-100 text-rose-800"
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              emp.status === "ACTIVE" ? "bg-emerald-600" : "bg-rose-600"
+                            }`}
+                          />
+                          {emp.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>{emp.documents?.length || 0} File(s)</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setDocUploadItem(emp);
+                              setSelectedFile(null);
+                            }}
+                            title="Upload Document"
+                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditEmployeeItem(emp);
+                              setFormData({
+                                name: emp.name,
+                                phone: emp.phone,
+                                role: emp.role,
+                                joiningDate: new Date(emp.joiningDate)
+                                  .toISOString()
+                                  .split("T")[0],
+                                status: emp.status,
+                              });
+                            }}
+                            title="Edit Employee"
+                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Add Employee Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-bold text-gray-900">Add New Employee</h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g. Rahul Verma"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="e.g. 9876543210"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Role
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    >
+                      <option value="STAFF">Staff</option>
+                      <option value="MANAGER">Manager</option>
+                      <option value="KITCHEN">Kitchen</option>
+                      <option value="BUSINESS_OWNER">Business Owner</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    >
+                      <option value="ACTIVE">Active</option>
+                      <option value="INACTIVE">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Joining Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.joiningDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, joiningDate: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {isCreating ? "Saving..." : "Save Employee"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Employee Modal */}
+        {editEmployeeItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-bold text-gray-900">Edit Employee</h3>
+                <button
+                  onClick={() => setEditEmployeeItem(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleUpdateSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Role
+                    </label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    >
+                      <option value="STAFF">Staff</option>
+                      <option value="MANAGER">Manager</option>
+                      <option value="KITCHEN">Kitchen</option>
+                      <option value="BUSINESS_OWNER">Business Owner</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    >
+                      <option value="ACTIVE">Active</option>
+                      <option value="INACTIVE">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Joining Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.joiningDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, joiningDate: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setEditEmployeeItem(null)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {isUpdating ? "Updating..." : "Update Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Document Modal */}
+        {docUploadItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-bold text-gray-900">
+                  Upload Document for {docUploadItem.name}
+                </h3>
+                <button
+                  onClick={() => setDocUploadItem(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleDocSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select File (PDF, PNG, JPEG, DOC - Max 5MB)
+                  </label>
+                  <input
+                    type="file"
+                    required
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#D3232A]/10 file:text-[#D3232A] hover:file:bg-[#D3232A]/20"
+                  />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setDocUploadItem(null)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploading || !selectedFile}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {isUploading ? "Uploading..." : "Upload Document"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
