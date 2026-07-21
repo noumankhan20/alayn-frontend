@@ -158,11 +158,12 @@ export default function LandingNav() {
                 Log in
               </Link>
               <motion.div
-                ref={signupRef}
-                animate={{ x, y }}
+                ref={signupRef as any}
+                animate={{ x, y } as any}
                 transition={springSnappy}
                 style={{ display: "inline-block" }}
               >
+
                 <Link
                   href="/signup"
                   id="nav-get-started"
