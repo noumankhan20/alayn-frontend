@@ -1,7 +1,18 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Branch, fetchBranches } from "./api";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useGetOutletsQuery, Outlet } from "@/redux/slices/outletApiSlice";
+import { useAppSelector } from "@/redux/store/hooks";
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  businessId?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
 
 interface BranchContextType {
   activeBranch: Branch | null;
@@ -14,6 +25,13 @@ interface BranchContextType {
 
 const BranchContext = createContext<BranchContextType | undefined>(undefined);
 
+export const ALL_OUTLETS_BRANCH: Branch = {
+  id: "all",
+  name: "All Outlets",
+  address: "All Locations Overview",
+  businessId: "all",
+};
+
 const DEMO_BRANCHES: Branch[] = [
   { id: "demo-soho", name: "London Soho", address: "12 Wardour St, London", businessId: "demo-business" },
   { id: "demo-deansgate", name: "Manchester Deansgate", address: "123 Deansgate, Manchester", businessId: "demo-business" },
@@ -22,63 +40,57 @@ const DEMO_BRANCHES: Branch[] = [
 ];
 
 export function BranchProvider({ children }: { children: React.ReactNode }) {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranch, setActiveBranchState] = useState<Branch | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  const refreshBranches = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchBranches();
-      if (data && data.length > 0) {
-        setBranches(data);
-        setIsDemo(false);
-        
-        // Restore active branch selection from localstorage if valid
-        const savedId = localStorage.getItem("alayn_active_branch_id");
-        const matched = data.find((b) => b.id === savedId);
-        const nextBranch = matched || data[0];
-        setActiveBranchState(nextBranch);
-        localStorage.setItem("alayn_active_branch_id", nextBranch.id);
-      } else {
-        // If logged in but no branches are returned, we don't fall back to demo automatically,
-        // we keep branches empty so they can register their first outlet.
-        // Wait, how do we know if we are logged in? If getAccessToken() exists.
-        const token = localStorage.getItem("alayn_access_token");
-        if (token) {
-          setBranches([]);
-          setActiveBranchState(null);
-          setIsDemo(false);
-        } else {
-          // If no token, we are in Demo mode (public landing pages / demo view)
-          setBranches(DEMO_BRANCHES);
-          setActiveBranchState(DEMO_BRANCHES[0]);
-          setIsDemo(true);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load branches:", err);
-      setBranches(DEMO_BRANCHES);
+  // Enterprise Redux RTK Query Store Cache Hook
+  const { 
+    data: fetchedOutlets, 
+    isLoading: isQueryLoading, 
+    refetch 
+  } = useGetOutletsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  const [activeBranch, setActiveBranchState] = useState<Branch | null>(null);
+
+  const rawOutlets = fetchedOutlets || [];
+  const isDemo = !isAuthenticated;
+  const loading = isAuthenticated ? (isQueryLoading && rawOutlets.length === 0) : false;
+
+  const branches: Branch[] = isDemo
+    ? DEMO_BRANCHES
+    : rawOutlets.length > 1
+    ? [ALL_OUTLETS_BRANCH, ...rawOutlets]
+    : rawOutlets;
+
+  useEffect(() => {
+    if (isDemo) {
       setActiveBranchState(DEMO_BRANCHES[0]);
-      setIsDemo(true);
-    } finally {
-      setLoading(false);
+    } else if (branches.length > 0) {
+      const savedId = typeof window !== "undefined" ? localStorage.getItem("alayn_active_branch_id") : null;
+      const matched = branches.find((b) => b.id === savedId);
+      const nextBranch = matched || branches[0];
+      setActiveBranchState(nextBranch);
+      if (nextBranch && typeof window !== "undefined") {
+        localStorage.setItem("alayn_active_branch_id", nextBranch.id);
+      }
+    } else {
+      setActiveBranchState(null);
     }
-  }, []);
+  }, [branches.length, isDemo]);
 
   const setActiveBranch = (branch: Branch | null) => {
     setActiveBranchState(branch);
-    if (branch) {
+    if (branch && typeof window !== "undefined") {
       localStorage.setItem("alayn_active_branch_id", branch.id);
-    } else {
+    } else if (typeof window !== "undefined") {
       localStorage.removeItem("alayn_active_branch_id");
     }
   };
 
-  useEffect(() => {
-    refreshBranches();
-  }, [refreshBranches]);
+  const refreshBranches = async () => {
+    await refetch();
+  };
 
   return (
     <BranchContext.Provider value={{ activeBranch, setActiveBranch, branches, loading, isDemo, refreshBranches }}>
