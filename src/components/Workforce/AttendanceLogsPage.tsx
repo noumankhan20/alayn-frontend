@@ -55,6 +55,7 @@ export default function AttendanceLogsPage() {
   const [currentDateStr, setCurrentDateStr] = useState<string>("");
   const [isShiftActive, setIsShiftActive] = useState<boolean>(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -70,17 +71,22 @@ export default function AttendanceLogsPage() {
   const logs = apiLogsData?.data || (isLoading ? [] : DEMO_ATTENDANCE_LOGS);
 
   const handleClockIn = async () => {
+    setFeedbackMsg(null);
+    setErrorMsg(null);
     try {
       await clockIn({ timestamp: new Date().toISOString() }).unwrap();
       setIsShiftActive(true);
       setFeedbackMsg("Clock In successful! Have a great shift.");
     } catch (err: any) {
-      setIsShiftActive(true);
-      setFeedbackMsg("Clocked In for today's shift.");
+      const message = err?.data?.message || err?.message || "Failed to clock in";
+      setErrorMsg(message);
+      setIsShiftActive(false);
     }
   };
 
   const handleClockOut = async () => {
+    setFeedbackMsg(null);
+    setErrorMsg(null);
     try {
       await clockOut({ timestamp: new Date().toISOString() }).unwrap();
       setIsShiftActive(false);
@@ -109,9 +115,22 @@ export default function AttendanceLogsPage() {
 
         {/* Feedback Message */}
         {feedbackMsg && (
-          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-sm">
+          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-sm font-medium">
             <span>{feedbackMsg}</span>
-            <button onClick={() => setFeedbackMsg(null)} className="text-emerald-600 hover:text-emerald-900">
+            <button onClick={() => setFeedbackMsg(null)} className="text-emerald-600 hover:text-emerald-900 cursor-pointer font-bold text-base">
+              &times;
+            </button>
+          </div>
+        )}
+
+        {/* Error Message Banner */}
+        {errorMsg && (
+          <div className="flex items-center justify-between bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-lg text-sm font-medium shadow-sm">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+            <button onClick={() => setErrorMsg(null)} className="text-rose-600 hover:text-rose-900 cursor-pointer font-bold text-base">
               &times;
             </button>
           </div>

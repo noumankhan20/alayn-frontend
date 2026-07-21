@@ -135,9 +135,8 @@ export const baseApi = createApi({
         "MenuCategories",
         "Orders",
         "KitchenTickets",
-        "Supplier",
-        "PurchaseOrder",
-        "Waste",
+        "Roster",
+        "Holidays",
     ],
 
 
