@@ -25,21 +25,21 @@ export const dashboardApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getKpis: builder.query<KpiResponse, { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/kpi",
+        url: "/dashboard/kpi",
         params: outletId ? { outletId } : undefined,
       }),
       providesTags: ["Dashboard"],
     }),
     getSalesForecast: builder.query<SalesForecastPoint[], { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/sales-forecast",
+        url: "/dashboard/sales-forecast",
         params: outletId ? { outletId } : undefined,
       }),
       providesTags: ["Dashboard"],
     }),
     getInventoryForecast: builder.query<InventoryForecastPoint[], { outletId?: string }>({
       query: ({ outletId }) => ({
-        url: "/api/v1/dashboard/inventory-forecast",
+        url: "/dashboard/inventory-forecast",
         params: outletId ? { outletId } : undefined,
       }),
       providesTags: ["Dashboard"],

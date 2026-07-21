@@ -2,7 +2,9 @@
 // All branch-scoped calls accept outletId explicitly (from BranchContext).
 
 const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-const BACKEND_URL = RAW_URL.endsWith("/api/v1") ? RAW_URL : `${RAW_URL.replace(/\/$/, "")}/api/v1`;
+const API_VERSION = "v1";
+const BASE_DOMAIN = RAW_URL.replace(/\/$/, "").replace(/\/api\/v\d+$/, "");
+const BACKEND_URL = `${BASE_DOMAIN}/api/${API_VERSION}`;
 
 const TOKEN_KEY = "alayn_access_token";
 
@@ -56,12 +58,9 @@ async function apiRequest<T>(
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.outletId) headers["x-outlet-id"] = opts.outletId;
 
-  // Normalize path to prevent duplicate /api/v1/api/v1
-  const cleanPath = path.startsWith("/api/v1")
-    ? path.replace(/^\/api\/v1/, "")
-    : path;
-  const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
-  const targetUrl = `${BACKEND_URL}${normalizedPath}`;
+  // Normalize path to prevent duplicate /api/v1/api/v1 or /api/vX
+  const cleanPath = path.replace(/^\/?(api\/v\d+\/)+/, "").replace(/^\/+/, "");
+  const targetUrl = `${BACKEND_URL}/${cleanPath}`;
 
   try {
     const res = await fetch(targetUrl, {

@@ -28,7 +28,7 @@ export const menuApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMenuItems: builder.query<MenuItem[], { categoryId?: string; search?: string } | void>({
       query: (params) => ({
-        url: "/api/v1/menu/items",
+        url: "/menu/items",
         method: "GET",
         params: params || undefined,
       }),
@@ -37,7 +37,7 @@ export const menuApi = baseApi.injectEndpoints({
 
     getCategories: builder.query<MenuCategory[], void>({
       query: () => ({
-        url: "/api/v1/menu/categories",
+        url: "/menu/categories",
         method: "GET",
       }),
       providesTags: ["MenuCategories"],
@@ -45,7 +45,7 @@ export const menuApi = baseApi.injectEndpoints({
 
     createCategory: builder.mutation<MenuCategory, { name: string; description?: string; imageUrl?: string }>({
       query: (body) => ({
-        url: "/api/v1/menu/categories",
+        url: "/menu/categories",
         method: "POST",
         body,
       }),
@@ -54,7 +54,7 @@ export const menuApi = baseApi.injectEndpoints({
 
     createMenuItem: builder.mutation<MenuItem, Partial<MenuItem>>({
       query: (body) => ({
-        url: "/api/v1/menu/items",
+        url: "/menu/items",
         method: "POST",
         body,
       }),
@@ -63,7 +63,7 @@ export const menuApi = baseApi.injectEndpoints({
 
     updateMenuItem: builder.mutation<MenuItem, { id: string; data: Partial<MenuItem> }>({
       query: ({ id, data }) => ({
-        url: `/api/v1/menu/items/${id}`,
+        url: `/menu/items/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -72,7 +72,7 @@ export const menuApi = baseApi.injectEndpoints({
 
     toggleMenuItemStatus: builder.mutation<MenuItem, { id: string; isAvailable: boolean }>({
       query: ({ id, isAvailable }) => ({
-        url: `/api/v1/menu/items/${id}/status`,
+        url: `/menu/items/${id}/status`,
         method: "PATCH",
         body: { isAvailable },
       }),

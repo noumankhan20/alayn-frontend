@@ -35,8 +35,6 @@ import {
   useGetInventoryForecastQuery,
 } from "@/redux/slices/dashboardApiSlice";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
-
 export default function MasterDashboardPage(props?: {
   params?: Promise<any>;
   searchParams?: Promise<any>;
