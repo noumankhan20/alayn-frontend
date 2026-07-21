@@ -42,7 +42,14 @@ export default function InventoryAdjustPage() {
       return;
     }
 
+    if (direction === "DEDUCT" && selectedItem && numChange > (selectedItem.currentStock || 0)) {
+      setErrorMsg(`Cannot deduct ${numChange} ${selectedItem.unit}. Only ${selectedItem.currentStock} ${selectedItem.unit} currently available in stock.`);
+      return;
+    }
+
+
     const finalChange = direction === "DEDUCT" ? -numChange : numChange;
+
 
 
     try {

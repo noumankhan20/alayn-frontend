@@ -17,7 +17,7 @@ const tabs = [
     name: "Adjust Stock",
     href: "/inventory/adjust",
     icon: Sliders,
-    desc: "Record Usage / Add / Waste",
+    desc: "Record Usage / Count Audit",
   },
   {
     name: "Procurement & POs",
@@ -25,13 +25,8 @@ const tabs = [
     icon: Truck,
     desc: "Suppliers & Purchase Orders",
   },
-  {
-    name: "Waste Management",
-    href: "/inventory/waste",
-    icon: Trash2,
-    desc: "Spoilage Logs & Cost Analysis",
-  },
 ];
+
 
 export default function InventoryNavTabs() {
   const pathname = usePathname();

@@ -94,8 +94,9 @@ export default function InventoryPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-full gap-4 sm:gap-6 max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+      <div className="flex flex-col min-h-full gap-4 sm:gap-6 max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pb-8">
         <InventoryNavTabs />
+
 
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -107,6 +108,7 @@ export default function InventoryPage() {
               Live database tracking of stock counts, categories, and reorder levels
             </p>
           </div>
+          <div className="flex items-center gap-2">
             {lowStockItems.length > 0 && (
               <button
                 id="smart-po-btn"
@@ -116,18 +118,6 @@ export default function InventoryPage() {
                 <Zap className="h-4 w-4 fill-current" /> 1-Click Smart PO ({lowStockItems.length})
               </button>
             )}
-            <Link
-              href="/inventory/procurement"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-xs"
-            >
-              <Truck className="h-3.5 w-3.5 text-[#D3232A]" /> Procurement & POs
-            </Link>
-            <Link
-              href="/inventory/waste"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-xs"
-            >
-              <Trash2 className="h-3.5 w-3.5 text-[#D3232A]" /> Waste Logs
-            </Link>
             <button
               id="refresh-inventory-btn"
               onClick={() => refetch()}
@@ -143,6 +133,8 @@ export default function InventoryPage() {
             >
               <Plus className="h-4 w-4" /> Add Item
             </button>
+          </div>
+
 
         </div>
 
@@ -256,8 +248,9 @@ export default function InventoryPage() {
         </div>
 
         {/* Stock Items Table */}
-        <div className="flex-1 rounded-xl border border-zinc-200 bg-white shadow-xs overflow-hidden min-h-[300px]">
+        <div className="w-full rounded-2xl border border-zinc-200 bg-white shadow-xs overflow-hidden h-fit mb-6">
           {isPageLoading ? (
+
 
             <div className="p-4 space-y-3">
               <Skeleton height={24} width="30%" className="mb-4" />

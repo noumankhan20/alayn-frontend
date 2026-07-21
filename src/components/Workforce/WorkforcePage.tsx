@@ -29,7 +29,12 @@ import {
   Lock,
   FileSpreadsheet,
   Download,
+  Calendar as CalendarIcon,
+  Clock as ClockIcon,
+  ArrowRightLeft,
 } from "lucide-react";
+import { useAppSelector } from "@/redux/store/hooks";
+import { cn } from "@/lib/utils";
 
 const DEMO_EMPLOYEES = [
   {
@@ -236,37 +241,59 @@ export default function WorkforcePage() {
     }
   };
 
+  const user = useAppSelector((state) => state.auth.user);
+  const isManagerOrOwner =
+    user?.role === "BUSINESS_OWNER" ||
+    user?.role === "MANAGER" ||
+    user?.role === "SUPER_ADMIN";
+
+  const [showSwapModal, setShowSwapModal] = useState(false);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header Title */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Workforce Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isManagerOrOwner ? "Workforce Management" : "My Shift Calendar"}
+            </h1>
             <p className="text-sm text-gray-500">
-              Manage staff profiles, roles, documents, and directory records.
+              {isManagerOrOwner
+                ? "Manage staff profiles, roles, documents, and directory records."
+                : "View your assigned shifts, upcoming schedules, and request shift swaps."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          {isManagerOrOwner ? (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setBulkFile(null);
+                  setBulkResult(null);
+                  setShowBulkModal(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                Bulk Upload (Excel)
+              </button>
+              <button
+                onClick={handleOpenAddModal}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                Add Employee
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => {
-                setBulkFile(null);
-                setBulkResult(null);
-                setShowBulkModal(true);
-              }}
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-              Bulk Upload (Excel)
-            </button>
-            <button
-              onClick={handleOpenAddModal}
+              onClick={() => setShowSwapModal(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
-              Add Employee
+              <ArrowRightLeft className="h-4 w-4" />
+              Request Shift Swap
             </button>
-          </div>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -282,249 +309,338 @@ export default function WorkforcePage() {
           </div>
         )}
 
-        {/* Metrics Row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Staff
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-gray-900">{employees.length}</p>
+        {/* Role-based Content: Manager/Owner gets Directory, Staff gets Shift Calendar */}
+        {isManagerOrOwner ? (
+          <>
+            {/* Metrics Row */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Staff
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-gray-900">{employees.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
+                    <Users className="h-6 w-6" />
+                  </div>
+                </div>
               </div>
-              <div className="rounded-lg bg-blue-50 p-3 text-blue-600">
-                <Users className="h-6 w-6" />
+
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Active Employees
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-emerald-600">
+                      {employees.filter((e: any) => e.status === "ACTIVE").length}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-emerald-50 p-3 text-emerald-600">
+                    <UserCheck className="h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Inactive Staff
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-rose-600">
+                      {employees.filter((e: any) => e.status === "INACTIVE").length}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-rose-50 p-3 text-rose-600">
+                    <UserX className="h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Uploaded Docs
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-blue-600">
+                      {employees.reduce((acc: number, e: any) => acc + (e.documents?.length || 0), 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-purple-50 p-3 text-purple-600">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Active Employees
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-emerald-600">{activeCount}</p>
+            {/* Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search employee by name or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]/20 focus:border-[#D3232A]"
+                />
               </div>
-              <div className="rounded-lg bg-emerald-50 p-3 text-emerald-600">
-                <UserCheck className="h-6 w-6" />
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]/20 focus:border-[#D3232A] bg-white"
+                  >
+                    <option value="ALL">All Roles</option>
+                    <option value="BUSINESS_OWNER">Business Owner</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="STAFF">Staff</option>
+                    <option value="KITCHEN">Kitchen</option>
+                  </select>
+                </div>
+
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]/20 focus:border-[#D3232A] bg-white"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Inactive Staff
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-rose-600">{inactiveCount}</p>
-              </div>
-              <div className="rounded-lg bg-rose-50 p-3 text-rose-600">
-                <UserX className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Uploaded Docs
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-indigo-600">{docsCount}</p>
-              </div>
-              <div className="rounded-lg bg-indigo-50 p-3 text-indigo-600">
-                <FileText className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search employee by name or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A] focus:border-transparent"
-            />
-          </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
-              >
-                <option value="ALL">All Roles</option>
-                <option value="BUSINESS_OWNER">Business Owner</option>
-                <option value="MANAGER">Manager</option>
-                <option value="STAFF">Staff</option>
-                <option value="KITCHEN">Kitchen</option>
-              </select>
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Employees Table */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-gray-700 uppercase text-xs tracking-wider border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 font-semibold">Employee Name</th>
-                  <th className="px-6 py-3 font-semibold">Contact & Email</th>
-                  <th className="px-6 py-3 font-semibold">Role</th>
-                  <th className="px-6 py-3 font-semibold">Branch(es)</th>
-                  <th className="px-6 py-3 font-semibold">Joining Date</th>
-                  <th className="px-6 py-3 font-semibold">Status</th>
-                  <th className="px-6 py-3 font-semibold">Documents</th>
-                  <th className="px-6 py-3 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                      Loading workforce directory...
-                    </td>
-                  </tr>
-                ) : filteredEmployees.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                      No employees found matching your criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredEmployees.map((emp: any) => (
-                    <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">{emp.name}</td>
-                      <td className="px-6 py-4 text-xs text-gray-600">
-                        <div className="font-medium text-gray-900">{emp.phone}</div>
-                        <div className="text-gray-500 font-mono text-[11px] mt-0.5">{emp.email || emp.user?.email || "—"}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            emp.role === "MANAGER"
-                              ? "bg-purple-100 text-purple-800"
-                              : emp.role === "KITCHEN"
-                              ? "bg-amber-100 text-amber-800"
-                              : emp.role === "BUSINESS_OWNER"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {emp.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-gray-600">
-                        {emp.outlet?.name ? (
-                          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md font-medium">
-                            <Building2 className="h-3 w-3 text-gray-500" />
-                            {emp.outlet.name}
-                          </span>
-                        ) : emp.user?.outlets && emp.user.outlets.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {emp.user.outlets.map((u: any) => (
-                              <span key={u.outlet.id} className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md font-medium text-[11px]">
-                                <Building2 className="h-3 w-3 text-purple-500" />
-                                {u.outlet.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">Default Branch</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(emp.joiningDate).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            emp.status === "ACTIVE"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-rose-100 text-rose-800"
-                          }`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              emp.status === "ACTIVE" ? "bg-emerald-600" : "bg-rose-600"
-                            }`}
-                          />
-                          {emp.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <FileText className="h-3.5 w-3.5" />
-                          <span>{emp.documents?.length || 0} File(s)</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setDocUploadItem(emp);
-                              setSelectedFile(null);
-                            }}
-                            title="Upload Document"
-                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                          >
-                            <Upload className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditEmployeeItem(emp);
-                              const assignedOutlets = emp.user?.outlets && emp.user.outlets.length > 0
-                                ? emp.user.outlets.map((u: any) => u.outlet.id)
-                                : (emp.outletId ? [emp.outletId] : []);
-                              setFormData({
-                                name: emp.name,
-                                email: emp.email || emp.user?.email || "",
-                                password: "",
-                                phone: emp.phone,
-                                role: emp.role,
-                                joiningDate: new Date(emp.joiningDate)
-                                  .toISOString()
-                                  .split("T")[0],
-                                status: emp.status,
-                                outletIds: assignedOutlets,
-                              });
-                            }}
-                            title="Edit Employee"
-                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+            {/* Directory Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3.5">Employee Name</th>
+                      <th className="px-6 py-3.5">Contact & Email</th>
+                      <th className="px-6 py-3.5">Role</th>
+                      <th className="px-6 py-3.5">Branch(es)</th>
+                      <th className="px-6 py-3.5">Joining Date</th>
+                      <th className="px-6 py-3.5">Status</th>
+                      <th className="px-6 py-3.5">Documents</th>
+                      <th className="px-6 py-3.5 text-right">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredEmployees.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-8 text-center text-gray-500 text-sm">
+                          No employee profiles found matching your search.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredEmployees.map((emp: any) => (
+                        <tr key={emp.id} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-900">{emp.name}</td>
+                          <td className="px-6 py-4">
+                            <div className="text-xs font-medium text-gray-900">{emp.phone}</div>
+                            <div className="text-xs text-gray-500">{emp.email || emp.user?.email || "No login email"}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
+                                emp.role === "BUSINESS_OWNER" && "bg-purple-100 text-purple-800",
+                                emp.role === "MANAGER" && "bg-indigo-100 text-indigo-800",
+                                emp.role === "STAFF" && "bg-blue-100 text-blue-800",
+                                emp.role === "KITCHEN" && "bg-amber-100 text-amber-800"
+                              )}
+                            >
+                              {emp.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {emp.user?.outlets && emp.user.outlets.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {emp.user.outlets.map((u: any) => (
+                                  <span
+                                    key={u.outlet.id}
+                                    className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-[11px] px-2 py-0.5 rounded border border-gray-200 font-medium"
+                                  >
+                                    <Building2 className="h-3 w-3 text-gray-400" />
+                                    {u.outlet.name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">Default Branch</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {new Date(emp.joiningDate).toLocaleDateString(undefined, {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 text-xs font-medium",
+                                emp.status === "ACTIVE" ? "text-emerald-700" : "text-rose-700"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "h-1.5 w-1.5 rounded-full",
+                                  emp.status === "ACTIVE" ? "bg-emerald-500" : "bg-rose-500"
+                                )}
+                              />
+                              {emp.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <FileText className="h-3.5 w-3.5" />
+                              <span>{emp.documents?.length || 0} File(s)</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setDocUploadItem(emp);
+                                  setSelectedFile(null);
+                                }}
+                                title="Upload Document"
+                                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                              >
+                                <Upload className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditEmployeeItem(emp);
+                                  const assignedOutlets = emp.user?.outlets && emp.user.outlets.length > 0
+                                    ? emp.user.outlets.map((u: any) => u.outlet.id)
+                                    : (emp.outletId ? [emp.outletId] : []);
+                                  setFormData({
+                                    name: emp.name,
+                                    email: emp.email || emp.user?.email || "",
+                                    password: "",
+                                    phone: emp.phone,
+                                    role: emp.role,
+                                    joiningDate: new Date(emp.joiningDate)
+                                      .toISOString()
+                                      .split("T")[0],
+                                    status: emp.status,
+                                    outletIds: assignedOutlets,
+                                  });
+                                }}
+                                title="Edit Employee"
+                                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Staff Personal Shift Schedule & Swaps View */
+          <div className="space-y-6">
+            {/* Active Shift Card */}
+            <div className="bg-gradient-to-r from-[#0B1221] to-[#1F2B42] text-white rounded-2xl p-6 shadow-md border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Today's Assigned Shift</span>
+                <h2 className="text-xl font-bold mt-1 text-white">Morning Duty - 09:00 AM to 05:00 PM</h2>
+                <p className="text-xs text-zinc-300 mt-1 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-zinc-400" />
+                  Assigned Branch: Bombay Branch (Main Outlet)
+                </p>
+              </div>
+              <a
+                href="/workforce/attendance"
+                className="inline-flex items-center gap-2 bg-[#D3232A] hover:bg-[#b01e23] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+              >
+                <ClockIcon className="h-4 w-4" />
+                Go to Attendance Terminal
+              </a>
+            </div>
+
+            {/* Weekly Schedule Grid */}
+            <div>
+              <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-[#D3232A]" />
+                This Week's Assigned Roster
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {[
+                  { day: "Mon", date: "Jul 21", shift: "09:00 AM - 05:00 PM", status: "Active" },
+                  { day: "Tue", date: "Jul 22", shift: "09:00 AM - 05:00 PM", status: "Upcoming" },
+                  { day: "Wed", date: "Jul 23", shift: "01:00 PM - 09:00 PM", status: "Upcoming" },
+                  { day: "Thu", date: "Jul 24", shift: "OFF", status: "Off Day" },
+                  { day: "Fri", date: "Jul 25", shift: "09:00 AM - 05:00 PM", status: "Upcoming" },
+                  { day: "Sat", date: "Jul 26", shift: "10:00 AM - 06:00 PM", status: "Upcoming" },
+                  { day: "Sun", date: "Jul 27", shift: "OFF", status: "Off Day" },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "rounded-xl border p-3.5 text-center flex flex-col justify-between h-32 transition-all",
+                      item.status === "Active"
+                        ? "border-[#D3232A] bg-red-50/30 shadow-xs"
+                        : item.shift === "OFF"
+                        ? "border-gray-200 bg-gray-50 opacity-60"
+                        : "border-gray-200 bg-white"
+                    )}
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-gray-500 uppercase">{item.day}</span>
+                      <div className="text-xs font-medium text-gray-900">{item.date}</div>
+                    </div>
+                    <div className="my-1">
+                      <span className={cn("text-xs font-bold block", item.shift === "OFF" ? "text-gray-400" : "text-[#D3232A]")}>
+                        {item.shift}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-medium text-gray-500">{item.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Shift Swaps Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4 text-indigo-600" />
+                  My Shift Swaps & Trade Requests
+                </h3>
+                <button
+                  onClick={() => setShowSwapModal(true)}
+                  className="text-xs font-semibold text-[#D3232A] hover:underline"
+                >
+                  + Request New Swap
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Need to trade a shift with a coworker? Submit a swap request for approval by your team manager.
+              </p>
+              <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-center text-xs text-gray-500">
+                No active shift swap requests pending. Click "+ Request New Swap" if you need to trade shifts.
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Add Employee Modal */}
         {showAddModal && (

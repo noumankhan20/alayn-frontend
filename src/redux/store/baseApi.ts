@@ -124,6 +124,13 @@ export const baseApi = createApi({
         "Dashboard",
         "Shift",
         "Leave",
+        "PurchaseOrder",
+        "Supplier",
+        "Waste",
+        "MenuItems",
+        "MenuCategories",
+        "Orders",
+        "KitchenTickets",
         "MenuItems",
         "MenuCategories",
         "Orders",
@@ -132,6 +139,7 @@ export const baseApi = createApi({
         "PurchaseOrder",
         "Waste",
     ],
+
 
     endpoints: () => ({}),
 });

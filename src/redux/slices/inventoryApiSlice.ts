@@ -54,7 +54,8 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
         method: "POST",
         body: { change, reason },
       }),
-      invalidatesTags: ["Inventory"],
+      invalidatesTags: ["Inventory", "Waste"],
+
     }),
     getLowStockAlerts: builder.query<InventoryAlertsResult, void>({
       query: () => "/inventory/alerts",
