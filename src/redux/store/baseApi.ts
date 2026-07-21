@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError 
 import { logout, setCredentials } from "../slices/authSlice";
 
 const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-const BASE_URL = RAW_URL.endsWith("/") ? RAW_URL.slice(0, -1) : RAW_URL;
+const BASE_URL = RAW_URL.endsWith("/api/v1") ? RAW_URL : `${RAW_URL.replace(/\/$/, "")}/api/v1`;
 
 const baseQuery = fetchBaseQuery({
     baseUrl: BASE_URL || "http://localhost:5000/api/v1",
@@ -56,7 +56,7 @@ const baseQueryWithReauth: BaseQueryFn<
         // Try to get a new access token via refresh endpoint
         const refreshResult = await baseQuery(
             {
-                url: "/api/v1/auth/refresh",
+                url: "/auth/refresh",
                 method: "POST",
                 body: storedRefreshToken ? { refreshToken: storedRefreshToken } : undefined,
                 headers: storedRefreshToken ? { "x-refresh-token": storedRefreshToken } : undefined,

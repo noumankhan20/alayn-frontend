@@ -4,14 +4,14 @@ export const shiftApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getShifts: builder.query({
       query: () => ({
-        url: "/api/v1/shifts",
+        url: "/shifts",
         method: "GET",
       }),
       providesTags: ["Shift"],
     }),
     createShift: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/shifts",
+        url: "/shifts",
         method: "POST",
         body,
       }),
@@ -19,7 +19,7 @@ export const shiftApi = baseApi.injectEndpoints({
     }),
     assignShift: builder.mutation({
       query: ({ shiftId, ...body }) => ({
-        url: `/api/v1/shifts/${shiftId}/assign`,
+        url: `/shifts/${shiftId}/assign`,
         method: "POST",
         body,
       }),
@@ -27,7 +27,7 @@ export const shiftApi = baseApi.injectEndpoints({
     }),
     requestSwap: builder.mutation({
       query: (body) => ({
-        url: "/api/v1/shifts/swaps",
+        url: "/shifts/swaps",
         method: "POST",
         body,
       }),
@@ -35,7 +35,7 @@ export const shiftApi = baseApi.injectEndpoints({
     }),
     updateSwapStatus: builder.mutation({
       query: ({ swapId, status }) => ({
-        url: `/api/v1/shifts/swaps/${swapId}`,
+        url: `/shifts/swaps/${swapId}`,
         method: "PATCH",
         body: { status },
       }),
