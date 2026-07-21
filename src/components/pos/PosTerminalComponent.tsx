@@ -178,7 +178,14 @@ export default function PosTerminalComponent() {
               }`}
             >
               {c.imageUrl && (
-                <img src={getImageUrl(c.imageUrl)} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />
+                <img
+                  src={getImageUrl(c.imageUrl)}
+                  alt=""
+                  className="w-3.5 h-3.5 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = "none";
+                  }}
+                />
               )}
               {c.name}
             </button>
@@ -206,7 +213,14 @@ export default function PosTerminalComponent() {
                 {/* Optional Image thumbnail in POS grid */}
                 {item.imageUrl && (
                   <div className="h-24 w-full bg-gray-100 relative overflow-hidden">
-                    <img src={getImageUrl(item.imageUrl)} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                    <img
+                      src={getImageUrl(item.imageUrl)}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = "none";
+                      }}
+                    />
                   </div>
                 )}
                 
