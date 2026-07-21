@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
+
 import {
   Package,
   Search,
@@ -12,7 +14,10 @@ import {
   Loader2,
   RefreshCw,
   Zap,
+  Truck,
+  Trash2,
 } from "lucide-react";
+
 
 import Skeleton from "react-loading-skeleton";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -85,28 +90,7 @@ export default function InventoryPage() {
   const lowStockCount = lowStockItems.length;
   const expiringBatchesCount = alertsData?.expiringBatches?.length || 0;
 
-  if (branchLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64 gap-3 text-zinc-400">
-          <Loader2 className="h-6 w-6 animate-spin text-[#D3232A]" />
-          <p className="text-sm font-medium">Loading branch information…</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!activeBranch) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-64 gap-3 text-zinc-400">
-          <Building2 className="h-10 w-10 stroke-[1.5]" />
-          <p className="text-sm font-medium text-zinc-600">No branch selected</p>
-          <p className="text-xs">Select a branch from the header to manage live inventory.</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const isPageLoading = branchLoading || isLoadingItems;
 
   return (
     <DashboardLayout>
@@ -117,13 +101,12 @@ export default function InventoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-zinc-900">
-              Smart Inventory — <span className="text-[#D3232A]">{activeBranch.name}</span>
+              Smart Inventory — <span className="text-[#D3232A]">{activeBranch?.name || "Branch"}</span>
             </h1>
             <p className="text-xs text-zinc-500 mt-0.5">
               Live database tracking of stock counts, categories, and reorder levels
             </p>
           </div>
-          <div className="flex items-center gap-2">
             {lowStockItems.length > 0 && (
               <button
                 id="smart-po-btn"
@@ -133,6 +116,18 @@ export default function InventoryPage() {
                 <Zap className="h-4 w-4 fill-current" /> 1-Click Smart PO ({lowStockItems.length})
               </button>
             )}
+            <Link
+              href="/inventory/procurement"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-xs"
+            >
+              <Truck className="h-3.5 w-3.5 text-[#D3232A]" /> Procurement & POs
+            </Link>
+            <Link
+              href="/inventory/waste"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-xs"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-[#D3232A]" /> Waste Logs
+            </Link>
             <button
               id="refresh-inventory-btn"
               onClick={() => refetch()}
@@ -148,8 +143,9 @@ export default function InventoryPage() {
             >
               <Plus className="h-4 w-4" /> Add Item
             </button>
-          </div>
+
         </div>
+
 
         {/* Low Stock Smart PO Prompt Banner */}
         {lowStockCount > 0 && (
@@ -172,29 +168,52 @@ export default function InventoryPage() {
 
         {/* Responsive KPI Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <InventoryStatCard
-            icon={<Package className="h-5 w-5" />}
-            iconCls="bg-red-50 text-[#D3232A]"
-            label="Total SKUs"
-            value={String(items.length)}
-            sub={`${filteredItems.length} matching filters`}
-          />
-          <InventoryStatCard
-            icon={<AlertTriangle className="h-5 w-5" />}
-            iconCls={lowStockCount > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}
-            label="Low Stock Alert"
-            value={String(lowStockCount)}
-            pulse={lowStockCount > 0}
-            sub={lowStockCount > 0 ? "Items below reorder level" : "All stock levels OK"}
-          />
-          <InventoryStatCard
-            icon={<IndianRupee className="h-5 w-5" />}
-            iconCls="bg-blue-50 text-blue-600"
-            label="Live Stock Value"
-            value={`₹${totalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
-            sub="calculated at cost price"
-          />
+          {isPageLoading ? (
+            <>
+              <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs">
+                <Skeleton height={14} width="40%" className="mb-2" />
+                <Skeleton height={28} width="30%" className="mb-1" />
+                <Skeleton height={12} width="60%" />
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs">
+                <Skeleton height={14} width="40%" className="mb-2" />
+                <Skeleton height={28} width="30%" className="mb-1" />
+                <Skeleton height={12} width="60%" />
+              </div>
+              <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs">
+                <Skeleton height={14} width="40%" className="mb-2" />
+                <Skeleton height={28} width="30%" className="mb-1" />
+                <Skeleton height={12} width="60%" />
+              </div>
+            </>
+          ) : (
+            <>
+              <InventoryStatCard
+                icon={<Package className="h-5 w-5" />}
+                iconCls="bg-red-50 text-[#D3232A]"
+                label="Total SKUs"
+                value={String(items.length)}
+                sub={`${filteredItems.length} matching filters`}
+              />
+              <InventoryStatCard
+                icon={<AlertTriangle className="h-5 w-5" />}
+                iconCls={lowStockCount > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}
+                label="Low Stock Alert"
+                value={String(lowStockCount)}
+                pulse={lowStockCount > 0}
+                sub={lowStockCount > 0 ? "Items below reorder level" : "All stock levels OK"}
+              />
+              <InventoryStatCard
+                icon={<IndianRupee className="h-5 w-5" />}
+                iconCls="bg-blue-50 text-blue-600"
+                label="Live Stock Value"
+                value={`₹${totalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+                sub="calculated at cost price"
+              />
+            </>
+          )}
         </div>
+
 
         {/* Responsive Filter Row */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:px-4 sm:py-3 shadow-xs">
@@ -238,7 +257,8 @@ export default function InventoryPage() {
 
         {/* Stock Items Table */}
         <div className="flex-1 rounded-xl border border-zinc-200 bg-white shadow-xs overflow-hidden min-h-[300px]">
-          {isLoadingItems ? (
+          {isPageLoading ? (
+
             <div className="p-4 space-y-3">
               <Skeleton height={24} width="30%" className="mb-4" />
               <Skeleton count={6} height={42} borderRadius={8} className="mb-2" />

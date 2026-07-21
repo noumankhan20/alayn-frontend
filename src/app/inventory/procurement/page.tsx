@@ -179,16 +179,7 @@ export default function ProcurementPage() {
     }
   };
 
-  if (branchLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64 gap-3 text-zinc-400">
-          <Loader2 className="h-6 w-6 animate-spin text-[#D3232A]" />
-          <p className="text-sm font-medium">Loading branches…</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
+
 
   return (
     <DashboardLayout>
@@ -257,7 +248,8 @@ export default function ProcurementPage() {
         {/* TAB 1: PURCHASE ORDERS */}
         {activeTab === "POS" && (
           <div className="rounded-xl border border-zinc-200 bg-white shadow-xs overflow-x-auto">
-            {isLoadingPOs ? (
+            {(isLoadingPOs || branchLoading) ? (
+
               <div className="p-4 space-y-3">
                 <Skeleton height={24} width="25%" className="mb-4" />
                 <Skeleton count={5} height={42} borderRadius={8} className="mb-2" />
@@ -346,7 +338,8 @@ export default function ProcurementPage() {
         {/* TAB 2: SUPPLIERS */}
         {activeTab === "SUPPLIERS" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoadingSuppliers ? (
+            {(isLoadingSuppliers || branchLoading) ? (
+
               Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs">
                   <Skeleton height={20} width="60%" className="mb-2" />

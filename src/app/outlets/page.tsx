@@ -39,7 +39,8 @@ export default function OutletsLedgerPage(props?: {
   const userRole = user?.role || "BUSINESS_OWNER";
   const isAuthorized = userRole === "BUSINESS_OWNER" || userRole === "SUPER_ADMIN";
 
-  const outlets = outletsData?.data || outletsData || [];
+  const outlets = (outletsData as any)?.data || (Array.isArray(outletsData) ? outletsData : []);
+
   
   const filteredOutlets = (outlets as any[]).filter((item) => {
     const query = searchQuery.toLowerCase();

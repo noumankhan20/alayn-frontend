@@ -119,16 +119,7 @@ export default function WasteManagementPage() {
     ? (wasteSummary.currentMonthWastePaise / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })
     : "0.00";
 
-  if (branchLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64 gap-3 text-zinc-400">
-          <Loader2 className="h-6 w-6 animate-spin text-[#D3232A]" />
-          <p className="text-sm font-medium">Loading branches…</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
+
 
   return (
     <DashboardLayout>
@@ -149,7 +140,8 @@ export default function WasteManagementPage() {
 
         {/* Top Cumulative Summary Strip */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {isLoadingSummary ? (
+          {(isLoadingSummary || branchLoading) ? (
+
             <>
               <div className="lg:col-span-2 rounded-xl border border-red-200 bg-red-50/70 p-4 sm:p-5 shadow-xs">
                 <Skeleton height={14} width="50%" className="mb-2" />
@@ -316,8 +308,9 @@ export default function WasteManagementPage() {
               </div>
             </div>
 
-            {isLoadingLogs ? (
+            {(isLoadingLogs || branchLoading) ? (
               <div className="p-4 space-y-3">
+
                 <Skeleton height={20} width="30%" className="mb-4" />
                 <Skeleton count={5} height={40} borderRadius={8} className="mb-2" />
               </div>
