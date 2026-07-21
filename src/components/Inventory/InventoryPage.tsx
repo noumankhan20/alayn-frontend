@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useMemo } from "react";
 import {
   Package,
   Search,
@@ -17,167 +11,86 @@ import {
   Building2,
   Loader2,
   RefreshCw,
-  FlaskConical,
+  Zap,
 } from "lucide-react";
 
+import Skeleton from "react-loading-skeleton";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { fetchInventoryItems, InventoryItem } from "@/lib/api";
 import { useBranch } from "@/lib/BranchContext";
+import {
+  useGetItemsQuery,
+  useGetLowStockAlertsQuery,
+  InventoryItemApi,
+} from "@/redux/slices/inventoryApiSlice";
 
+import InventoryNavTabs   from "./InventoryNavTabs";
 import InventoryStatCard  from "./InventoryStatCard";
 import InventoryItemTable from "./InventoryItemTable";
 import AddItemModal       from "./AddItemModal";
 import AdjustStockModal   from "./AdjustStockModal";
-import InventoryToast, { ToastVariant } from "./InventoryToast";
+import SmartPOModal       from "./SmartPOModal";
 
-// ── Demo / fallback items ─────────────────────────────────────────────────────
 
-const DEMO_ITEMS: InventoryItem[] = [
-  { id: "d1", name: "Premium Espresso Beans",     sku: "COF-ESP-001",  category: "Beverages", unit: "kg",    reorderThreshold: 10, unitCostPaise: 120000, currentStock: 24   },
-  { id: "d2", name: "Whole Milk",                  sku: "MILK-WHL-002", category: "Dairy",     unit: "L",     reorderThreshold: 15, unitCostPaise: 8000,   currentStock: 8    },
-  { id: "d3", name: "Oat Milk (Barista Edition)",  sku: "MILK-OAT-003", category: "Dairy",     unit: "L",     reorderThreshold: 10, unitCostPaise: 18000,  currentStock: 18   },
-  { id: "d4", name: "Caramel Syrup",               sku: "SYR-CAR-004",  category: "Syrups",    unit: "Bottle",reorderThreshold: 5,  unitCostPaise: 45000,  currentStock: 3    },
-  { id: "d5", name: "Paper Cups 12oz",             sku: "PKG-CUP-12OZ", category: "Packaging", unit: "pack",  reorderThreshold: 8,  unitCostPaise: 65000,  currentStock: 12   },
-  { id: "d6", name: "Chocolate Chips",             sku: "BAK-CHP-006",  category: "Bakery",    unit: "kg",    reorderThreshold: 4,  unitCostPaise: 50000,  currentStock: 5    },
-  { id: "d7", name: "Butter Croissant (Frozen)",   sku: "BAK-CRO-007",  category: "Bakery",    unit: "pcs",   reorderThreshold: 50, unitCostPaise: 4500,   currentStock: 120  },
-  { id: "d8", name: "Vanilla Syrup",               sku: "SYR-VAN-008",  category: "Syrups",    unit: "Bottle",reorderThreshold: 5,  unitCostPaise: 42000,  currentStock: 7    },
-  { id: "d9", name: "Disposable Lids (Hot)",       sku: "PKG-LID-HOT",  category: "Packaging", unit: "pack",  reorderThreshold: 6,  unitCostPaise: 35000,  currentStock: 4    },
-  { id:"d10", name: "Almond Milk",                  sku: "MILK-ALM-010", category: "Dairy",     unit: "L",     reorderThreshold: 8,  unitCostPaise: 22000,  currentStock: 11   },
-];
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Toast {
-  id: number;
-  message: string;
-  variant: ToastVariant;
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export default function InventoryPage() {
-  const { activeBranch, loading: branchLoading, isDemo } = useBranch();
+  const { activeBranch, loading: branchLoading } = useBranch();
 
-  const [items,          setItems]          = useState<InventoryItem[]>([]);
-  const [search,         setSearch]         = useState("");
+  // Production RTK Query hooks
+  const {
+    data: itemsResponse,
+    isLoading: isLoadingItems,
+    isError: isItemsError,
+    refetch,
+  } = useGetItemsQuery(undefined, { skip: !activeBranch });
+
+  const { data: alertsData } = useGetLowStockAlertsQuery(undefined, {
+    skip: !activeBranch,
+  });
+
+  const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [loading,        setLoading]        = useState(true);
-  const [fetchError,     setFetchError]     = useState<string | null>(null);
 
-  const [showAdd,      setShowAdd]      = useState(false);
-  const [adjustTarget, setAdjustTarget] = useState<InventoryItem | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [adjustTarget, setAdjustTarget] = useState<any | null>(null);
+  const [showSmartPO, setShowSmartPO] = useState(false);
 
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const toastCounter        = useRef(0);
+  const items: InventoryItemApi[] = useMemo(() => {
+    return itemsResponse?.items || [];
+  }, [itemsResponse]);
 
-  const addToast = useCallback((message: string, variant: ToastVariant) => {
-    const id = ++toastCounter.current;
-    setToasts((prev) => [...prev, { id, message, variant }]);
-  }, []);
+  const lowStockItems = useMemo(() => {
+    return items.filter((i) => (i.currentStock || 0) <= i.reorderThreshold);
+  }, [items]);
 
-  const dismissToast = useCallback((id: number) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  const canManage = true; // backend is authoritative; show buttons for demo
-
-  // ── Load items ───────────────────────────────────────────────────────────────
-  const loadItems = useCallback(async () => {
-    if (!activeBranch) { setLoading(false); return; }
-
-    setLoading(true);
-    setFetchError(null);
-
-    // Demo mode: just serve the local mock data instantly
-    if (isDemo || activeBranch.id.startsWith("demo-")) {
-      await new Promise((r) => setTimeout(r, 300)); // slight delay for realism
-      setItems([...DEMO_ITEMS]);
-      setLoading(false);
-      return;
-    }
-
-    // Real backend call
-    try {
-      const data = await fetchInventoryItems({ outletId: activeBranch.id });
-      // If backend returned nothing, show demo items as fallback
-      setItems(data.length > 0 ? data : [...DEMO_ITEMS]);
-    } catch {
-      setFetchError("Could not reach the backend. Showing demo data.");
-      setItems([...DEMO_ITEMS]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeBranch, isDemo]);
-
-  // Reload whenever branch changes
-  useEffect(() => {
-    setItems([]);
-    setSearch("");
-    setCategoryFilter("All");
-    loadItems();
-  }, [loadItems, activeBranch?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Filter & stats ───────────────────────────────────────────────────────────
+  // Categories list
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(items.map((i) => i.category))).sort()],
-    [items],
+    [items]
   );
 
+  // Filtered items
   const filteredItems = useMemo(() => {
     const q = search.toLowerCase();
     return items.filter(
       (item) =>
         (item.name.toLowerCase().includes(q) || item.sku.toLowerCase().includes(q)) &&
-        (categoryFilter === "All" || item.category === categoryFilter),
+        (categoryFilter === "All" || item.category === categoryFilter)
     );
   }, [items, search, categoryFilter]);
 
-  const totalValue    = items.reduce((s, i) => s + i.currentStock * (i.unitCostPaise / 100), 0);
-  const lowStockCount = items.filter((i) => i.currentStock <= i.reorderThreshold).length;
-
-  // ── Handlers ─────────────────────────────────────────────────────────────────
-  const handleItemCreated = useCallback(
-    (item: InventoryItem) => {
-      setShowAdd(false);
-      setItems((prev) => [{ ...item, currentStock: item.currentStock ?? 0 }, ...prev]);
-      addToast(`"${item.name}" added to inventory.`, "success");
-    },
-    [addToast],
+  const totalValue = items.reduce(
+    (s, i) => s + (i.currentStock || 0) * (i.unitCostPaise / 100),
+    0
   );
+  const lowStockCount = lowStockItems.length;
+  const expiringBatchesCount = alertsData?.expiringBatches?.length || 0;
 
-  const handleAdjusted = useCallback(async () => {
-    setAdjustTarget(null);
-    if (!isDemo && !activeBranch?.id.startsWith("demo-")) {
-      await loadItems();
-    } else {
-      // Demo: optimistically update the target item's stock in local state
-      addToast("Stock updated (demo mode — not persisted).", "success");
-    }
-  }, [isDemo, activeBranch, loadItems, addToast]);
-
-  // Demo-mode adjust: update local state directly without backend
-  const handleDemoAdjust = useCallback(
-    (itemId: string, change: number) => {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId
-            ? { ...i, currentStock: Math.max(0, i.currentStock + change) }
-            : i,
-        ),
-      );
-      setAdjustTarget(null);
-      addToast("Stock updated (demo mode).", "success");
-    },
-    [addToast],
-  );
-
-  // ── Branch loading ────────────────────────────────────────────────────────────
   if (branchLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64 gap-3 text-zinc-400">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <p className="text-sm font-medium">Loading branches…</p>
+          <Loader2 className="h-6 w-6 animate-spin text-[#D3232A]" />
+          <p className="text-sm font-medium">Loading branch information…</p>
         </div>
       </DashboardLayout>
     );
@@ -189,145 +102,179 @@ export default function InventoryPage() {
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-zinc-400">
           <Building2 className="h-10 w-10 stroke-[1.5]" />
           <p className="text-sm font-medium text-zinc-600">No branch selected</p>
-          <p className="text-xs">Select a branch from the header to view inventory.</p>
+          <p className="text-xs">Select a branch from the header to manage live inventory.</p>
         </div>
       </DashboardLayout>
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-full gap-5 max-w-7xl mx-auto">
+      <div className="flex flex-col h-full gap-4 sm:gap-6 max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+        <InventoryNavTabs />
 
-        {/* Page header */}
-        <div className="flex items-start justify-between">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-zinc-900">
-              Inventory —{" "}
-              <span className="text-[#D3232A]">{activeBranch.name}</span>
+            <h1 className="text-lg sm:text-xl font-bold text-zinc-900">
+              Smart Inventory — <span className="text-[#D3232A]">{activeBranch.name}</span>
             </h1>
-            <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
-              Manage stock levels and reorder thresholds for this branch
-              {isDemo && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 text-amber-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ml-1">
-                  <FlaskConical className="h-3 w-3" /> Demo Mode
-                </span>
-              )}
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Live database tracking of stock counts, categories, and reorder levels
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {lowStockItems.length > 0 && (
+              <button
+                id="smart-po-btn"
+                onClick={() => setShowSmartPO(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-[#D3232A] px-3.5 py-2 text-xs sm:text-sm font-bold text-white hover:opacity-95 transition-opacity shadow-sm"
+              >
+                <Zap className="h-4 w-4 fill-current" /> 1-Click Smart PO ({lowStockItems.length})
+              </button>
+            )}
             <button
               id="refresh-inventory-btn"
-              onClick={loadItems}
+              onClick={() => refetch()}
               title="Refresh inventory"
-              className="rounded-lg border border-zinc-200 bg-white p-2 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-colors shadow-sm"
+              className="rounded-lg border border-zinc-200 bg-white p-2 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors shadow-xs"
             >
               <RefreshCw className="h-4 w-4" />
             </button>
-            {canManage && (
-              <button
-                id="add-inventory-item-btn"
-                onClick={() => setShowAdd(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#b01e23] transition-colors shadow-sm"
-              >
-                <Plus className="h-4 w-4" /> Add Item
-              </button>
-            )}
+            <button
+              id="add-inventory-item-btn"
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-3.5 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-[#b01e23] transition-colors shadow-xs"
+            >
+              <Plus className="h-4 w-4" /> Add Item
+            </button>
           </div>
         </div>
 
-        {/* KPI strip */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Low Stock Smart PO Prompt Banner */}
+        {lowStockCount > 0 && (
+          <div className="rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-xs sm:text-sm text-red-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+              <div>
+                <strong>{lowStockCount} Low Stock Item(s) Detected:</strong> Quantities are at or below reorder threshold.
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSmartPO(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#D3232A] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#b01e23] transition-colors shrink-0 shadow-2xs"
+            >
+              <Zap className="h-3.5 w-3.5 fill-current" /> Auto-Generate Purchase Order
+            </button>
+          </div>
+        )}
+
+
+        {/* Responsive KPI Strip */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <InventoryStatCard
             icon={<Package className="h-5 w-5" />}
             iconCls="bg-red-50 text-[#D3232A]"
             label="Total SKUs"
             value={String(items.length)}
-            sub={`${filteredItems.length} shown`}
+            sub={`${filteredItems.length} matching filters`}
           />
           <InventoryStatCard
             icon={<AlertTriangle className="h-5 w-5" />}
-            iconCls={lowStockCount > 0 ? "bg-amber-50 text-amber-500" : "bg-emerald-50 text-emerald-500"}
-            label="Low Stock"
+            iconCls={lowStockCount > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}
+            label="Low Stock Alert"
             value={String(lowStockCount)}
             pulse={lowStockCount > 0}
-            sub={lowStockCount > 0 ? "Needs reorder" : "All levels OK"}
+            sub={lowStockCount > 0 ? "Items below reorder level" : "All stock levels OK"}
           />
           <InventoryStatCard
             icon={<IndianRupee className="h-5 w-5" />}
-            iconCls="bg-blue-50 text-blue-500"
-            label="Stock Value"
-            value={`₹${totalValue.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
-            sub="at cost price"
+            iconCls="bg-blue-50 text-blue-600"
+            label="Live Stock Value"
+            value={`₹${totalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+            sub="calculated at cost price"
           />
         </div>
 
-        {/* Filter row */}
-        <div className="flex items-center gap-3 rounded-xl border border-zinc-200/80 bg-white px-4 py-3 shadow-sm">
+        {/* Responsive Filter Row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:px-4 sm:py-3 shadow-xs">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 pointer-events-none" />
             <input
               id="inventory-search"
               type="text"
-              placeholder="Search by name or SKU…"
+              placeholder="Search ingredient by name or SKU…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input pl-9"
+              className="w-full rounded-lg border border-zinc-300 pl-9 pr-3 py-1.5 text-xs sm:text-sm focus:border-[#D3232A] focus:outline-none"
             />
           </div>
-          <select
-            id="inventory-category-filter"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="input w-44"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          <button
-            id="inventory-clear-filters-btn"
-            onClick={() => { setSearch(""); setCategoryFilter("All"); }}
-            title="Clear filters"
-            className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-zinc-500 hover:bg-zinc-100 transition-colors"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              id="inventory-category-filter"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full sm:w-44 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs sm:text-sm focus:border-[#D3232A] focus:outline-none"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <button
+              id="inventory-clear-filters-btn"
+              onClick={() => {
+                setSearch("");
+                setCategoryFilter("All");
+              }}
+              title="Clear filters"
+              className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-zinc-500 hover:bg-zinc-100 transition-colors"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Demo notice banner */}
-        {isDemo && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
-            <FlaskConical className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
-            <p>
-              <strong>Demo Mode</strong> — The backend is not connected. Showing sample inventory data.
-              Adjustments will update the local view only and won&apos;t be saved.
-            </p>
-          </div>
-        )}
-
-        {/* Table */}
-        <div className="flex-1 rounded-xl border border-zinc-200/80 bg-white shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center gap-2 h-56">
-              <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-zinc-200 border-t-[#D3232A]" />
-              <span className="text-sm text-zinc-400">Loading inventory…</span>
+        {/* Stock Items Table */}
+        <div className="flex-1 rounded-xl border border-zinc-200 bg-white shadow-xs overflow-hidden min-h-[300px]">
+          {isLoadingItems ? (
+            <div className="p-4 space-y-3">
+              <Skeleton height={24} width="30%" className="mb-4" />
+              <Skeleton count={6} height={42} borderRadius={8} className="mb-2" />
             </div>
-          ) : fetchError ? (
-            <div className="flex flex-col items-center justify-center gap-2 h-56">
-              <AlertTriangle className="h-7 w-7 text-amber-400" />
-              <p className="text-sm font-medium text-zinc-600">{fetchError}</p>
-              <button onClick={loadItems} className="text-xs text-[#D3232A] underline hover:text-[#b01e23]">
+          ) : isItemsError ? (
+
+            <div className="flex flex-col items-center justify-center gap-2 h-64">
+              <AlertTriangle className="h-7 w-7 text-amber-500" />
+              <p className="text-sm font-medium text-zinc-700">Could not connect to backend server</p>
+              <button
+                onClick={() => refetch()}
+                className="text-xs text-[#D3232A] underline font-semibold hover:text-[#b01e23]"
+              >
                 Retry
               </button>
             </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 h-64 text-zinc-400">
+              <Package className="h-9 w-9 text-zinc-300" />
+              <p className="text-sm font-medium text-zinc-600">No inventory items found</p>
+              <p className="text-xs text-zinc-400">Add a new item to start tracking live stock.</p>
+              <button
+                onClick={() => setShowAdd(true)}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#D3232A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b01e23]"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add First Item
+              </button>
+            </div>
           ) : (
-            <InventoryItemTable
-              items={filteredItems}
-              onAdjust={setAdjustTarget}
-              canManage={canManage}
-            />
+            <div className="overflow-x-auto">
+              <InventoryItemTable
+                items={filteredItems as any}
+                onAdjust={setAdjustTarget}
+                canManage={true}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -337,9 +284,12 @@ export default function InventoryPage() {
         <Overlay onClose={() => setShowAdd(false)}>
           <AddItemModal
             outletId={activeBranch.id}
-            onCreated={handleItemCreated}
+            onCreated={() => {
+              setShowAdd(false);
+              refetch();
+            }}
             onClose={() => setShowAdd(false)}
-            isDemo={isDemo}
+            isDemo={false}
           />
         </Overlay>
       )}
@@ -350,31 +300,38 @@ export default function InventoryPage() {
           <AdjustStockModal
             outletId={activeBranch.id}
             item={adjustTarget}
-            onAdjusted={handleAdjusted}
-            onDemoAdjust={isDemo ? handleDemoAdjust : undefined}
+            onAdjusted={() => {
+              setAdjustTarget(null);
+              refetch();
+            }}
             onClose={() => setAdjustTarget(null)}
           />
         </Overlay>
       )}
 
-      {/* Toasts */}
-      {toasts.map((t) => (
-        <InventoryToast
-          key={t.id}
-          message={t.message}
-          variant={t.variant}
-          onDismiss={() => dismissToast(t.id)}
-        />
-      ))}
+      {/* 1-Click Smart PO Generator Modal */}
+      {showSmartPO && activeBranch && (
+        <Overlay onClose={() => setShowSmartPO(false)}>
+          <SmartPOModal
+            outletId={activeBranch.id}
+            lowStockItems={lowStockItems}
+            onClose={() => setShowSmartPO(false)}
+            onSuccess={() => {
+              setShowSmartPO(false);
+              refetch();
+            }}
+          />
+        </Overlay>
+      )}
     </DashboardLayout>
   );
 }
 
-// ── Overlay ───────────────────────────────────────────────────────────────────
+
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
       onClick={onClose}
     >
       <div onClick={(e) => e.stopPropagation()}>{children}</div>

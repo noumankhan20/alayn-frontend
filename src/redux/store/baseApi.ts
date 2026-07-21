@@ -5,8 +5,22 @@ const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const BASE_URL = RAW_URL.endsWith("/") ? RAW_URL.slice(0, -1) : RAW_URL;
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: BASE_URL,
+    baseUrl: BASE_URL || "http://localhost:5000/api/v1",
     credentials: "include",
+
+    prepareHeaders: (headers) => {
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("alayn_access_token");
+            if (token) {
+                headers.set("authorization", `Bearer ${token}`);
+            }
+            const outletId = localStorage.getItem("alayn_active_branch_id");
+            if (outletId) {
+                headers.set("x-outlet-id", outletId);
+            }
+        }
+        return headers;
+    },
     prepareHeaders: (headers) => {
         if (typeof window !== "undefined") {
             const token = localStorage.getItem("alayn_access_token") ||
@@ -93,6 +107,13 @@ export const baseApi = createApi({
         "Inventory",
         "Attendance",
         "Dashboard",
+        "PurchaseOrder",
+        "Supplier",
+        "Waste",
+        "MenuItems",
+        "MenuCategories",
+        "Orders",
+        "KitchenTickets",
         "Shift",
         "Leave",
     ],
