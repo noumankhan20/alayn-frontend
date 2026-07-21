@@ -2,7 +2,6 @@ import { createSlice } from "@reduxjs/toolkit";
 
 interface AuthState {
     user: any;
-    // token: string | null;
     isAuthenticated: boolean;
 }
 
@@ -19,7 +18,7 @@ const getInitialUser = () => {
 const getInitialIsAuthenticated = () => {
     if (typeof window === "undefined") return false;
     try {
-        return !!localStorage.getItem("auth_user");
+        return !!localStorage.getItem("auth_user") || !!localStorage.getItem("alayn_access_token");
     } catch {
         return false;
     }
@@ -37,20 +36,39 @@ const authSlice = createSlice({
 
     reducers: {
         setCredentials: (state, action) => {
-            state.user = action.payload;
-            // state.token = action.payload.token;
+            const payload = action.payload;
+            const user = payload?.user || payload;
+            const token = payload?.accessToken || payload?.token;
+            const refreshToken = payload?.refreshToken;
+
+            state.user = user;
             state.isAuthenticated = true;
-            localStorage.setItem(
-                "auth_user",
-                JSON.stringify(action.payload)
-            );
+
+            try {
+                localStorage.setItem("auth_user", JSON.stringify(user));
+                if (token) {
+                    localStorage.setItem("alayn_access_token", token);
+                }
+                if (refreshToken) {
+                    localStorage.setItem("alayn_refresh_token", refreshToken);
+                }
+            } catch {
+                // ignore
+            }
         },
 
         logout: (state) => {
             state.user = null;
-            // state.token = null;
             state.isAuthenticated = false;
-            localStorage.removeItem("auth_user");
+            try {
+                localStorage.removeItem("auth_user");
+                localStorage.removeItem("alayn_access_token");
+                localStorage.removeItem("alayn_refresh_token");
+                localStorage.removeItem("alayn_active_branch_id");
+                localStorage.removeItem("alayn_cached_branches");
+            } catch {
+                // ignore
+            }
         },
     },
 });

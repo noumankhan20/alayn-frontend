@@ -1,7 +1,18 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Branch, fetchBranches } from "./api";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useGetOutletsQuery, Outlet } from "@/redux/slices/outletApiSlice";
+import { useAppSelector } from "@/redux/store/hooks";
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  businessId?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
 
 interface BranchContextType {
   activeBranch: Branch | null;
@@ -29,60 +40,57 @@ const DEMO_BRANCHES: Branch[] = [
 ];
 
 export function BranchProvider({ children }: { children: React.ReactNode }) {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranch, setActiveBranchState] = useState<Branch | null>(ALL_OUTLETS_BRANCH);
-  const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  const refreshBranches = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchBranches();
-      if (data && data.length > 0) {
-        const fullBranchList = [ALL_OUTLETS_BRANCH, ...data];
-        setBranches(fullBranchList);
-        setIsDemo(false);
-        
-        // Restore active branch selection from localstorage if valid
-        const savedId = localStorage.getItem("alayn_active_branch_id");
-        const matched = fullBranchList.find((b) => b.id === savedId);
-        const nextBranch = matched || ALL_OUTLETS_BRANCH;
-        setActiveBranchState(nextBranch);
+  // Enterprise Redux RTK Query Store Cache Hook
+  const { 
+    data: fetchedOutlets, 
+    isLoading: isQueryLoading, 
+    refetch 
+  } = useGetOutletsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  const [activeBranch, setActiveBranchState] = useState<Branch | null>(null);
+
+  const rawOutlets = fetchedOutlets || [];
+  const isDemo = !isAuthenticated;
+  const loading = isAuthenticated ? (isQueryLoading && rawOutlets.length === 0) : false;
+
+  const branches: Branch[] = isDemo
+    ? DEMO_BRANCHES
+    : rawOutlets.length > 1
+    ? [ALL_OUTLETS_BRANCH, ...rawOutlets]
+    : rawOutlets;
+
+  useEffect(() => {
+    if (isDemo) {
+      setActiveBranchState(DEMO_BRANCHES[0]);
+    } else if (branches.length > 0) {
+      const savedId = typeof window !== "undefined" ? localStorage.getItem("alayn_active_branch_id") : null;
+      const matched = branches.find((b) => b.id === savedId);
+      const nextBranch = matched || branches[0];
+      setActiveBranchState(nextBranch);
+      if (nextBranch && typeof window !== "undefined") {
         localStorage.setItem("alayn_active_branch_id", nextBranch.id);
-      } else {
-        const token = localStorage.getItem("alayn_access_token");
-        if (token) {
-          setBranches([ALL_OUTLETS_BRANCH]);
-          setActiveBranchState(ALL_OUTLETS_BRANCH);
-          setIsDemo(false);
-        } else {
-          setBranches(DEMO_BRANCHES);
-          setActiveBranchState(ALL_OUTLETS_BRANCH);
-          setIsDemo(true);
-        }
       }
-    } catch (err) {
-      console.error("Failed to load branches:", err);
-      setBranches(DEMO_BRANCHES);
-      setActiveBranchState(ALL_OUTLETS_BRANCH);
-      setIsDemo(true);
-    } finally {
-      setLoading(false);
+    } else {
+      setActiveBranchState(null);
     }
-  }, []);
+  }, [branches.length, isDemo]);
 
   const setActiveBranch = (branch: Branch | null) => {
     setActiveBranchState(branch);
-    if (branch) {
+    if (branch && typeof window !== "undefined") {
       localStorage.setItem("alayn_active_branch_id", branch.id);
-    } else {
+    } else if (typeof window !== "undefined") {
       localStorage.removeItem("alayn_active_branch_id");
     }
   };
 
-  useEffect(() => {
-    refreshBranches();
-  }, [refreshBranches]);
+  const refreshBranches = async () => {
+    await refetch();
+  };
 
   return (
     <BranchContext.Provider value={{ activeBranch, setActiveBranch, branches, loading, isDemo, refreshBranches }}>

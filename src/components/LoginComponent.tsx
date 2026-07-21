@@ -30,10 +30,8 @@ export default function LoginComponent() {
 
       console.log("Login response:", response);
 
-      const userPayload = response?.data?.user || response?.user || response;
-      dispatch(
-        setCredentials(userPayload)
-      );
+      const payload = response?.data || response;
+      dispatch(setCredentials(payload));
 
       router.replace("/dashboard");
     } catch (err: any) {

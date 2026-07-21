@@ -1,114 +1,242 @@
 "use client";
 
-import React from "react";
+import React, { memo, useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutGrid, 
-  TrendingUp, 
-  Users, 
-  ClipboardList, 
+import {
+  LayoutGrid,
+  Store,
+  Users,
   Package,
-  Lightbulb, 
-  Settings, 
-  HelpCircle, 
-  User, 
-  Building2, 
-  Sparkles 
+  UtensilsCrossed,
+  ClipboardList,
+  MessageSquare,
+  Trash2,
+  Settings,
+  Calendar,
+  FileText,
+  CreditCard,
+  ChefHat,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/redux/store/hooks";
 
-const navItems = [
+type Role = "BUSINESS_OWNER" | "SUPER_ADMIN" | "MANAGER" | "STAFF" | "KITCHEN";
+
+interface NavItem {
+  name: string;
+  icon: React.ElementType;
+  href: string;
+  badge?: string;
+}
+
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+const ownerNavItems: NavItem[] = [
   { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
-  { name: "Performance", icon: TrendingUp, href: "/performance" },
+  { name: "Location Manager", icon: Store, href: "/outlets" },
   { name: "Workforce", icon: Users, href: "/workforce" },
-  { name: "Operations", icon: ClipboardList, href: "/operations" },
-  { name: "Inventory", icon: Package, href: "/inventory" },
-  { name: "Insights", icon: Lightbulb, href: "/insights" },
+  { name: "Smart Inventory", icon: Package, href: "/inventory" },
+  { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
+  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Support & Tickets", icon: MessageSquare, href: "/support" },
+  { name: "Waste Management", icon: Trash2, href: "/waste" },
   { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
-const bottomNavItems = [
-  { name: "Help", icon: HelpCircle, href: "/help" },
-  { name: "Profile", icon: User, href: "/profile" },
-  { name: "Organization", icon: Building2, href: "/organization" },
+const managerNavItems: NavItem[] = [
+  { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
+  { name: "Workforce Directory", icon: Users, href: "/workforce" },
+  { name: "Inventory", icon: Package, href: "/inventory" },
+  { name: "POS & Operations", icon: ClipboardList, href: "/operations" },
+  { name: "Support Tickets", icon: MessageSquare, href: "/support" },
+  { name: "Waste Logs", icon: Trash2, href: "/waste" },
 ];
 
-export default function Sidebar() {
+const staffNavItems: NavItem[] = [
+  { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
+  { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
+  { name: "POS Terminal", icon: CreditCard, href: "/operations" },
+  { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
+];
+
+const kitchenNavItems: NavItem[] = [
+  { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
+  { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
+  { name: "Kitchen Dispatch", icon: ChefHat, href: "/operations" },
+  { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
+];
+
+// Memoized nav link item
+const NavLinkItem = memo(function NavLinkItem({
+  item,
+  isActive,
+  isCollapsed,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  isCollapsed: boolean;
+}) {
+  return (
+    <Link
+      href={item.href}
+      title={isCollapsed ? item.name : undefined}
+      className={cn(
+        "group relative flex items-center rounded-xl text-[13px] font-medium transition-colors duration-100",
+        isCollapsed ? "h-11 w-11 justify-center" : "h-10 px-3.5",
+        isActive
+          ? "bg-white/[0.08] text-white"
+          : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+      )}
+    >
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-[#D3232A]" />
+      )}
+      <item.icon
+        className={cn(
+          "h-[18px] w-[18px] shrink-0",
+          !isCollapsed && "mr-3",
+          isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-200"
+        )}
+        aria-hidden="true"
+      />
+      {!isCollapsed && (
+        <span className="truncate leading-none">{item.name}</span>
+      )}
+      {!isCollapsed && item.badge && (
+        <span className="ml-auto shrink-0 rounded-full bg-[#D3232A] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+          {item.badge}
+        </span>
+      )}
+    </Link>
+  );
+});
+
+function SidebarComponent({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
+  const user = useAppSelector((state) => state.auth.user);
+  const role: Role = useMemo(() => (user?.role as Role) || "BUSINESS_OWNER", [user?.role]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const navItems = useMemo(() => {
+    if (role === "MANAGER") return managerNavItems;
+    if (role === "STAFF") return staffNavItems;
+    if (role === "KITCHEN") return kitchenNavItems;
+    return ownerNavItems;
+  }, [role]);
+
+  // Use stable SSR-safe fallbacks until client mounts
+  const displayName = mounted ? (user?.name || "Owner") : "Owner";
+  const displayInitial = displayName.charAt(0).toUpperCase();
+  const displayRole = (user?.role || "BUSINESS_OWNER").replace(/_/g, " ");
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#0B1221] text-zinc-400">
-      {/* Logo Section */}
-      <div className="flex flex-col px-4 pt-8 pb-4">
-        <div className="w-52">
-          <Image 
-            src="/blackalaynlogo.png" 
-            alt="ALAYN Logo" 
-            width={208} 
-            height={53} 
-            className="h-auto w-full object-contain"
-            style={{ height: "auto" }}
+    <aside
+      className="flex h-full flex-col bg-[#0B1221] border-r border-white/[0.05] relative select-none w-full"
+      aria-label="Sidebar navigation"
+    >
+      {/* ── Collapse toggle ────────────────────────── */}
+      {onToggleCollapse && (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="absolute -right-[14px] top-[26px] z-50 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#1A2335] text-zinc-300 shadow-lg hover:bg-[#D3232A] hover:text-white hover:border-[#D3232A] transition-colors duration-150"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          )}
+        </button>
+      )}
+
+      {/* ── Logo ──────────────────────────────────── */}
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center border-b border-white/[0.05]",
+          isCollapsed ? "justify-center px-0" : "px-5"
+        )}
+      >
+        {isCollapsed ? (
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D3232A] text-white font-serif font-extrabold text-xl shadow-sm">
+            A
+          </div>
+        ) : (
+          <Image
+            src="/whitelogo.png"
+            alt="Alayn AI"
+            width={160}
+            height={44}
+            className="w-[140px] h-auto object-contain"
             priority
           />
-        </div>
+        )}
       </div>
 
-      {/* Main Navigation */}
-      <nav className="flex-1 space-y-1 px-3">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "group flex items-center rounded-md px-3 py-2.5 text-sm font-medium transition-colors relative",
-                isActive
-                  ? "bg-white/10 text-white"
-                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
-              )}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D3232A] rounded-r-sm" />
-              )}
-              <item.icon
-                className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
-                )}
-                aria-hidden="true"
-              />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* ── Main Nav (scrollable, fills all space) ── */}
+      <div className={cn("flex-1 min-h-0 flex flex-col pt-4", isCollapsed ? "px-2" : "px-3")}>
+        {!isCollapsed && (
+          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-600">
+            Navigation
+          </p>
+        )}
 
-      {/* Bottom Section */}
-      <div className="p-4 space-y-4">
-        <button className="flex w-full items-center justify-center gap-2 rounded-md bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors">
-          <Sparkles className="h-4 w-4" />
-          Ask Alayn
-        </button>
-
-        <nav className="space-y-1 mt-6">
-          {bottomNavItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white transition-colors"
-            >
-              <item.icon
-                className="mr-3 h-5 w-5 flex-shrink-0 text-zinc-400 group-hover:text-white"
-                aria-hidden="true"
-              />
-              {item.name}
-            </Link>
+        {/* overflow-y-auto so items never hide behind footer */}
+        <nav
+          className="flex-1 overflow-y-auto flex flex-col gap-[3px] pb-2 scrollbar-none"
+          role="navigation"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {navItems.map((item) => (
+            <NavLinkItem
+              key={item.href}
+              item={item}
+              isActive={pathname === item.href}
+              isCollapsed={isCollapsed}
+            />
           ))}
         </nav>
       </div>
-    </div>
+
+      {/* ── User Badge (pinned at bottom) ─────────── */}
+      <div
+        className={cn(
+          "shrink-0 border-t border-white/[0.05] p-3",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-3 rounded-xl bg-white/[0.04] border border-white/[0.05]",
+            isCollapsed ? "h-11 w-11 justify-center" : "px-3 py-2.5"
+          )}
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#D3232A] text-xs font-bold text-white shadow-sm" suppressHydrationWarning>
+            {displayInitial}
+          </div>
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-zinc-200 leading-tight" suppressHydrationWarning>
+                {displayName}
+              </p>
+              <p className="truncate text-[10px] text-zinc-500 font-medium leading-tight mt-0.5" suppressHydrationWarning>
+                {displayRole}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 }
+
+export default memo(SidebarComponent);

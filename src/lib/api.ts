@@ -1,8 +1,8 @@
 // Frontend API Client — Alayn Backend
 // All branch-scoped calls accept outletId explicitly (from BranchContext).
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BACKEND_URL = RAW_URL.endsWith("/api/v1") ? RAW_URL : `${RAW_URL.replace(/\/$/, "")}/api/v1`;
 
 const TOKEN_KEY = "alayn_access_token";
 
@@ -10,7 +10,18 @@ const TOKEN_KEY = "alayn_access_token";
 
 function readToken(): string | null {
   if (typeof window === "undefined") return null;
-  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+  try {
+    const cached = localStorage.getItem(TOKEN_KEY);
+    if (cached) return cached;
+    const authUserStr = localStorage.getItem("auth_user");
+    if (authUserStr) {
+      const parsed = JSON.parse(authUserStr);
+      return parsed?.accessToken || parsed?.token || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function writeToken(tok: string) {
@@ -18,25 +29,9 @@ function writeToken(tok: string) {
   try { localStorage.setItem(TOKEN_KEY, tok); } catch { /* noop */ }
 }
 
-/** Returns the cached access token or fetches a fresh one via the dev login. */
+/** Returns the cached access token from state / localStorage. */
 export async function getAccessToken(): Promise<string | null> {
-  const cached = readToken();
-  if (cached) return cached;
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "owner@alayn.com", password: "password123" }),
-    });
-    if (!res.ok) return null;
-    const body = await res.json();
-    const tok: string = body?.data?.accessToken ?? body?.accessToken ?? "";
-    if (tok) writeToken(tok);
-    return tok || null;
-  } catch {
-    return null;
-  }
+  return readToken();
 }
 
 // ── Shared request helper ─────────────────────────────────────────────────────
@@ -50,28 +45,64 @@ interface RequestOptions {
 async function apiRequest<T>(
   path: string,
   opts: RequestOptions = {},
+  isRetry = false
 ): Promise<{ ok: true; data: T } | { ok: false; error: string; status?: number }> {
   const token = await getAccessToken();
-  if (!token) {
-    return { ok: false, error: "Not authenticated" };
-  }
 
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`,
-  };
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.outletId) headers["x-outlet-id"] = opts.outletId;
 
+  // Normalize path to prevent duplicate /api/v1/api/v1
+  const cleanPath = path.startsWith("/api/v1")
+    ? path.replace(/^\/api\/v1/, "")
+    : path;
+  const normalizedPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
+  const targetUrl = `${BACKEND_URL}${normalizedPath}`;
+
   try {
-    const res = await fetch(`${BACKEND_URL}${path}`, {
+    const res = await fetch(targetUrl, {
       method: opts.method ?? "GET",
       headers,
+      credentials: "include",
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
     });
 
     const json = await res.json();
 
     if (!res.ok) {
+      if (res.status === 401 && !isRetry && !path.includes("/auth/")) {
+        const storedRefreshToken = typeof window !== "undefined" ? localStorage.getItem("alayn_refresh_token") : null;
+        try {
+          const refreshRes = await fetch(`${BACKEND_URL}/auth/refresh`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(storedRefreshToken ? { "x-refresh-token": storedRefreshToken } : {})
+            },
+            credentials: "include",
+            body: storedRefreshToken ? JSON.stringify({ refreshToken: storedRefreshToken }) : undefined,
+          });
+          if (refreshRes.ok) {
+            const refreshJson = await refreshRes.json();
+            const refreshData = refreshJson?.data || refreshJson;
+            if (refreshData?.accessToken) {
+              writeToken(refreshData.accessToken);
+              if (refreshData.refreshToken && typeof window !== "undefined") {
+                localStorage.setItem("alayn_refresh_token", refreshData.refreshToken);
+              }
+              // Retry original request
+              return apiRequest<T>(path, opts, true);
+            }
+          }
+        } catch {
+          // ignore refresh error
+        }
+      }
+
       if (res.status === 403) {
         return {
           ok: false,
@@ -202,7 +233,7 @@ const FALLBACK_INVENTORY: InventoryItem[] = [
 // ── Branches API ──────────────────────────────────────────────────────────────
 
 export async function fetchBranches(): Promise<Branch[]> {
-  const result = await apiRequest<Branch[]>("/inventory/branches");
+  const result = await apiRequest<Branch[]>("/outlets");
   if (result.ok) return result.data;
   console.warn("fetchBranches failed:", result.error);
   return [];
