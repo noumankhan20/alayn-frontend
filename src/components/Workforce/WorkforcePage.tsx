@@ -9,6 +9,7 @@ import {
   useUpdateEmployeeMutation,
   useUploadDocumentMutation,
 } from "@/redux/slices/employeeApiSlice";
+import { useGetOutletsQuery } from "@/redux/slices/outletApiSlice";
 import {
   Users,
   UserCheck,
@@ -22,12 +23,16 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  Building2,
+  Mail,
+  Lock,
 } from "lucide-react";
 
 const DEMO_EMPLOYEES = [
   {
     id: "demo-1",
     name: "Rohan Sharma",
+    email: "rohan.sharma@alayn.com",
     phone: "+91 98765 43210",
     role: "MANAGER",
     joiningDate: "2024-01-15",
@@ -37,6 +42,7 @@ const DEMO_EMPLOYEES = [
   {
     id: "demo-2",
     name: "Priya Patel",
+    email: "priya.patel@alayn.com",
     phone: "+91 98123 45678",
     role: "STAFF",
     joiningDate: "2024-03-01",
@@ -46,6 +52,7 @@ const DEMO_EMPLOYEES = [
   {
     id: "demo-3",
     name: "Amit Kumar",
+    email: "amit.kumar@alayn.com",
     phone: "+91 97111 22233",
     role: "KITCHEN",
     joiningDate: "2024-02-10",
@@ -55,6 +62,7 @@ const DEMO_EMPLOYEES = [
   {
     id: "demo-4",
     name: "Sneha Reddy",
+    email: "sneha.reddy@alayn.com",
     phone: "+91 99887 76655",
     role: "STAFF",
     joiningDate: "2023-11-20",
@@ -65,11 +73,15 @@ const DEMO_EMPLOYEES = [
 
 export default function WorkforcePage() {
   const { data: apiData, isLoading } = useGetEmployeesQuery(undefined);
+  const { data: outletsData } = useGetOutletsQuery();
   const [createEmployee, { isLoading: isCreating }] = useCreateEmployeeMutation();
   const [updateEmployee, { isLoading: isUpdating }] = useUpdateEmployeeMutation();
   const [uploadDocument, { isLoading: isUploading }] = useUploadDocumentMutation();
 
   const employees = apiData?.data || (isLoading ? [] : DEMO_EMPLOYEES);
+  const outlets: any[] = Array.isArray(outletsData)
+    ? outletsData
+    : (outletsData as any)?.data || [];
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -83,19 +95,37 @@ export default function WorkforcePage() {
   // Form states
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
+    password: "",
     phone: "",
     role: "STAFF",
     joiningDate: new Date().toISOString().split("T")[0],
     status: "ACTIVE",
+    outletIds: [] as string[],
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
+  const handleOpenAddModal = () => {
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      phone: "",
+      role: "STAFF",
+      joiningDate: new Date().toISOString().split("T")[0],
+      status: "ACTIVE",
+      outletIds: outlets.length > 0 ? [outlets[0].id] : [],
+    });
+    setShowAddModal(true);
+  };
+
   const filteredEmployees = employees.filter((emp: any) => {
     const matchesSearch =
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.phone.includes(searchTerm);
+      emp.phone.includes(searchTerm) ||
+      (emp.email && emp.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole = roleFilter === "ALL" || emp.role === roleFilter;
     const matchesStatus = statusFilter === "ALL" || emp.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -112,14 +142,17 @@ export default function WorkforcePage() {
     e.preventDefault();
     try {
       await createEmployee(formData).unwrap();
-      setFeedbackMsg("Employee created successfully!");
+      setFeedbackMsg("Employee created successfully and registered as User!");
       setShowAddModal(false);
       setFormData({
         name: "",
+        email: "",
+        password: "",
         phone: "",
         role: "STAFF",
         joiningDate: new Date().toISOString().split("T")[0],
         status: "ACTIVE",
+        outletIds: [],
       });
     } catch (err: any) {
       setFeedbackMsg(err?.data?.message || "Failed to create employee");
@@ -168,17 +201,8 @@ export default function WorkforcePage() {
             </p>
           </div>
           <button
-            onClick={() => {
-              setFormData({
-                name: "",
-                phone: "",
-                role: "STAFF",
-                joiningDate: new Date().toISOString().split("T")[0],
-                status: "ACTIVE",
-              });
-              setShowAddModal(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#D3232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#b01e23] transition-colors cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Add Employee
@@ -303,8 +327,9 @@ export default function WorkforcePage() {
               <thead className="bg-gray-50 text-gray-700 uppercase text-xs tracking-wider border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Employee Name</th>
-                  <th className="px-6 py-3 font-semibold">Phone</th>
+                  <th className="px-6 py-3 font-semibold">Contact & Email</th>
                   <th className="px-6 py-3 font-semibold">Role</th>
+                  <th className="px-6 py-3 font-semibold">Branch(es)</th>
                   <th className="px-6 py-3 font-semibold">Joining Date</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
                   <th className="px-6 py-3 font-semibold">Documents</th>
@@ -314,13 +339,13 @@ export default function WorkforcePage() {
               <tbody className="divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                       Loading workforce directory...
                     </td>
                   </tr>
                 ) : filteredEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                       No employees found matching your criteria.
                     </td>
                   </tr>
@@ -328,7 +353,10 @@ export default function WorkforcePage() {
                   filteredEmployees.map((emp: any) => (
                     <tr key={emp.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900">{emp.name}</td>
-                      <td className="px-6 py-4 text-gray-600">{emp.phone}</td>
+                      <td className="px-6 py-4 text-xs text-gray-600">
+                        <div className="font-medium text-gray-900">{emp.phone}</div>
+                        <div className="text-gray-500 font-mono text-[11px] mt-0.5">{emp.email || emp.user?.email || "—"}</div>
+                      </td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -343,6 +371,25 @@ export default function WorkforcePage() {
                         >
                           {emp.role}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-gray-600">
+                        {emp.outlet?.name ? (
+                          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md font-medium">
+                            <Building2 className="h-3 w-3 text-gray-500" />
+                            {emp.outlet.name}
+                          </span>
+                        ) : emp.user?.outlets && emp.user.outlets.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {emp.user.outlets.map((u: any) => (
+                              <span key={u.outlet.id} className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md font-medium text-[11px]">
+                                <Building2 className="h-3 w-3 text-purple-500" />
+                                {u.outlet.name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Default Branch</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-gray-600">
                         {new Date(emp.joiningDate).toLocaleDateString("en-IN", {
@@ -390,12 +437,15 @@ export default function WorkforcePage() {
                               setEditEmployeeItem(emp);
                               setFormData({
                                 name: emp.name,
+                                email: emp.email || emp.user?.email || "",
+                                password: "",
                                 phone: emp.phone,
                                 role: emp.role,
                                 joiningDate: new Date(emp.joiningDate)
                                   .toISOString()
                                   .split("T")[0],
                                 status: emp.status,
+                                outletIds: emp.outletId ? [emp.outletId] : [],
                               });
                             }}
                             title="Edit Employee"
@@ -415,21 +465,25 @@ export default function WorkforcePage() {
 
         {/* Add Employee Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+            <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200 my-8">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 className="text-lg font-bold text-gray-900">Add New Employee</h3>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Add New Employee</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Registers employee profile & user login account</p>
+                </div>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                {/* Full Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -440,9 +494,50 @@ export default function WorkforcePage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
                   />
                 </div>
+
+                {/* Email Address */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
+                    Email Address (Login Username) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="e.g. rahul.verma@alayn.com"
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Login Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <input
+                      type="password"
+                      required
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Employee will use this password to log into their account dashboard.
+                  </p>
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -453,6 +548,7 @@ export default function WorkforcePage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
                   />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -460,7 +556,16 @@ export default function WorkforcePage() {
                     </label>
                     <select
                       value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      onChange={(e) => {
+                        const newRole = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          role: newRole,
+                          outletIds: newRole !== "MANAGER" && prev.outletIds.length > 1
+                            ? [prev.outletIds[0]]
+                            : prev.outletIds,
+                        }));
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
                     >
                       <option value="STAFF">Staff</option>
@@ -483,6 +588,67 @@ export default function WorkforcePage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Branch / Outlet Selection */}
+                <div className="rounded-lg border border-gray-200 p-3 bg-gray-50/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Assigned Branch / Outlet <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[11px] font-medium text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                      {formData.role === "MANAGER" ? "Multi-Branch Allowed" : "Single Branch"}
+                    </span>
+                  </div>
+
+                  {outlets.length === 0 ? (
+                    <p className="text-xs text-gray-500 italic">No outlets found. Employee will be linked to default branch.</p>
+                  ) : formData.role === "MANAGER" ? (
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto border border-gray-200 rounded-md p-2 bg-white">
+                      {outlets.map((outlet: any) => {
+                        const isChecked = formData.outletIds.includes(outlet.id);
+                        return (
+                          <label key={outlet.id} className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    outletIds: [...prev.outletIds, outlet.id],
+                                  }));
+                                } else {
+                                  if (formData.outletIds.length > 1) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      outletIds: prev.outletIds.filter((id) => id !== outlet.id),
+                                    }));
+                                  }
+                                }
+                              }}
+                              className="rounded border-gray-300 text-[#D3232A] focus:ring-[#D3232A]"
+                            />
+                            <span className="font-medium">{outlet.name}</span>
+                            <span className="text-[10px] text-gray-400 ml-auto">{outlet.city}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.outletIds[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, outletIds: [e.target.value] })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#D3232A]"
+                    >
+                      {outlets.map((outlet: any) => (
+                        <option key={outlet.id} value={outlet.id}>
+                          {outlet.name} ({outlet.city})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Joining Date
@@ -508,9 +674,9 @@ export default function WorkforcePage() {
                   <button
                     type="submit"
                     disabled={isCreating}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#D3232A] hover:bg-[#b01e23] rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
-                    {isCreating ? "Saving..." : "Save Employee"}
+                    {isCreating ? "Saving & Registering..." : "Save Employee"}
                   </button>
                 </div>
               </form>
