@@ -55,21 +55,24 @@ export default function FieldCanvas({
     };
     buildRoutes(DEFAULT_NODES);
 
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
     let raf = 0;
     let startTs = 0;
 
-    const draw = (time: number) => {
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-      ctx.clearRect(0, 0, W, H);
+    let wasCleared = false;
 
+    const draw = (time: number) => {
       let wSum = 0;
       let chaos = 0;
       let sync = 0;
@@ -83,13 +86,24 @@ export default function FieldCanvas({
       const blended: FieldTarget =
         wSum > 0.001
           ? { chaos: chaos / wSum, sync: sync / wSum, presence: presence / wSum }
-          : currentRef.current;
+          : { chaos: currentRef.current.chaos, sync: currentRef.current.sync, presence: 0 };
 
       const cur = currentRef.current;
       const ease = 0.045;
       cur.chaos += (blended.chaos - cur.chaos) * ease;
       cur.sync += (blended.sync - cur.sync) * ease;
       cur.presence += (blended.presence - cur.presence) * ease;
+
+      if (wSum === 0 && cur.presence < 0.005) {
+        if (!wasCleared) {
+          ctx.clearRect(0, 0, W, H);
+          wasCleared = true;
+        }
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      wasCleared = false;
+      ctx.clearRect(0, 0, W, H);
 
       const activeNodes = nodesOverrideRef.current ?? DEFAULT_NODES;
       if (routes.length === 0 || routes[0].a.id !== activeNodes[0]?.id) buildRoutes(activeNodes);
@@ -175,6 +189,8 @@ export default function FieldCanvas({
         height: "100vh",
         pointerEvents: "none",
         zIndex: 0,
+        willChange: "transform",
+        transform: "translateZ(0)",
       }}
     />
   );

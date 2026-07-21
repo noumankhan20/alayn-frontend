@@ -12,7 +12,7 @@ export default function CalmScene() {
       sync={0.15}
       presence={0.12}
       className="landing-section"
-      style={{ background: "var(--cream)", minHeight: "60vh", display: "flex", alignItems: "center" }}
+      style={{ background: "var(--cream)", paddingTop: "40px", paddingBottom: "120px", display: "flex", alignItems: "center" }}
       ariaLabel="Calm"
     >
       <div style={{ maxWidth: "560px", margin: "0 auto", padding: "0 24px", textAlign: "center" }}>

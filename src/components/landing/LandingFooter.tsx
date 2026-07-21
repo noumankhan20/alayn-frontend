@@ -35,11 +35,16 @@ export default function LandingFooter() {
             }}
           >
             <Image
-              src="/blackalaynlogo.png"
-              alt="Alayn Logo"
-              width={256}
-              height={64}
-              style={{ height: "64px", width: "auto" }}
+              src="/whitelogo.png"
+              alt="Alayn — AI Operating System for Hospitality"
+              width={1280}
+              height={297}
+              style={{ 
+                height: "64px", 
+                width: "auto",
+                transform: "scale(1.5)",
+                transformOrigin: "left center"
+              }}
               className="w-auto object-contain"
             />
           </div>

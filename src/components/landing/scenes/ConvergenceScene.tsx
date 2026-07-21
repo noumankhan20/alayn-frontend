@@ -10,7 +10,7 @@ const MODULES = [
   { name: "Orders", outcome: "Counter, table, third-party delivery — all in one sync stream.", color: "rgba(196, 30, 42, 1)", angle: 30 },
   { name: "Insight", outcome: "Forecast operational velocity before the day even starts.", color: "rgba(27, 42, 74, 1)", angle: 90 },
   { name: "Waste", outcome: "Pinpoint prep-shift food waste to the exact rupee value.", color: "rgba(196, 30, 42, 1)", angle: 150 },
-  { name: "Guests", outcome: "Catch complaints and sync ticket updates before they leaves.", color: "rgba(27, 42, 74, 1)", angle: -150 },
+  { name: "Guests", outcome: "Catch complaints and sync ticket updates before they leave.", color: "rgba(27, 42, 74, 1)", angle: -150 },
 ];
 
 export default function ConvergenceScene() {
@@ -18,6 +18,16 @@ export default function ConvergenceScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hoveredRef = useRef<string | null>(null);
+  const logoImageRef = useRef<HTMLImageElement | null>(null);
+
+  // Load logo image on mount
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/darktext.png";
+    img.onload = () => {
+      logoImageRef.current = img;
+    };
+  }, []);
 
   // Sync ref with state for the draw loop
   useEffect(() => {
@@ -31,20 +41,30 @@ export default function ConvergenceScene() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = (canvas.width = canvas.clientWidth || 400);
-    let height = (canvas.height = 400);
-    let animationFrameId: number;
+    let width = 0;
+    let height = 0;
+    let cx = 0;
+    let cy = 0;
+    let R = 150;
+    let animationFrameId: number = 0;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = canvas.clientWidth || 400;
-      height = canvas.height = 400;
+    // Recomputed on every resize (not just once at mount) — previously the
+    // orbit's center/radius were frozen from the size at first render, so
+    // rotating a phone or resizing the window left the whole diagram
+    // permanently off-center relative to the canvas.
+    const resize = () => {
+      width = canvas.clientWidth || 400;
+      height = 400;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cx = width / 2;
+      cy = height / 2;
+      R = Math.min(150, width * 0.36);
     };
-    window.addEventListener("resize", handleResize);
-
-    const cx = width / 2;
-    const cy = height / 2;
-    const R = 150;
+    resize();
+    window.addEventListener("resize", resize);
 
     let phase = 0;
     let mouse = { x: -1000, y: -1000 };
@@ -63,7 +83,13 @@ export default function ConvergenceScene() {
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseleave", handleMouseLeave);
 
+    let isIntersecting = false;
+
     const draw = () => {
+      if (!isIntersecting) {
+        animationFrameId = 0;
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
 
       // Draw orbit circle
@@ -75,18 +101,6 @@ export default function ConvergenceScene() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Draw central hub
-      ctx.beginPath();
-      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
-      ctx.fillStyle = "var(--espresso)";
-      ctx.fill();
-
-      ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
-      ctx.fillStyle = "#FFFFFF";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("Alayn", cx, cy);
-
       // Pause rotation on hover so the user can easily read details
       if (!hoveredRef.current) {
         phase += 0.0045;
@@ -94,12 +108,12 @@ export default function ConvergenceScene() {
 
       let currentHovered: string | null = null;
 
-      MODULES.forEach((mod) => {
+      // FIRST PASS: Calculate positions and draw spoke lines (Edges)
+      const modulePositions = MODULES.map((mod) => {
         const angleRad = (mod.angle * Math.PI) / 180 + phase;
         const nx = cx + Math.cos(angleRad) * R;
         const ny = cy + Math.sin(angleRad) * R;
 
-        // Check if mouse is hovering over this dynamic position
         const dist = Math.hypot(mouse.x - nx, mouse.y - ny);
         if (dist < 28) {
           currentHovered = mod.name;
@@ -107,7 +121,7 @@ export default function ConvergenceScene() {
 
         const isHovered = hoveredRef.current === mod.name;
 
-        // Draw connecting spoke line
+        // Draw connecting spoke line behind the nodes
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(nx, ny);
@@ -115,6 +129,44 @@ export default function ConvergenceScene() {
         ctx.lineWidth = isHovered ? 1.5 : 0.75;
         ctx.stroke();
 
+        return { mod, nx, ny, isHovered };
+      });
+
+      // SECOND PASS: Draw central hub (Node)
+      ctx.beginPath();
+      ctx.arc(cx, cy, 38, 0, Math.PI * 2); // Slightly larger radius for the logo
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.strokeStyle = "#1B2A4A";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      if (logoImageRef.current) {
+        const img = logoImageRef.current;
+        const maxW = 56;
+        const maxH = 56;
+        let w = img.width;
+        let h = img.height;
+        const ratio = w / h;
+        if (w > maxW) {
+          w = maxW;
+          h = w / ratio;
+        }
+        if (h > maxH) {
+          h = maxH;
+          w = h * ratio;
+        }
+        ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
+      } else {
+        ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
+        ctx.fillStyle = "#1B2A4A";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Alayn", cx, cy);
+      }
+
+      // THIRD PASS: Draw outer nodes and labels
+      modulePositions.forEach(({ mod, nx, ny, isHovered }) => {
         // Draw node
         ctx.beginPath();
         ctx.arc(nx, ny, isHovered ? 28 : 24, 0, Math.PI * 2);
@@ -128,6 +180,8 @@ export default function ConvergenceScene() {
         // Node label
         ctx.font = "bold 9px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = mod.color;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(mod.name.toUpperCase(), nx, ny);
       });
 
@@ -139,10 +193,28 @@ export default function ConvergenceScene() {
       animationFrameId = requestAnimationFrame(draw);
     };
 
-    draw();
+    const observer = new IntersectionObserver(([entry]) => {
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        if (!animationFrameId) {
+          animationFrameId = requestAnimationFrame(draw);
+        }
+      } else {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = 0;
+        }
+      }
+    }, { threshold: 0 });
+
+    observer.observe(canvas);
+
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", handleResize);
+      observer.disconnect();
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      window.removeEventListener("resize", resize);
       if (canvas) {
         canvas.removeEventListener("mousemove", handleMouseMove);
         canvas.removeEventListener("mouseleave", handleMouseLeave);

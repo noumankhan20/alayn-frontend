@@ -19,7 +19,8 @@ import {
     ArrowLeft,
     Check,
 } from "lucide-react";
-import { useRegisterMutation } from "@/redux/slices/authApiSlice"; // adjust this import path to match your project structure
+import { useRegisterMutation } from "@/redux/slices/authApiSlice";
+import AuthShowcase from "@/components/auth/AuthShowcase";
 
 interface SignupFormState {
     // Step 1 — Account
@@ -75,17 +76,17 @@ function Field({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-semibold leading-6 text-[#0B1221]">
+            <label htmlFor={id} className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
                 {label}
             </label>
-            <div className="relative mt-2 rounded-xl shadow-sm">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+            <div className="relative mt-2 group">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-1">
                     {icon}
                 </div>
                 {children}
             </div>
             {error && (
-                <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-[#D3232A]">
+                <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-[#C41E2A]">
                     {error}
                 </p>
             )}
@@ -214,379 +215,337 @@ export default function SignupComponent() {
     };
 
     const inputClasses =
-        "block w-full rounded-xl border-0 py-3.5 pl-11 pr-3 text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#D3232A] sm:text-sm sm:leading-6 bg-gray-50/50 focus:bg-white transition-all duration-200";
+        "block w-full border-b border-[#1B2A4A]/20 py-3.5 pl-11 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 sm:text-sm [&>option]:text-[#1B2A4A]";
 
     const errorInputClasses =
-        "block w-full rounded-xl border-0 py-3.5 pl-11 pr-3 text-gray-900 ring-1 ring-inset ring-red-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[#D3232A] sm:text-sm sm:leading-6 bg-red-50/30 focus:bg-white transition-all duration-200";
+        "block w-full border-b border-[#C41E2A]/50 py-3.5 pl-11 pr-3 text-[#1B2A4A] placeholder:text-[#6B7A90] bg-transparent transition-all duration-300 focus:border-[#C41E2A] focus:shadow-[0_4px_12px_rgba(196,30,42,0.08)] focus:outline-none focus:ring-0 sm:text-sm [&>option]:text-[#1B2A4A]";
 
-    const iconClasses = "h-5 w-5 text-gray-400";
+    const iconClasses = "h-4.5 w-4.5 text-[#1B2A4A]/40 group-focus-within:text-[#1B2A4A] transition-colors";
 
     return (
-        <div className="flex min-h-screen flex-col lg:flex-row bg-white font-sans">
-            {/* LHS: Large Brand Section */}
-            <div className="hidden lg:flex lg:w-1/2 bg-[#0B1221] relative overflow-hidden flex-col justify-center items-center p-12">
-                <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-[#D3232A]/20 blur-3xl animate-pulse" />
-                <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="relative flex flex-col lg:flex-row min-h-screen bg-white font-sans overflow-hidden">
+            {/* Back Button */}
+            <Link 
+                href="/" 
+                className="absolute top-6 left-6 z-50 flex items-center gap-2 text-[#1B2A4A]/60 hover:text-[#1B2A4A] bg-[#F4F5F8] hover:bg-[#E8ECF1] px-4 py-2.5 rounded-xl border border-[#1B2A4A]/10 transition-all duration-300 group shadow-sm"
+            >
+                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-bold">Back</span>
+            </Link>
 
-                <div className="relative z-10 w-full max-w-md text-center flex flex-col items-center">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl mb-8 max-w-sm transition-transform duration-300 hover:scale-[1.02]">
-                        <Image
-                            src="/image.png"
-                            alt="ALAYN Logo"
-                            width={280}
-                            height={80}
-                            className="w-auto h-auto object-contain mx-auto"
-                            priority
-                            onError={(e) => {
-                                const target = e.target as HTMLElement;
-                                target.style.display = "none";
-                            }}
-                        />
+            {/* Left Pane: Form */}
+            <div className="flex-1 lg:flex-initial lg:w-[45%] xl:w-[40%] flex flex-col justify-start px-6 py-16 lg:py-24 z-10 relative bg-white border-r border-[#1B2A4A]/10 overflow-y-auto no-scrollbar max-h-screen">
+                <div className="w-full max-w-md mx-auto relative z-10 my-auto">
+                    {/* Logo */}
+                    <div className="flex justify-center lg:justify-start mb-12">
+                        <Link href="/">
+                            <Image
+                                src="/gptlogo.png"
+                                alt="Alayn — AI Operating System for Hospitality"
+                                width={1280}
+                                height={297}
+                                style={{ 
+                                  height: "56px", 
+                                  width: "auto",
+                                  transform: "scale(1.8)",
+                                  transformOrigin: "left center"
+                                }}
+                                className="w-auto object-contain"
+                                priority
+                            />
+                        </Link>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-wide font-serif">
-                        ALAYN <span className="text-[#D3232A]">AI</span>
-                    </h3>
-                    <p className="text-sm text-zinc-400 max-w-xs leading-relaxed">
-                        State-of-the-art restaurant operations, performance tracking, and machine learning insights.
-                    </p>
-                </div>
-            </div>
 
-            {/* Mobile Header: compact brand bar, replaces the boxy logo-only block */}
-            <div className="lg:hidden relative overflow-hidden bg-[#0B1221] px-6 pt-8 pb-10">
-                <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-[#D3232A]/20 blur-3xl" />
-                <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
-                <div className="relative z-10 flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-lg p-2">
-                        <Image
-                            src="/image.png"
-                            alt="ALAYN Logo"
-                            width={40}
-                            height={40}
-                            className="w-auto h-auto max-h-8 object-contain"
-                            priority
-                            onError={(e) => {
-                                const target = e.target as HTMLElement;
-                                target.style.display = "none";
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-white tracking-wide font-serif leading-tight">
-                            ALAYN <span className="text-[#D3232A]">AI</span>
-                        </h3>
-                        <p className="text-[11px] text-zinc-400 font-medium">
-                            Restaurant operations platform
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* RHS: Signup Form (rises over the mobile header as a rounded sheet) */}
-            <div className="relative z-10 -mt-5 flex w-full flex-1 flex-col justify-center rounded-t-3xl bg-white px-6 py-8 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] lg:mt-0 lg:w-1/2 lg:rounded-none lg:px-16 lg:py-12 lg:shadow-none xl:px-24">
-                <div className="mx-auto w-full max-w-md">
-                    <div className="text-left">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B1221] font-serif">
+                    <div className="text-center lg:text-left mb-10">
+                        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1B2A4A] font-serif">
                             Create your restaurant
                         </h2>
-                        <p className="mt-2.5 text-sm text-gray-500 font-medium">
+                        <p className="mt-2 text-sm text-[#6B7A90] font-medium leading-relaxed">
                             {step === 1 && "Let's start with your admin account details."}
                             {step === 2 && "Now, set up your first outlet."}
                         </p>
                     </div>
 
                     {/* Step Indicator */}
-                    <div className="mt-8 flex items-center" aria-label="Signup progress">
-                        {STEPS.map((s, idx) => {
+                    <div className="mb-10 flex gap-4 w-full" aria-label="Signup progress">
+                        {STEPS.map((s) => {
                             const isComplete = step > s.id;
                             const isActive = step === s.id;
                             return (
-                                <React.Fragment key={s.id}>
-                                    <div className="flex items-center gap-2.5">
-                                        <div
-                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${isComplete
-                                                ? "bg-[#D3232A] text-white"
-                                                : isActive
-                                                    ? "bg-[#0B1221] text-white ring-4 ring-[#0B1221]/10"
-                                                    : "bg-gray-100 text-gray-400"
-                                                }`}
-                                            aria-current={isActive ? "step" : undefined}
-                                        >
-                                            {isComplete ? <Check className="h-4 w-4" /> : s.id}
-                                        </div>
-                                        <span
-                                            className={`hidden sm:inline text-xs font-semibold uppercase tracking-wider ${isActive || isComplete ? "text-[#0B1221]" : "text-gray-400"
-                                                }`}
-                                        >
-                                            {s.label}
-                                        </span>
-                                    </div>
-                                    {idx < STEPS.length - 1 && (
-                                        <div
-                                            className={`mx-3 h-0.5 flex-1 rounded-full transition-colors duration-300 ${step > s.id ? "bg-[#D3232A]" : "bg-gray-100"
-                                                }`}
-                                        />
-                                    )}
-                                </React.Fragment>
+                                <div key={s.id} className="flex-1 flex flex-col gap-2">
+                                    <div className={`h-1 rounded-full transition-all duration-500 ${
+                                        isComplete || isActive ? "bg-[#C41E2A]" : "bg-[#1B2A4A]/10"
+                                    }`} />
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                        isComplete || isActive ? "text-[#C41E2A]" : "text-[#1B2A4A]/30"
+                                    }`}>
+                                        Step {s.id}: {s.label}
+                                    </span>
+                                </div>
                             );
                         })}
                     </div>
 
-                    <div className="mt-8">
-                        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-                            {submitError && (
-                                <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-[#D3232A] border border-red-100/80 font-medium">
-                                    {submitError}
-                                </div>
-                            )}
+                    <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+                        {submitError && (
+                            <div role="alert" className="rounded-xl bg-[#C41E2A]/10 p-4 text-sm text-[#C41E2A] border border-[#C41E2A]/20 font-medium">
+                                {submitError}
+                            </div>
+                        )}
 
-                            {submitSuccess && (
-                                <div role="status" className="rounded-xl bg-green-50 p-4 text-sm text-green-700 border border-green-100/80 font-medium">
-                                    Restaurant created successfully. Redirecting to sign in...
-                                </div>
-                            )}
+                        {submitSuccess && (
+                            <div role="status" className="rounded-xl bg-[#1B2A4A]/5 p-4 text-sm text-[#1B2A4A] border border-[#1B2A4A]/10 font-medium">
+                                Restaurant created successfully. Redirecting to sign in...
+                            </div>
+                        )}
 
-                            {/* STEP 1 — Account */}
-                            {step === 1 && (
-                                <div className="space-y-5">
-                                    <Field id="fullName" label="Full Name" icon={<User className={iconClasses} />} error={fieldErrors.fullName}>
-                                        <input
-                                            id="fullName"
-                                            name="fullName"
-                                            type="text"
-                                            autoComplete="name"
-                                            required
-                                            value={formData.fullName}
-                                            onChange={handleChange("fullName")}
-                                            placeholder="Jordan Rivera"
-                                            aria-invalid={!!fieldErrors.fullName}
-                                            aria-describedby={fieldErrors.fullName ? "fullName-error" : undefined}
-                                            className={fieldErrors.fullName ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
+                        {/* STEP 1 — Account */}
+                        {step === 1 && (
+                            <div className="space-y-5">
+                                <Field id="fullName" label="Full Name" icon={<User className={iconClasses} />} error={fieldErrors.fullName}>
+                                    <input
+                                        id="fullName"
+                                        name="fullName"
+                                        type="text"
+                                        autoComplete="name"
+                                        required
+                                        value={formData.fullName}
+                                        onChange={handleChange("fullName")}
+                                        placeholder="Jordan Rivera"
+                                        aria-invalid={!!fieldErrors.fullName}
+                                        aria-describedby={fieldErrors.fullName ? "fullName-error" : undefined}
+                                        className={fieldErrors.fullName ? errorInputClasses : inputClasses}
+                                    />
+                                </Field>
 
-                                    <Field id="email" label="Email Address" icon={<Mail className={iconClasses} />} error={fieldErrors.email}>
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            autoComplete="email"
-                                            required
-                                            value={formData.email}
-                                            onChange={handleChange("email")}
-                                            placeholder="name@alayn.com"
-                                            aria-invalid={!!fieldErrors.email}
-                                            aria-describedby={fieldErrors.email ? "email-error" : undefined}
-                                            className={fieldErrors.email ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
+                                <Field id="email" label="Email Address" icon={<Mail className={iconClasses} />} error={fieldErrors.email}>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={handleChange("email")}
+                                        placeholder="name@alayn.com"
+                                        aria-invalid={!!fieldErrors.email}
+                                        aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                                        className={fieldErrors.email ? errorInputClasses : inputClasses}
+                                    />
+                                </Field>
 
-                                    <Field id="phone" label="Phone Number" icon={<Phone className={iconClasses} />} error={fieldErrors.phone}>
-                                        <input
-                                            id="phone"
-                                            name="phone"
-                                            type="tel"
-                                            autoComplete="tel"
-                                            required
-                                            value={formData.phone}
-                                            onChange={handleChange("phone")}
-                                            placeholder="+91 98765 43210"
-                                            aria-invalid={!!fieldErrors.phone}
-                                            aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
-                                            className={fieldErrors.phone ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
+                                <Field id="phone" label="Phone Number" icon={<Phone className={iconClasses} />} error={fieldErrors.phone}>
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        autoComplete="tel"
+                                        required
+                                        value={formData.phone}
+                                        onChange={handleChange("phone")}
+                                        placeholder="+91 98765 43210"
+                                        aria-invalid={!!fieldErrors.phone}
+                                        aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
+                                        className={fieldErrors.phone ? errorInputClasses : inputClasses}
+                                    />
+                                </Field>
 
-                                    <div>
-                                        <label htmlFor="password" className="block text-sm font-semibold leading-6 text-[#0B1221]">
-                                            Password
-                                        </label>
-                                        <div className="relative mt-2 rounded-xl shadow-sm">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                                                <Lock className={iconClasses} />
-                                            </div>
-                                            <input
-                                                id="password"
-                                                name="password"
-                                                type={showPassword ? "text" : "password"}
-                                                autoComplete="new-password"
-                                                required
-                                                value={formData.password}
-                                                onChange={handleChange("password")}
-                                                placeholder="••••••••"
-                                                aria-invalid={!!fieldErrors.password}
-                                                aria-describedby={fieldErrors.password ? "password-error" : undefined}
-                                                className={(fieldErrors.password ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                aria-label={showPassword ? "Hide password" : "Show password"}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-[#D3232A] transition-colors"
-                                            >
-                                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                            </button>
+                                <div>
+                                    <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
+                                        Password
+                                    </label>
+                                    <div className="relative group">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                            <Lock className={iconClasses} />
                                         </div>
-                                        {fieldErrors.password && (
-                                            <p id="password-error" className="mt-1.5 text-xs font-medium text-[#D3232A]">
-                                                {fieldErrors.password}
-                                            </p>
-                                        )}
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            autoComplete="new-password"
+                                            required
+                                            value={formData.password}
+                                            onChange={handleChange("password")}
+                                            placeholder="••••••••"
+                                            aria-invalid={!!fieldErrors.password}
+                                            aria-describedby={fieldErrors.password ? "password-error" : undefined}
+                                            className={(fieldErrors.password ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                     </div>
+                                    {fieldErrors.password && (
+                                        <p id="password-error" className="mt-1.5 text-xs font-medium text-[#C41E2A]">
+                                            {fieldErrors.password}
+                                        </p>
+                                    )}
+                                </div>
 
-                                    <div>
-                                        <label htmlFor="confirmPassword" className="block text-sm font-semibold leading-6 text-[#0B1221]">
-                                            Confirm Password
-                                        </label>
-                                        <div className="relative mt-2 rounded-xl shadow-sm">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                                                <Lock className={iconClasses} />
-                                            </div>
-                                            <input
-                                                id="confirmPassword"
-                                                name="confirmPassword"
-                                                type={showConfirmPassword ? "text" : "password"}
-                                                autoComplete="new-password"
-                                                required
-                                                value={formData.confirmPassword}
-                                                onChange={handleChange("confirmPassword")}
-                                                placeholder="••••••••"
-                                                aria-invalid={!!fieldErrors.confirmPassword}
-                                                aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
-                                                className={(fieldErrors.confirmPassword ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-[#D3232A] transition-colors"
-                                            >
-                                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                            </button>
+                                <div>
+                                    <label htmlFor="confirmPassword" className="block text-[10px] font-bold uppercase tracking-wider text-[#6B7A90] mb-2">
+                                        Confirm Password
+                                    </label>
+                                    <div className="relative group">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                            <Lock className={iconClasses} />
                                         </div>
-                                        {fieldErrors.confirmPassword && (
-                                            <p id="confirmPassword-error" className="mt-1.5 text-xs font-medium text-[#D3232A]">
-                                                {fieldErrors.confirmPassword}
-                                            </p>
-                                        )}
+                                        <input
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            autoComplete="new-password"
+                                            required
+                                            value={formData.confirmPassword}
+                                            onChange={handleChange("confirmPassword")}
+                                            placeholder="••••••••"
+                                            aria-invalid={!!fieldErrors.confirmPassword}
+                                            aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
+                                            className={(fieldErrors.confirmPassword ? errorInputClasses : inputClasses).replace("pr-3", "pr-10")}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#1B2A4A]/40 hover:text-[#1B2A4A] transition-colors"
+                                        >
+                                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && (
+                                        <p id="confirmPassword-error" className="mt-1.5 text-xs font-medium text-[#C41E2A]">
+                                            {fieldErrors.confirmPassword}
+                                        </p>
+                                    )}
+                                </div>
 
+                                <div className="pt-2">
                                     <button
                                         type="button"
                                         onClick={goNext}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D3232A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-md hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3232A] transition-all duration-200 hover:-translate-y-[1px]"
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] transition-all duration-300 hover:-translate-y-[1px] mt-2 cursor-pointer"
                                     >
                                         Continue
                                         <ArrowRight className="h-4 w-4" />
                                     </button>
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {/* STEP 2 — First Outlet */}
-                            {step === 2 && (
-                                <div className="space-y-5">
-                                    <Field id="businessName" label="Business / Restaurant Name" icon={<Store className={iconClasses} />} error={fieldErrors.businessName}>
-                                        <input
-                                            id="businessName"
-                                            name="businessName"
-                                            type="text"
-                                            autoComplete="off"
-                                            required
-                                            value={formData.businessName}
-                                            onChange={handleChange("businessName")}
-                                            placeholder="Microsoft Cafe"
-                                            aria-invalid={!!fieldErrors.businessName}
-                                            aria-describedby={fieldErrors.businessName ? "businessName-error" : undefined}
-                                            className={fieldErrors.businessName ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
+                        {/* STEP 2 — First Outlet */}
+                        {step === 2 && (
+                            <div className="space-y-5">
+                                <Field id="businessName" label="Business / Restaurant Name" icon={<Store className={iconClasses} />} error={fieldErrors.businessName}>
+                                    <input
+                                        id="businessName"
+                                        name="businessName"
+                                        type="text"
+                                        autoComplete="off"
+                                        required
+                                        value={formData.businessName}
+                                        onChange={handleChange("businessName")}
+                                        placeholder="Microsoft Cafe"
+                                        aria-invalid={!!fieldErrors.businessName}
+                                        aria-describedby={fieldErrors.businessName ? "businessName-error" : undefined}
+                                        className={fieldErrors.businessName ? errorInputClasses : inputClasses}
+                                    />
+                                </Field>
 
-                                    <Field id="locationsCount" label="Number of Locations" icon={<Store className={iconClasses} />} error={fieldErrors.locationsCount}>
-                                        <select
-                                            id="locationsCount"
-                                            name="locationsCount"
-                                            required
-                                            value={formData.locationsCount}
-                                            onChange={handleChange("locationsCount")}
-                                            className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
-                                        >
-                                            <option value="">Select location range</option>
-                                            <option value="1">1 Location</option>
-                                            <option value="2-5">2-5 Locations</option>
-                                            <option value="6-10">6-10 Locations</option>
-                                            <option value="10+">10+ Locations</option>
-                                        </select>
-                                    </Field>
+                                <Field id="locationsCount" label="Number of Locations" icon={<Store className={iconClasses} />} error={fieldErrors.locationsCount}>
+                                    <select
+                                        id="locationsCount"
+                                        name="locationsCount"
+                                        required
+                                        value={formData.locationsCount}
+                                        onChange={handleChange("locationsCount")}
+                                        className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                    >
+                                        <option value="">Select location range</option>
+                                        <option value="1">1 Location</option>
+                                        <option value="2-5">2-5 Locations</option>
+                                        <option value="6-10">6-10 Locations</option>
+                                        <option value="10+">10+ Locations</option>
+                                    </select>
+                                </Field>
 
-                                    <Field id="businessType" label="Business Type" icon={<Store className={iconClasses} />} error={fieldErrors.businessType}>
-                                        <select
-                                            id="businessType"
-                                            name="businessType"
-                                            required
-                                            value={formData.businessType}
-                                            onChange={handleChange("businessType")}
-                                            className={fieldErrors.businessType ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
-                                        >
-                                            <option value="">Select business type</option>
-                                            <option value="restaurant">Restaurant</option>
-                                            <option value="cafe">Café</option>
-                                            <option value="bar">Bar</option>
-                                            <option value="qsr">QSR (Quick Service Restaurant)</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </Field>
+                                <Field id="businessType" label="Business Type" icon={<Store className={iconClasses} />} error={fieldErrors.businessType}>
+                                    <select
+                                        id="businessType"
+                                        name="businessType"
+                                        required
+                                        value={formData.businessType}
+                                        onChange={handleChange("businessType")}
+                                        className={fieldErrors.businessType ? errorInputClasses.replace("pl-11", "pl-4") : inputClasses.replace("pl-11", "pl-4")}
+                                    >
+                                        <option value="">Select business type</option>
+                                        <option value="restaurant">Restaurant</option>
+                                        <option value="cafe">Café</option>
+                                        <option value="bar">Bar</option>
+                                        <option value="qsr">QSR (Quick Service Restaurant)</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </Field>
 
-                                    <Field id="contactDetail" label="Company Contact Detail (Email / Phone)" icon={<Phone className={iconClasses} />} error={fieldErrors.contactDetail}>
-                                        <input
-                                            id="contactDetail"
-                                            name="contactDetail"
-                                            type="text"
-                                            required
-                                            value={formData.contactDetail}
-                                            onChange={handleChange("contactDetail")}
-                                            placeholder="contact@company.com or +91 98765 43210"
-                                            aria-invalid={!!fieldErrors.contactDetail}
-                                            aria-describedby={fieldErrors.contactDetail ? "contactDetail-error" : undefined}
-                                            className={fieldErrors.contactDetail ? errorInputClasses : inputClasses}
-                                        />
-                                    </Field>
+                                <Field id="contactDetail" label="Company Contact Detail (Email / Phone)" icon={<Phone className={iconClasses} />} error={fieldErrors.contactDetail}>
+                                    <input
+                                        id="contactDetail"
+                                        name="contactDetail"
+                                        type="text"
+                                        required
+                                        value={formData.contactDetail}
+                                        onChange={handleChange("contactDetail")}
+                                        placeholder="contact@company.com or +91 98765 43210"
+                                        aria-invalid={!!fieldErrors.contactDetail}
+                                        aria-describedby={fieldErrors.contactDetail ? "contactDetail-error" : undefined}
+                                        className={fieldErrors.contactDetail ? errorInputClasses : inputClasses}
+                                    />
+                                </Field>
 
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={goBack}
-                                            className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 text-sm font-bold leading-6 text-[#0B1221] ring-1 ring-inset ring-gray-200 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B1221] transition-all duration-200"
-                                        >
-                                            <ArrowLeft className="h-4 w-4" />
-                                            Back
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#D3232A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-md hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3232A] disabled:opacity-75 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-[1px]"
-                                        >
-                                            {isLoading ? (
-                                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                            ) : (
-                                                <>
-                                                    Create Business
-                                                    <ArrowRight className="h-4 w-4" />
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={goBack}
+                                        className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 text-sm font-bold leading-6 text-[#1B2A4A] border border-[#1B2A4A]/20 hover:bg-[#F4F5F8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A4A]/20 transition-all duration-300 cursor-pointer"
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                        Back
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#C41E2A] px-4 py-3.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-[#b01e23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C41E2A] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:-translate-y-[1px] cursor-pointer"
+                                    >
+                                        {isLoading ? (
+                                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                        ) : (
+                                            <>
+                                                Create Business
+                                                <ArrowRight className="h-4 w-4" />
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            <p className="text-center text-sm text-gray-500 font-medium">
-                                Already have an account?{" "}
-                                <Link href="/login" className="font-semibold text-[#D3232A] hover:text-[#b01e23] transition-colors">
-                                    Sign In
-                                </Link>
-                            </p>
-                        </form>
-                    </div>
+                        <p className="text-center lg:text-left text-sm text-[#6B7A90] font-medium mt-8">
+                            Already have an account?{" "}
+                            <Link href="/login" className="font-semibold text-[#C41E2A] hover:text-[#b01e23] transition-colors">
+                                Sign In
+                            </Link>
+                        </p>
+                    </form>
                 </div>
+            </div>
+
+            {/* Right Pane: Interactive Bento Grid Showcase */}
+            <div className="hidden lg:block lg:flex-1 relative">
+                <AuthShowcase />
             </div>
         </div>
     );

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alayn — Frontend Build Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17191C; --ink-soft:#3D434B;
+    --paper:#F6F3EC; --card:#FFFFFF;
+    --line:#E4DFD4; --line-soft:#EEEAE0;
+    --steel:#54606D; --steel-soft:#8A929C;
+    --saffron:#D9820F; --saffron-deep:#A9620A; --saffron-tint:#FBEED6;
+    --green:#256D4E; --green-tint:#DFEDE6;
+    --plum:#7A426C; --plum-tint:#F0E4EE;
+    --red:#B5432F;
+    --shadow:0 1px 2px rgba(23,25,28,.04), 0 8px 28px -18px rgba(23,25,28,.22);
+    --shadow-lg:0 2px 4px rgba(23,25,28,.05), 0 24px 60px -30px rgba(23,25,28,.30);
+    --display:"Bricolage Grotesque", system-ui, sans-serif;
+    --body:"IBM Plex Sans", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, monospace;
+    --maxw:1120px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--body); font-size:16px; line-height:1.6;
+    font-weight:400; letter-spacing:-.006em;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none;}
+  ::selection{background:var(--saffron); color:#fff;}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+
+  /* ---------- sticky nav ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(246,243,236,.82); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .wrap{display:flex; align-items:center; gap:20px; height:60px;}
+  .brand{display:flex; align-items:baseline; gap:9px; font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:-.02em;}
+  .brand .tm{width:9px; height:9px; border-radius:2px; background:var(--saffron); transform:translateY(-1px);}
+  .brand small{font-family:var(--mono); font-weight:500; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--steel);}
+  .dotnav{margin-left:auto; display:flex; gap:5px; align-items:center;}
+  .dotnav a{
+    font-family:var(--mono); font-size:11px; font-weight:500; color:var(--steel-soft);
+    width:26px; height:26px; display:grid; place-items:center; border-radius:7px;
+    transition:.18s;
+  }
+  .dotnav a:hover{color:var(--ink); background:var(--line-soft);}
+  .dotnav a.active{color:#fff; background:var(--ink);}
+  @media(max-width:720px){ .dotnav{display:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:74px 0 52px; border-bottom:1px solid var(--line);}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--saffron-deep); font-weight:600; display:flex; align-items:center; gap:12px;
+  }
+  .eyebrow::before{content:""; width:26px; height:2px; background:var(--saffron); display:inline-block;}
+  h1{
+    font-family:var(--display); font-weight:800; letter-spacing:-.03em; line-height:1.02;
+    font-size:clamp(38px, 6.2vw, 68px); margin:22px 0 0; max-width:16ch;
+  }
+  h1 em{font-style:normal; color:var(--saffron);}
+  .thesis{font-size:clamp(17px,2.1vw,20px); color:var(--ink-soft); max-width:60ch; margin:22px 0 0; line-height:1.5;}
+  .metastrip{display:flex; flex-wrap:wrap; gap:0; margin-top:38px; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--card);}
+  .metastrip .cell{flex:1 1 150px; padding:18px 22px; border-right:1px solid var(--line-soft);}
+  .metastrip .cell:last-child{border-right:none;}
+  .metastrip .num{font-family:var(--display); font-weight:700; font-size:30px; letter-spacing:-.02em; line-height:1;}
+  .metastrip .lbl{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--steel); margin-top:8px;}
+  .stackline{margin-top:22px; font-family:var(--mono); font-size:12.5px; color:var(--steel); display:flex; flex-wrap:wrap; gap:8px 6px; align-items:center;}
+  .stackline b{color:var(--ink); font-weight:600;}
+  .chip-stack{background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px 11px; color:var(--ink-soft);}
+
+  /* ---------- section scaffolding ---------- */
+  section[id]{scroll-margin-top:76px;}
+  .band{padding:60px 0; border-bottom:1px solid var(--line);}
+  .band-head{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:30px;}
+  .band-title{font-family:var(--display); font-weight:700; letter-spacing:-.025em; font-size:clamp(24px,3.4vw,34px); line-height:1.05;}
+  .band-kicker{font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--steel); margin-bottom:10px;}
+  .band-note{color:var(--ink-soft); max-width:52ch; font-size:15px;}
+
+  /* ---------- legend ---------- */
+  .legend{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px;}
+  .legend .li{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:15px 16px; box-shadow:var(--shadow);}
+  .legend .li h4{margin:0 0 5px; font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--steel); font-weight:600;}
+  .legend .li p{margin:0; font-size:13.5px; color:var(--ink-soft); line-height:1.45;}
+  .pill{font-family:var(--mono); font-weight:600; font-size:11px; padding:2px 8px; border-radius:6px; letter-spacing:.03em; display:inline-block; line-height:1.5;}
+  .pill.get{background:var(--green-tint); color:var(--green);}
+  .pill.post{background:var(--saffron-tint); color:var(--saffron-deep);}
+  .pill.patch{background:var(--plum-tint); color:var(--plum);}
+  code, .mono{font-family:var(--mono); font-size:.86em;}
+  .inline-code{background:var(--line-soft); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-family:var(--mono); font-size:12.5px; color:var(--ink);}
+
+  /* ---------- module map ---------- */
+  .maplayers{display:flex; flex-direction:column; gap:26px;}
+  .layer{}
+  .layer-label{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .layer-dot{width:11px; height:11px; border-radius:50%;}
+  .layer-label h3{font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:-.01em; margin:0;}
+  .layer-label span{font-family:var(--mono); font-size:11px; color:var(--steel); letter-spacing:.04em;}
+  .layer-label .rule{flex:1; height:1px; background:var(--line);}
+  .mapgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px;}
+  .mcard{
+    position:relative; display:block; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:18px 18px 16px; box-shadow:var(--shadow);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    border-top:3px solid var(--cat);
+  }
+  .mcard:hover{transform:translateY(-3px); box-shadow:var(--shadow-lg); border-color:var(--cat);}
+  .mcard:focus-visible{outline:2px solid var(--ink); outline-offset:3px;}
+  .mcard .mtop{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px;}
+  .mcard .mno{font-family:var(--mono); font-weight:600; font-size:12px; color:var(--cat); letter-spacing:.05em;}
+  .mcard .mtag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:#fff; background:var(--cat); padding:3px 8px; border-radius:5px; font-weight:600;}
+  .mcard h4{font-family:var(--display); font-weight:700; letter-spacing:-.015em; font-size:18px; margin:0 0 6px; line-height:1.15;}
+  .mcard p{margin:0 0 13px; font-size:13.5px; color:var(--ink-soft); line-height:1.45;}
+  .mcard .mlinks{display:flex; flex-wrap:wrap; gap:5px; align-items:center; font-family:var(--mono); font-size:10.5px; color:var(--steel);}
+  .mcard .mlinks .lk{background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:2px 7px; color:var(--ink-soft);}
+  .mcard .mlinks .lbl{color:var(--steel-soft); margin-right:2px;}
+  .mcard .arrow{position:absolute; bottom:16px; right:18px; color:var(--steel-soft); transition:.18s;}
+  .mcard:hover .arrow{color:var(--cat); transform:translateX(3px);}
+
+  /* ---------- roles matrix ---------- */
+  .roles{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px;}
+  .rolecard{background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); display:flex; flex-direction:column;}
+  .rolecard .rhead{padding:18px 20px 16px; border-bottom:1px solid var(--line-soft); background:linear-gradient(180deg,var(--rtint),transparent);}
+  .rolecard .rrole{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--rc); text-transform:uppercase;}
+  .rolecard .rname{font-family:var(--display); font-weight:700; font-size:20px; letter-spacing:-.02em; margin:6px 0 4px;}
+  .rolecard .rdesc{font-size:13px; color:var(--ink-soft); margin:0;}
+  .rolecard ul{list-style:none; margin:0; padding:8px 0 12px;}
+  .rolecard li{display:flex; gap:10px; padding:8px 20px; font-size:14px; align-items:baseline; border-bottom:1px solid var(--line-soft);}
+  .rolecard li:last-child{border-bottom:none;}
+  .rolecard li .k{width:6px; height:6px; border-radius:50%; background:var(--rc); flex:none; transform:translateY(6px);}
+  .rolecard li b{font-weight:600;}
+  .rolecard li span{color:var(--steel); font-size:12.5px;}
+
+  /* ---------- module detail ---------- */
+  .mod{padding:56px 0; border-bottom:1px solid var(--line); position:relative;}
+  .mod-head{display:flex; align-items:flex-start; gap:22px; margin-bottom:8px;}
+  .mod-no{font-family:var(--display); font-weight:800; font-size:clamp(46px,7vw,74px); line-height:.82; color:var(--cat); letter-spacing:-.04em; flex:none;}
+  .mod-headtext{padding-top:4px;}
+  .mod-tag{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:#fff; background:var(--cat); padding:3px 10px; border-radius:6px; font-weight:600; display:inline-block; margin-bottom:9px;}
+  .mod-name{font-family:var(--display); font-weight:700; font-size:clamp(24px,3.2vw,32px); letter-spacing:-.025em; line-height:1.05; margin:0;}
+  .mod-purpose{color:var(--ink-soft); margin:9px 0 0; max-width:60ch; font-size:15.5px;}
+  .mod-wire{display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 30px;}
+  .mod-wire .w{font-family:var(--mono); font-size:11.5px; padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); display:flex; align-items:center; gap:7px;}
+  .mod-wire .w .tt{color:var(--steel-soft); text-transform:uppercase; letter-spacing:.08em; font-size:10px;}
+  .mod-wire .w.feeds{border-color:var(--cat); color:var(--cat); background:color-mix(in srgb, var(--cat) 7%, white);}
+
+  .cols{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px;}
+  @media(max-width:860px){ .cols{grid-template-columns:1fr;} }
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; box-shadow:var(--shadow);}
+  .panel h5{display:flex; align-items:center; gap:9px; margin:0 0 14px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--steel); font-weight:600;}
+  .panel h5 .ic{width:22px; height:22px; border-radius:7px; display:grid; place-items:center; background:var(--cat); color:#fff; flex:none;}
+  .panel h5 .ic svg{width:13px; height:13px;}
+  .plist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:13px;}
+  .plist li{font-size:13.6px; line-height:1.42;}
+  .plist .route{font-family:var(--mono); font-size:12.5px; color:var(--ink); font-weight:500; background:var(--paper); border:1px solid var(--line-soft); border-radius:6px; padding:1px 7px; display:inline-block; margin-bottom:3px;}
+  .plist .desc{color:var(--ink-soft); display:block;}
+  .plist .slice{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--saffron-deep);}
+  .plist .ep{color:var(--steel); font-size:12.5px;}
+  .fn-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px;}
+  .fn-list li{display:flex; gap:9px; font-size:13.6px; line-height:1.45; color:var(--ink-soft);}
+  .fn-list li::before{content:""; width:5px; height:5px; border-radius:50%; background:var(--cat); flex:none; transform:translateY(8px);}
+
+  /* backend strip */
+  .backend{background:var(--ink); color:#EDEAE3; border-radius:14px; padding:20px 22px; box-shadow:var(--shadow);}
+  .backend .bhead{display:flex; align-items:center; gap:10px; margin-bottom:16px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:#B9B4AA; font-weight:600;}
+  .backend .bhead svg{width:15px; height:15px; color:var(--saffron);}
+  .routes{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+  .routes .rf{font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:7px; padding:4px 10px; color:#E6E2D9;}
+  .routes .rf .p{color:var(--saffron); }
+  .eps{display:flex; flex-direction:column; gap:8px;}
+  .ep-row{display:flex; align-items:center; gap:11px; font-family:var(--mono); font-size:12.5px; padding:7px 0; border-top:1px solid rgba(255,255,255,.08);}
+  .ep-row:first-child{border-top:none;}
+  .ep-row .path{color:#F3F0E9;}
+  .ep-row .expl{margin-left:auto; color:#8F897E; font-family:var(--body); font-size:12.5px; text-align:right;}
+  .pill.dark{padding:2px 9px;}
+
+  /* footer */
+  .foot{padding:56px 0 70px;}
+  .foot .fgrid{display:grid; grid-template-columns:1.3fr 1fr; gap:40px;}
+  @media(max-width:760px){ .foot .fgrid{grid-template-columns:1fr;} }
+  .foot h3{font-family:var(--display); font-weight:700; font-size:22px; letter-spacing:-.02em; margin:0 0 12px;}
+  .foot p{color:var(--ink-soft); font-size:14.5px; max-width:48ch;}
+  .conv{border:1px solid var(--line); border-radius:14px; background:var(--card); overflow:hidden;}
+  .conv .cr{display:flex; justify-content:space-between; gap:14px; padding:11px 16px; border-top:1px solid var(--line-soft); font-size:13px;}
+  .conv .cr:first-child{border-top:none; background:var(--paper);}
+  .conv .cr b{font-family:var(--mono); font-size:11.5px; color:var(--ink); font-weight:600;}
+  .conv .cr span{color:var(--steel); font-family:var(--mono); font-size:11.5px;}
+  .footmeta{margin-top:34px; padding-top:22px; border-top:1px solid var(--line); font-family:var(--mono); font-size:11.5px; color:var(--steel-soft); letter-spacing:.03em; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+
+  /* reveal */
+  .rv{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease;}
+  .rv.in{opacity:1; transform:none;}
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    .rv{opacity:1; transform:none; transition:none;}
+    .mcard:hover{transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="tm"></span>Alayn<small>Frontend Spec</small></div>
+    <nav class="dotnav" id="dotnav">
+      <a href="#map">Map</a>
+      <a href="#roles">Roles</a>
+      <a href="#m1">01</a><a href="#m2">02</a><a href="#m3">03</a><a href="#m4">04</a>
+      <a href="#m5">05</a><a href="#m6">06</a><a href="#m7">07</a><a href="#m8">08</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow rv">Frontend Build Documentation · v1</div>
+    <h1 class="rv">Eight modules that turn a built backend into a running <em>restaurant</em>.</h1>
+    <p class="thesis rv">Alayn is a multi-tenant restaurant operations platform. The backend services already exist — this document is the frontend team's map: what each screen is, which Redux state and API endpoints power it, and how every module wires into the ones around it, from the login page to the kitchen pass.</p>
+
+    <div class="metastrip rv">
+      <div class="cell"><div class="num">8</div><div class="lbl">Modules</div></div>
+      <div class="cell"><div class="num">20+</div><div class="lbl">Pages &amp; screens</div></div>
+      <div class="cell"><div class="num">3</div><div class="lbl">Access roles</div></div>
+      <div class="cell"><div class="num">/api/v1</div><div class="lbl">REST namespace</div></div>
+    </div>
+
+    <div class="stackline rv">
+      <b>Frontend stack, as specified:</b>
+      <span class="chip-stack">React</span>
+      <span class="chip-stack">Redux Toolkit</span>
+      <span class="chip-stack">RTK Query</span>
+      <span class="chip-stack">SSR-safe session</span>
+      <span class="chip-stack">HTTP-only cookie auth</span>
+      <span class="chip-stack">Recharts / Chart.js</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HOW TO READ ============ -->
+<section class="band">
+  <div class="wrap">
+    <div class="band-head rv">
+      <div>
+        <div class="band-kicker">Reading this document</div>
+        <div class="band-title">A quick key</div>
+      </div>
+      <p class="band-note">Every module below follows the same three-panel shape — Pages, State &amp; API, Core behaviour — followed by the backend routes it consumes. Conventions:</p>
+    </div>
+    <div class="legend rv">
+      <div class="li">
+        <h4>HTTP method pills</h4>
+        <p><span class="pill get">GET</span> read &nbsp; <span class="pill post">POST</span> create &nbsp; <span class="pill patch">PATCH</span> update</p>
+      </div>
+      <div class="li">
+        <h4>Monospace = code</h4>
+        <p>Anything in mono is literal: a route like <span class="inline-code">/pos</span>, a slice like <span class="inline-code">authSlice.ts</span>, or an endpoint.</p>
+      </div>
+      <div class="li">
+        <h4>Wiring chips</h4>
+        <p>Each module lists what it <b>depends on</b> and what it <b>feeds</b>, so cross-module links are visible at a glance.</p>
+      </div>
+      <div class="li">
+        <h4>Layer colour</h4>
+        <p>Colour marks the layer — Foundation, Operations, Intelligence, or Support — carried consistently across the map and each section.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE MAP ============ -->
+<section class="band" id="map">
+  <div class="wrap">
+    <div class="band-head rv">
+      <div>
+        <div class="band-kicker">The pass · at a glance</div>
+        <div class="band-title">Module map</div>
+      </div>
+      <p class="band-note">Eight stations across four layers. Foundation scopes everything; Operations runs the floor and kitchen; Intelligence reads the numbers; Support closes the loop with guests and staff. Tap any card to jump to it.</p>
+    </div>
+
+    <div class="maplayers">
+
+      <!-- Foundation -->
+      <div class="layer rv">
+        <div class="layer-label">
+          <span class="layer-dot" style="background:var(--steel)"></span>
+          <h3>Foundation</h3><span>identity &amp; scope — underpins all other modules</span>
+          <span class="rule"></span>
+        </div>
+        <div class="mapgrid">
+          <a class="mcard" href="#m1" style="--cat:var(--steel)">
+            <div class="mtop"><span class="mno">MODULE 01</span><span class="mtag">Foundation</span></div>
+            <h4>Authentication &amp; Core Setup</h4>
+            <p>Login, multi-step signup, sessions, and role-based routing that shapes every sidebar.</p>
+            <div class="mlinks"><span class="lbl">feeds →</span><span class="lk">All modules (RBAC)</span></div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="mcard" href="#m2" style="--cat:var(--steel)">
+            <div class="mtop"><span class="mno">MODULE 02</span><span class="mtag">Foundation</span></div>
+            <h4>Outlet &amp; Location</h4>
+            <p>Branch creation, the header location switcher, and the <span class="mono">x-outlet-id</span> scope header.</p>
+            <div class="mlinks"><span class="lbl">feeds →</span><span class="lk">All scoped calls</span></div>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Operations -->
+      <div class="layer rv">
+        <div class="layer-label">
+          <span class="layer-dot" style="background:var(--saffron)"></span>
+          <h3>Operations</h3><span>the working floor, back-of-house &amp; kitchen</span>
+          <span class="rule"></span>
+        </div>
+        <div class="mapgrid">
+          <a class="mcard" href="#m3" style="--cat:var(--saffron)">
+            <div class="mtop"><span class="mno">MODULE 03</span><span class="mtag">Operations</span></div>
+            <h4>Workforce &amp; Shifts</h4>
+            <p>Staff directory, shift scheduler, leave approvals, and the clock-in terminal.</p>
+            <div class="mlinks"><span class="lbl">feeds →</span><span class="lk">Dashboard</span></div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="mcard" href="#m4" style="--cat:var(--saffron)">
+            <div class="mtop"><span class="mno">MODULE 04</span><span class="mtag">Operations</span></div>
+            <h4>Inventory &amp; Procurement</h4>
+            <p>Stock catalog, adjustments, low-stock alerts, suppliers, and purchase orders.</p>
+            <div class="mlinks"><span class="lbl">feeds →</span><span class="lk">Menu/POS</span><span class="lk">Dashboard</span><span class="lk">Waste</span></div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="mcard" href="#m5" style="--cat:var(--saffron)">
+            <div class="mtop"><span class="mno">MODULE 05</span><span class="mtag">Operations</span></div>
+            <h4>Menu &amp; POS Orders</h4>
+            <p>Menu configuration, the point-of-sale counter, and the live kitchen dispatch board.</p>
+            <div class="mlinks"><span class="lbl">uses</span><span class="lk">Inventory</span><span class="lbl">feeds →</span><span class="lk">Dashboard</span></div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="mcard" href="#m8" style="--cat:var(--saffron)">
+            <div class="mtop"><span class="mno">MODULE 08</span><span class="mtag">Operations</span></div>
+            <h4>Waste Management</h4>
+            <p>Spoilage logs that write back to inventory and roll up into monthly waste cost.</p>
+            <div class="mlinks"><span class="lbl">writes →</span><span class="lk">Inventory</span><span class="lbl">feeds →</span><span class="lk">Dashboard</span></div>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Intelligence -->
+      <div class="layer rv">
+        <div class="layer-label">
+          <span class="layer-dot" style="background:var(--green)"></span>
+          <h3>Intelligence</h3><span>aggregation, KPIs &amp; forecasting</span>
+          <span class="rule"></span>
+        </div>
+        <div class="mapgrid">
+          <a class="mcard" href="#m6" style="--cat:var(--green)">
+            <div class="mtop"><span class="mno">MODULE 06</span><span class="mtag">Intelligence</span></div>
+            <h4>Dashboard &amp; Analytics</h4>
+            <p>P&amp;L summary, sales &amp; inventory forecasting, and cross-location comparison.</p>
+            <div class="mlinks"><span class="lbl">reads ←</span><span class="lk">Workforce</span><span class="lk">Inventory</span><span class="lk">POS</span><span class="lk">Waste</span></div>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="layer rv">
+        <div class="layer-label">
+          <span class="layer-dot" style="background:var(--plum)"></span>
+          <h3>Support</h3><span>guests &amp; staff — closing the loop</span>
+          <span class="rule"></span>
+        </div>
+        <div class="mapgrid">
+          <a class="mcard" href="#m7" style="--cat:var(--plum)">
+            <div class="mtop"><span class="mno">MODULE 07</span><span class="mtag">Support</span></div>
+            <h4>Feedback &amp; Tickets</h4>
+            <p>A unified tracker for customer feedback, staff queries, and help-desk tickets.</p>
+            <div class="mlinks"><span class="lbl">scoped by</span><span class="lk">Outlet</span></div>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROLES ============ -->
+<section class="band" id="roles">
+  <div class="wrap">
+    <div class="band-head rv">
+      <div>
+        <div class="band-kicker">Access control</div>
+        <div class="band-title">Who sees what</div>
+      </div>
+      <p class="band-note">The sidebar renders conditionally from the logged-in <span class="inline-code">role</span> in Redux state. Three tiers of visibility, from full master analytics down to a single personal terminal.</p>
+    </div>
+
+    <div class="roles rv">
+      <div class="rolecard" style="--rc:var(--steel); --rtint:var(--line-soft)">
+        <div class="rhead">
+          <div class="rrole">TENANT_OWNER · SUPER_ADMIN</div>
+          <div class="rname">Owner &amp; Admin</div>
+          <p class="rdesc">Full master view across every branch. Redirected straight to the dashboard on login.</p>
+        </div>
+        <ul>
+          <li><span class="k"></span><div><b>Overview</b> <span>— master P&amp;L &amp; forecasting</span></div></li>
+          <li><span class="k"></span><div><b>Location Manager</b> <span>— branches &amp; outlets</span></div></li>
+          <li><span class="k"></span><div><b>Workforce &amp; Scheduler</b> <span>— staff, shifts, leave</span></div></li>
+          <li><span class="k"></span><div><b>Smart Inventory &amp; Procurement</b> <span>— stock &amp; POs</span></div></li>
+          <li><span class="k"></span><div><b>Menu Manager</b> <span>— categories &amp; pricing</span></div></li>
+          <li><span class="k"></span><div><b>POS &amp; Kitchen Operations</b></div></li>
+          <li><span class="k"></span><div><b>Support Tickets &amp; Feedback</b></div></li>
+          <li><span class="k"></span><div><b>Waste Management</b></div></li>
+          <li><span class="k"></span><div><b>Settings</b> <span>— billing &amp; business info</span></div></li>
+        </ul>
+      </div>
+
+      <div class="rolecard" style="--rc:var(--saffron-deep); --rtint:var(--saffron-tint)">
+        <div class="rhead">
+          <div class="rrole">MANAGER</div>
+          <div class="rname">Outlet Manager</div>
+          <p class="rdesc">Everything scoped to their assigned outlet — no cross-branch or master-financial access.</p>
+        </div>
+        <ul>
+          <li><span class="k"></span><div><b>Overview</b> <span>— their outlet only</span></div></li>
+          <li><span class="k"></span><div><b>Workforce Directory</b> <span>— shifts &amp; staff</span></div></li>
+          <li><span class="k"></span><div><b>Inventory Adjustments</b> <span>— counts &amp; low-stock</span></div></li>
+          <li><span class="k"></span><div><b>POS &amp; Kitchen Operations</b></div></li>
+          <li><span class="k"></span><div><b>Support Tickets</b> <span>— outlet queries</span></div></li>
+          <li><span class="k"></span><div><b>Waste Logs</b> <span>— create &amp; review</span></div></li>
+        </ul>
+      </div>
+
+      <div class="rolecard" style="--rc:var(--plum); --rtint:var(--plum-tint)">
+        <div class="rhead">
+          <div class="rrole">STAFF · KITCHEN</div>
+          <div class="rname">Staff &amp; Kitchen</div>
+          <p class="rdesc">A focused, personal view — the terminal and calendar each role needs, nothing more.</p>
+        </div>
+        <ul>
+          <li><span class="k"></span><div><b>Shift Calendar</b> <span>— personal shifts &amp; swaps</span></div></li>
+          <li><span class="k"></span><div><b>Leave Request</b> <span>— submit &amp; track</span></div></li>
+          <li><span class="k"></span><div><b>POS Terminal</b> <span>— staff only</span></div></li>
+          <li><span class="k"></span><div><b>Kitchen Dispatch Board</b> <span>— kitchen only</span></div></li>
+          <li><span class="k"></span><div><b>Attendance Logs</b> <span>— punch in / out</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 01 ============ -->
+<section class="mod rv" id="m1" style="--cat:var(--steel)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">01</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Foundation · Auth &amp; Scoping</span>
+        <h2 class="mod-name">Authentication &amp; Core Setup</h2>
+        <p class="mod-purpose">Manages user identity, session persistence, and the routing and role logic that every other module depends on.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w feeds"><span class="tt">feeds</span> RBAC for every sidebar</div>
+      <div class="w feeds"><span class="tt">feeds</span> Router guards on all dashboard routes</div>
+      <div class="w"><span class="tt">provides</span> active <span class="mono">user</span> &amp; <span class="mono">role</span> in Redux</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/login</span><span class="desc">Sign-in with email &amp; password, error/success banners, and post-auth redirect.</span></li>
+          <li><span class="route">/signup</span><span class="desc">Multi-step registration — Step 1 admin account, Step 2 tenant &amp; business details (name, location count, type, contact).</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">authSlice.ts</span><span class="ep">Holds <span class="mono">user</span> + <span class="mono">isAuthenticated</span>; restores session on refresh via SSR-safe localStorage check.</span></li>
+          <li><span class="slice">authApiSlice.ts</span><span class="ep">RTK Query — <span class="mono">login</span>, <span class="mono">register</span>, <span class="mono">logout</span> mutations (token in HTTP-only cookie).</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>JWT expiry re-auth queueing in <span class="inline-code">baseApi.ts</span> to avoid race conditions on concurrent 401s.</li>
+          <li>Router guards via a <span class="inline-code">withAuth</span> HOC / middleware protecting dashboard routes.</li>
+          <li>Sidebar options render conditionally from the user's <span class="inline-code">role</span>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">auth.routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/auth/login</span><span class="expl">Auth verification</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/auth/register</span><span class="expl">Tenant &amp; admin setup</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/auth/logout</span><span class="expl">Clears cookies</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/auth/refresh</span><span class="expl">Access-token rotation</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 02 ============ -->
+<section class="mod rv" id="m2" style="--cat:var(--steel)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">02</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Foundation · Location</span>
+        <h2 class="mod-name">Outlet &amp; Location Management</h2>
+        <p class="mod-purpose">Sets up physical branches, switches the active branch context, and attaches the scoping header that isolates data per outlet.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w feeds"><span class="tt">feeds</span> <span class="mono">x-outlet-id</span> on every scoped call</div>
+      <div class="w"><span class="tt">gates</span> first-login branch creation</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages &amp; modals</h5>
+        <ul class="plist">
+          <li><span class="route">/outlets/create</span><span class="desc">Shown immediately after first login when <span class="mono">branches.length === 0</span>, forcing creation of the first branch.</span></li>
+          <li><span class="route">Location dropdown</span><span class="desc">Header control to switch between active branches.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">BranchContext.tsx</span><span class="ep">Tracks <span class="mono">activeBranch</span>, <span class="mono">branches</span>, <span class="mono">isDemo</span>; attaches <span class="mono">x-outlet-id</span> to scoped calls.</span></li>
+          <li><span class="slice">outletApiSlice.ts</span><span class="ep">RTK Query — <span class="mono">fetchOutlets</span>, <span class="mono">createOutlet</span>.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Checks the user has at least one branch before entering the app.</li>
+          <li>Persists selected branch ID in localStorage so the location choice survives page changes.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">outlet.routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/outlets</span><span class="expl">List tenant branches</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/outlets</span><span class="expl">Register a new outlet</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 03 ============ -->
+<section class="mod rv" id="m3" style="--cat:var(--saffron)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">03</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Operations · Workforce</span>
+        <h2 class="mod-name">Workforce, Attendance &amp; Shifts</h2>
+        <p class="mod-purpose">Manages employees, leave approvals, shift scheduling, and digital clock-in — the data behind labor cost and the activity feed on the dashboard.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w feeds"><span class="tt">feeds</span> Dashboard — labor cost &amp; activity feed</div>
+      <div class="w"><span class="tt">defines</span> STAFF / KITCHEN role scope</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/workforce</span><span class="desc">Staff directory — status, roles, join dates, and file attachments (ID proofs, contracts).</span></li>
+          <li><span class="route">/workforce/scheduler</span><span class="desc">Calendar of shift assignments, swap requests, and time slots.</span></li>
+          <li><span class="route">/workforce/leaves</span><span class="desc">Admin approve / reject view for leave requests.</span></li>
+          <li><span class="route">/attendance-terminal</span><span class="desc">Public tablet screen where staff enter credentials to clock in / out.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">employeeApiSlice.ts</span><span class="ep"><span class="mono">getEmployees</span>, <span class="mono">addEmployee</span>, <span class="mono">updateEmployee</span>, <span class="mono">uploadDocuments</span>.</span></li>
+          <li><span class="slice">shiftApiSlice.ts</span><span class="ep"><span class="mono">getShifts</span>, <span class="mono">assignShift</span>, <span class="mono">swapShiftRequest</span>.</span></li>
+          <li><span class="slice">attendanceApiSlice.ts</span><span class="ep"><span class="mono">clockIn</span>, <span class="mono">clockOut</span>, <span class="mono">getAttendanceLogs</span>.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Drag-and-drop shift calendar.</li>
+          <li>Real-time status badges — <b>Present</b>, <b>Absent</b>, <b>Late</b>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">employee · shift · attendance .routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/employees</span><span class="expl">List staff</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/employees</span><span class="expl">Add staff</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/employees/:id/documents</span><span class="expl">Upload ID / documents</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/shifts</span><span class="expl">List shifts</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/shifts/assign</span><span class="expl">Assign a shift</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/attendance/clock-in</span><span class="expl">Check-in timestamp</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/attendance/clock-out</span><span class="expl">Check-out timestamp</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/leave-requests</span><span class="expl">List leave requests</span></div>
+        <div class="ep-row"><span class="pill patch dark">PATCH</span><span class="path">/api/v1/leave-requests/:id</span><span class="expl">Approve / reject</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 04 ============ -->
+<section class="mod rv" id="m4" style="--cat:var(--saffron)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">04</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Operations · Inventory</span>
+        <h2 class="mod-name">Smart Inventory &amp; Procurement</h2>
+        <p class="mod-purpose">Catalogs ingredients, tracks stock and batch expiries, raises alerts, and manages suppliers and purchase orders — the source of truth behind COGS and forecasting.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w"><span class="tt">used by</span> Menu / POS items</div>
+      <div class="w feeds"><span class="tt">feeds</span> Dashboard — COGS &amp; forecasts</div>
+      <div class="w feeds"><span class="tt">receives</span> writes from Waste</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/inventory</span><span class="desc">Stock levels, categories, unit counts, and reorder levels.</span></li>
+          <li><span class="route">/inventory/adjust</span><span class="desc">Modal to record stock changes — Sale, Waste, Purchase, Adjustment.</span></li>
+          <li><span class="route">/inventory/procurement</span><span class="desc">Suppliers, purchase orders, and PO statuses — Draft, Sent, Received.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">inventoryApiSlice.ts</span><span class="ep"><span class="mono">getItems</span>, <span class="mono">createItem</span>, <span class="mono">adjustStock</span>, <span class="mono">getLowStockAlerts</span>.</span></li>
+          <li><span class="slice">procurementApiSlice.ts</span><span class="ep"><span class="mono">getSuppliers</span>, <span class="mono">createSupplier</span>, <span class="mono">getPurchaseOrders</span>, <span class="mono">createPurchaseOrder</span>, <span class="mono">receivePOItem</span>.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Auto-highlight a row in red when stock falls below <span class="inline-code">reorderThreshold</span>.</li>
+          <li>Warnings for expiring batches.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">inventory · purchaseOrder .routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/inventory/items</span><span class="expl">List stock items</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/inventory/items</span><span class="expl">Create item</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/inventory/items/:id/adjust</span><span class="expl">Stock adjustment</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/purchase-orders</span><span class="expl">List POs</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/purchase-orders</span><span class="expl">Create PO</span></div>
+        <div class="ep-row"><span class="pill patch dark">PATCH</span><span class="path">/api/v1/purchase-orders/:id/receive</span><span class="expl">Mark items received</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 05 ============ -->
+<section class="mod rv" id="m5" style="--cat:var(--saffron)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">05</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Operations · Menu &amp; POS</span>
+        <h2 class="mod-name">Menu Management &amp; POS Orders</h2>
+        <p class="mod-purpose">Configures pricing, builds tickets at the counter, and dispatches orders to the kitchen — the revenue engine that feeds the dashboard.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w"><span class="tt">uses</span> Inventory items</div>
+      <div class="w feeds"><span class="tt">feeds</span> Dashboard — revenue</div>
+      <div class="w feeds"><span class="tt">feeds</span> Kitchen dispatch board</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/menu</span><span class="desc">Organize categories (Appetizers, Mains, Drinks) and active items with pricing.</span></li>
+          <li><span class="route">/pos</span><span class="desc">Interactive point-of-sale — build cart, pick table / QR source, checkout.</span></li>
+          <li><span class="route">/kitchen</span><span class="desc">Live dispatch board — tickets and statuses: Received, Preparing, Ready, Served.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">menuApiSlice.ts</span><span class="ep"><span class="mono">getMenuItems</span>, <span class="mono">createMenuItem</span>, <span class="mono">toggleMenuStatus</span>.</span></li>
+          <li><span class="slice">orderApiSlice.ts</span><span class="ep"><span class="mono">createOrder</span> (checkout with billing), <span class="mono">getOrders</span>, <span class="mono">updateOrderStatus</span> (KOT board).</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Real-time ticket syncing via polling or WebSockets.</li>
+          <li>Interactive POS search with a categories sidebar.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">menu · order .routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/menu/items</span><span class="expl">List menu items</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/menu/items</span><span class="expl">Create menu item</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/orders</span><span class="expl">POS checkout</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/kitchen/tickets</span><span class="expl">KOT screen feed</span></div>
+        <div class="ep-row"><span class="pill patch dark">PATCH</span><span class="path">/api/v1/orders/:id/status</span><span class="expl">Update order state</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 06 ============ -->
+<section class="mod rv" id="m6" style="--cat:var(--green)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">06</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Intelligence · Analytics</span>
+        <h2 class="mod-name">Dashboard Overview &amp; Analytics</h2>
+        <p class="mod-purpose">Renders KPI summaries, financial reports, forecasting, and cross-location comparison — reading from Workforce, Inventory, POS, and Waste.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w"><span class="tt">reads</span> Workforce · Inventory · POS · Waste</div>
+      <div class="w feeds"><span class="tt">redirect</span> TENANT_OWNER lands here on login</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/</span><span class="desc">Home dashboard. On login, a <span class="mono">TENANT_OWNER</span> is redirected straight here for the business summary.</span></li>
+          <li><span class="route">/performance</span><span class="desc">Forecast-vs-last-year charts plus a locations comparison grid.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">analyticsApiSlice.ts</span><span class="ep"><span class="mono">getDailySummary(outletId)</span> — gross sales, COGS, profit.</span></li>
+          <li><span class="slice">&nbsp;</span><span class="ep"><span class="mono">getOutletComparison()</span> — revenue metrics across branches.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Financial charting via Recharts / Chart.js.</li>
+          <li>Comparison status flags — <b>On Track</b>, <b>Action Needed</b>, <b>Watch</b>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px; border-color:var(--green);">
+      <h5 style="color:var(--green)"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="12" width="4" height="8"/><rect x="10" y="7" width="4" height="13"/><rect x="17" y="3" width="4" height="17"/></svg></span>Tenant-owner dashboard widgets</h5>
+      <ul class="fn-list" style="gap:9px;">
+        <li><b style="color:var(--ink)">P&amp;L Summary</b>&nbsp;— total revenue, COGS, gross profit, labor cost, net margins.</li>
+        <li><b style="color:var(--ink)">Sales Forecasting</b>&nbsp;— ML forecast of the upcoming week vs historical trend.</li>
+        <li><b style="color:var(--ink)">Inventory Forecasting</b>&nbsp;— predicted item usage and pre-emptive out-of-stock alerts.</li>
+        <li><b style="color:var(--ink)">Low Stock &amp; Expiry Alerts</b>&nbsp;— ingredients below threshold or nearing expiry.</li>
+        <li><b style="color:var(--ink)">Recent Activity Feed</b>&nbsp;— shift sign-ins, high-value purchases, ticket resolutions, large stock adjustments.</li>
+      </ul>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">analytics.routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/analytics/daily-summary</span><span class="expl">Revenue aggregations</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/analytics/outlet-comparison</span><span class="expl">Location performance</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 07 ============ -->
+<section class="mod rv" id="m7" style="--cat:var(--plum)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">07</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Support · Feedback &amp; Tickets</span>
+        <h2 class="mod-name">Feedback, Staff Queries &amp; Tickets</h2>
+        <p class="mod-purpose">Receives customer feedback, internal staff messages, and help-desk tickets — a unified tracker scoped by outlet.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w"><span class="tt">scoped by</span> active outlet</div>
+      <div class="w feeds"><span class="tt">surfaces</span> resolutions to activity feed</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/tickets</span><span class="desc">Unified tracker — complaints &amp; staff requests by priority (Low, Normal, High) and status (Open, In Progress, Resolved).</span></li>
+          <li><span class="route">/feedback</span><span class="desc">Customer reviews and rating levels from receipts / QR codes.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">ticketApiSlice.ts</span><span class="ep"><span class="mono">getTickets</span>, <span class="mono">createTicket</span>, <span class="mono">getFeedbacks</span>, <span class="mono">updateTicketStatus</span>.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Filter by status, source (Feedback / Staff Query), and priority.</li>
+          <li>Activity logs in the ticket side-drawer.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">ticket.routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/tickets</span><span class="expl">List tickets</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/tickets/:id</span><span class="expl">Ticket detail</span></div>
+        <div class="ep-row"><span class="pill patch dark">PATCH</span><span class="path">/api/v1/tickets/:id/status</span><span class="expl">Update ticket</span></div>
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/feedbacks</span><span class="expl">Customer reviews</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 08 ============ -->
+<section class="mod rv" id="m8" style="--cat:var(--saffron)">
+  <div class="wrap">
+    <div class="mod-head">
+      <div class="mod-no">08</div>
+      <div class="mod-headtext">
+        <span class="mod-tag">Operations · Waste</span>
+        <h2 class="mod-name">Waste Management</h2>
+        <p class="mod-purpose">Tracks food and ingredient spoilage, then writes back to the inventory ledger and rolls up wastage cost for the month.</p>
+      </div>
+    </div>
+    <div class="mod-wire">
+      <div class="w feeds"><span class="tt">writes</span> Inventory item ledger</div>
+      <div class="w feeds"><span class="tt">feeds</span> Dashboard — waste cost analysis</div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s7-5.7 7-11a7 7 0 10-14 0c0 5.3 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Pages</h5>
+        <ul class="plist">
+          <li><span class="route">/inventory/waste</span><span class="desc">Register wasted ingredients (quantity, cost, reason: Spoilage, Over Prep, Error, Return) with historical logs.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>State &amp; API</h5>
+        <ul class="plist">
+          <li><span class="slice">wasteApiSlice.ts</span><span class="ep"><span class="mono">getWasteLogs</span>; <span class="mono">logWaste</span> — records the reason and auto-updates inventory stock.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h5><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>Core behaviour</h5>
+        <ul class="fn-list">
+          <li>Historical logs table with sorting.</li>
+          <li>Cumulative waste value (in ₹) for the current month.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="backend">
+      <div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg> Backend connections · <span class="mono">waste.routes.ts</span></div>
+      <div class="eps">
+        <div class="ep-row"><span class="pill get dark">GET</span><span class="path">/api/v1/waste-logs</span><span class="expl">List spoilage logs</span></div>
+        <div class="ep-row"><span class="pill post dark">POST</span><span class="path">/api/v1/waste-logs</span><span class="expl">Log waste &amp; update ledger</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <h3>How the pieces connect</h3>
+        <p><b>Foundation</b> (Auth + Outlet) scopes and secures everything. <b>Operations</b> runs the day — staff clock in, stock moves, orders fire to the kitchen, waste is logged back against inventory. <b>Intelligence</b> reads all of that into the owner's dashboard, and <b>Support</b> closes the loop with guests and staff. Inventory sits at the centre: Menu/POS consumes it, Waste corrects it, and the Dashboard forecasts on it.</p>
+      </div>
+      <div class="conv rv">
+        <div class="cr"><b>Convention</b><span>Value</span></div>
+        <div class="cr"><b>API base</b><span>/api/v1</span></div>
+        <div class="cr"><b>Auth</b><span>HTTP-only cookie · JWT</span></div>
+        <div class="cr"><b>Scope header</b><span>x-outlet-id</span></div>
+        <div class="cr"><b>Data layer</b><span>RTK Query</span></div>
+        <div class="cr"><b>Session</b><span>SSR-safe localStorage</span></div>
+      </div>
+    </div>
+    <div class="footmeta">
+      <span>Alayn · Frontend Build Documentation</span>
+      <span>8 modules · 4 layers · /api/v1</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // scroll-spy for dot nav
+  const links = [...document.querySelectorAll('#dotnav a')];
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const targets = [...map.keys()].map(id => document.getElementById(id)).filter(Boolean);
+
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = map.get(e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+  targets.forEach(t => spy.observe(t));
+
+  // reveal on scroll
+  const rv = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); rv.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: .05 });
+  document.querySelectorAll('.rv').forEach(el => rv.observe(el));
+</script>
+</body>
+</html>

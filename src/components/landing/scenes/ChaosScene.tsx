@@ -12,25 +12,32 @@ export default function ChaosScene() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
-    let height = (canvas.height = 420);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let width = canvas.parentElement?.clientWidth || window.innerWidth;
+    let height = 420;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    let animationFrameId: number;
+    let animationFrameId: number = 0;
 
     const handleResize = () => {
-      width = canvas.width = canvas.parentElement?.clientWidth || window.innerWidth;
+      width = canvas.parentElement?.clientWidth || window.innerWidth;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     window.addEventListener("resize", handleResize);
 
     const labels = [
-      "Zomato ticket timed out",
-      "Kitchen printer out of paper",
-      "Late delivery rider",
-      "Stock out on avocados",
-      "Wrong payment terminal triggered",
-      "Table 4 waiting 25 mins",
-      "Staff call-out (No show)",
-      "High food waste on dairy",
+      "Forgot to log a sale",
+      "Lost track of a table's order",
+      "Ran out of stock, no one noticed",
+      "Staff shift mix-up",
+      "Manual tally at closing",
+      "Missed a reorder",
+      "No record of today's waste",
+      "Two people counting the same stock",
     ];
 
     // Create chaotic drifting tickets
@@ -48,7 +55,13 @@ export default function ChaosScene() {
       };
     });
 
+    let isIntersecting = false;
+
     const draw = () => {
+      if (!isIntersecting) {
+        animationFrameId = 0;
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
 
       // Draw faint connections to grid intersections
@@ -84,8 +97,10 @@ export default function ChaosScene() {
         ctx.fill();
         ctx.stroke();
 
-        // Crimson left accent line representing warning state
-        ctx.fillStyle = "var(--amber)";
+        // Crimson left accent line representing warning state.
+        // Canvas 2D never resolves CSS custom properties — "var(--amber)"
+        // silently fails and paints nothing, so this is the literal token value.
+        ctx.fillStyle = "#C41E2A";
         ctx.fillRect(item.x, item.y + 4, 3, item.height - 8);
 
         // Label text
@@ -99,10 +114,27 @@ export default function ChaosScene() {
       animationFrameId = requestAnimationFrame(draw);
     };
 
-    draw();
+    const observer = new IntersectionObserver(([entry]) => {
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        if (!animationFrameId) {
+          animationFrameId = requestAnimationFrame(draw);
+        }
+      } else {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = 0;
+        }
+      }
+    }, { threshold: 0 });
+
+    observer.observe(canvas);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener("resize", handleResize);
     };
   }, []);
