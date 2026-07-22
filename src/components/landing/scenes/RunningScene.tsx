@@ -69,7 +69,7 @@ export default function RunningScene() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let width = canvas.clientWidth || 300;
     let height = 300;
     canvas.width = width * dpr;

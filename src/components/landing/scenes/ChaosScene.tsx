@@ -12,7 +12,7 @@ export default function ChaosScene() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let width = canvas.parentElement?.clientWidth || window.innerWidth;
     let height = 420;
     canvas.width = width * dpr;
@@ -161,18 +161,20 @@ export default function ChaosScene() {
             letterSpacing: "-0.02em",
             marginBottom: "24px"
           }}>
-            Hospitality is rhythm.
+            Hospitality deserves better systems.
             <br />
             <span style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: "400" }}>
-              Chaos is broken rhythm.
+              One connected platform. Complete operational visibility.
             </span>
           </h2>
           <p style={{
-            color: "rgba(255, 255, 255, 0.55)",
-            maxWidth: "600px",
-            margin: "0 auto"
+            color: "rgba(255, 255, 255, 0.65)",
+            maxWidth: "680px",
+            margin: "0 auto",
+            fontSize: "1.0625rem",
+            lineHeight: 1.6
           }}>
-            Disconnected tools create visual noise, late ticket prints, and operational blind spots.
+            Replace fragmented tools with an intelligent operating system that keeps every team, process and location perfectly aligned.
           </p>
         </div>
 

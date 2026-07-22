@@ -43,7 +43,7 @@ export default function SceneProgress() {
         });
         setActive(best);
       },
-      { threshold: Array.from({ length: 11 }, (_, i) => i / 10) }
+      { threshold: [0, 0.25, 0.5, 0.75, 1.0] }
     );
 
     els.forEach((el) => io.observe(el));

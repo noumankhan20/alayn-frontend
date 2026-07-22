@@ -47,7 +47,7 @@ export default function ConvergenceScene() {
     let cy = 0;
     let R = 150;
     let animationFrameId: number = 0;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     // Recomputed on every resize (not just once at mount) — previously the
     // orbit's center/radius were frozen from the size at first render, so

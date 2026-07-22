@@ -41,9 +41,9 @@ export default function WaitingScene() {
             marginBottom: "20px",
           }}
         >
-          It&apos;s already running.
+          The AI Operating System for
           <br />
-          <em style={{ fontStyle: "italic", color: "var(--thread)" }}>Waiting for you.</em>
+          <em style={{ fontStyle: "italic", color: "var(--thread)" }}>Modern Business.</em>
         </Assemble>
 
         <Assemble
@@ -57,12 +57,12 @@ export default function WaitingScene() {
             margin: "0 auto 44px",
           }}
         >
-          Start free. No credit card. Your first location is on us.
+          Unify your teams, automate workflows, and accelerate growth-all in one platform.
         </Assemble>
 
         <Assemble as="div" delay={0.2} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
           <MagneticLink href="/signup" id="cta-start" className="btn-primary-light">
-            Start free
+            Get Started
           </MagneticLink>
           <Link href="/login" id="cta-login" className="btn-ghost-dark">
             I have an account

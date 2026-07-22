@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { baseApi } from "./baseApi";
 import authReducer from "../slices/authSlice";
+import { rtkQueryToastMiddleware } from "../middleware/rtkQueryToastMiddleware";
 
 export const store = configureStore({
     reducer: {
@@ -11,7 +12,7 @@ export const store = configureStore({
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: false,
-        }).concat(baseApi.middleware),
+        }).concat(baseApi.middleware, rtkQueryToastMiddleware),
 
     devTools: process.env.NODE_ENV !== "production" ? { maxAge: 25 } : false,
 });

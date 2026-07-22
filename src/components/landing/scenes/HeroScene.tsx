@@ -120,18 +120,18 @@ export default function HeroScene() {
               delay={0.06}
               style={{
                 fontFamily: "var(--font-playfair), Georgia, serif",
-                fontSize: "clamp(2.6rem, 5.6vw, 4.5rem)",
-                lineHeight: 1.05,
+                fontSize: "clamp(2.5rem, 5.2vw, 4.2rem)",
+                lineHeight: 1.08,
                 fontWeight: 800,
                 color: "var(--espresso)",
                 letterSpacing: "-0.03em",
                 marginBottom: "24px",
               }}
             >
-              Everything your kitchen runs on.
+              The Intelligent Operating System
               <br />
               <em style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: 400 }}>
-                Finally in one place.
+                for Hospitality.
               </em>
             </Assemble>
 
@@ -146,10 +146,7 @@ export default function HeroScene() {
                 marginBottom: "38px",
               }}
             >
-              Orders, stock, staff and prep — tracked as they happen, not
-              remembered at closing. The kind of system restaurants and cafés
-              abroad have run on for years, built for how hospitality
-              actually works here.
+             Orders, inventory, staffing and operations—unified in one intelligent platform with real-time visibility across every location. Built for the standards of modern hospitality, wherever your business grows.
             </Assemble>
 
             <Assemble
@@ -158,7 +155,7 @@ export default function HeroScene() {
               style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", marginBottom: "34px" }}
             >
               <MagneticLink href="/signup" id="cta-hero" className="btn-primary">
-                Get early access
+                Book a Demonstration
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -177,7 +174,7 @@ export default function HeroScene() {
                   opacity: 0.7,
                 }}
               >
-                See how it works
+                Explore the Platform
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                   <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -185,8 +182,7 @@ export default function HeroScene() {
             </Assemble>
 
             <Assemble as="p" delay={0.24} style={{ fontSize: "0.8125rem", color: "var(--muted)", opacity: 0.75, margin: 0 }}>
-              We&apos;re building this now — tell us what breaks in your day and help shape it
-            </Assemble>
+              We&apos;re  introducing Alayn AI to a select group of forward-thinking organisations. Arrange a demonstration to discover how intelligent automation can transform your operations.            </Assemble>
           </div>
 
           {/* Right — floating product surface (Stripe pattern).
@@ -296,12 +292,11 @@ export default function HeroScene() {
                     <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
                       <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--amber)" }} />
                       <span style={{ fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--amber)" }}>
-                        Inventory
+                        AI Predictive Autopilot
                       </span>
                     </div>
                     <p style={{ margin: 0, fontSize: "0.8125rem", lineHeight: 1.5, color: "var(--espresso)" }}>
-                      A key ingredient is running low. You&apos;ll know
-                      today — not when you run out mid-service.
+                      Dinner rush forecasted +38%. AI auto-drafted your supplier PO and optimized staff roster for 1-click approval.
                     </p>
                   </motion.div>
                 )}

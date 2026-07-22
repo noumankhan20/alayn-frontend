@@ -1,6 +1,7 @@
 "use client";
 
 import React, { memo, useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,6 +42,7 @@ interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
+
 
 const ownerNavItems: NavItem[] = [
   { name: "Overview", icon: LayoutGrid, href: "/dashboard" },
@@ -129,6 +131,7 @@ const NavLinkItem = memo(function NavLinkItem({
 
 function SidebarComponent({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const user = useAppSelector((state) => state.auth.user);
   const role: Role = useMemo(() => (user?.role as Role) || "BUSINESS_OWNER", [user?.role]);
   const [mounted, setMounted] = useState(false);
@@ -188,7 +191,8 @@ function SidebarComponent({ isCollapsed = false, onToggleCollapse }: SidebarProp
               alt="Alayn AI"
               width={160}
               height={44}
-              className="w-[130px] h-auto object-contain"
+              onClick={() => router.push("/")}
+              className="w-[130px] h-auto object-contain cursor-pointer"
               priority
             />
             {onToggleCollapse && (

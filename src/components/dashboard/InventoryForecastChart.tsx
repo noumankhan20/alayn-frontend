@@ -34,9 +34,11 @@ const DEFAULT_INVENTORY_DATA: InventoryItemData[] = [
 ];
 
 export default function InventoryForecastChart({
-  data = DEFAULT_INVENTORY_DATA,
+  data = [],
   isLoading = false,
 }: InventoryForecastChartProps) {
+  const lowStockItemsCount = data.filter(item => item.currentStock <= item.threshold).length;
+
   return (
     <div className="rounded-xl bg-white p-5 shadow-xs border border-gray-200/80 flex flex-col justify-between h-full">
       <div className="flex items-center justify-between mb-6">
@@ -57,6 +59,12 @@ export default function InventoryForecastChart({
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex flex-col h-full w-full items-center justify-center text-center p-4">
+            <Package className="h-10 w-10 text-gray-300 mb-2" />
+            <p className="text-xs font-semibold text-gray-400">No inventory items tracked yet</p>
+            <p className="text-[10px] text-gray-400 max-w-[200px] mt-0.5">Stock levels will appear here once items are added to your inventory.</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -114,9 +122,16 @@ export default function InventoryForecastChart({
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-semibold text-gray-500">
-        <div className="flex items-center gap-1.5 text-rose-700 font-semibold">
+        <div className={`flex items-center gap-1.5 font-semibold ${
+          lowStockItemsCount > 0 ? "text-rose-700" : "text-gray-400"
+        }`}>
           <AlertCircle className="h-4 w-4" />
-          <span>2 items below safety stock threshold</span>
+          <span>
+            {lowStockItemsCount === 0
+              ? "All items above safety stock threshold"
+              : `${lowStockItemsCount} item${lowStockItemsCount !== 1 ? "s" : ""} below safety stock threshold`
+            }
+          </span>
         </div>
         <button className="text-gray-700 hover:text-gray-900 transition-colors font-semibold cursor-pointer">
           Manage Stock →

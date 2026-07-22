@@ -59,7 +59,7 @@ export default function FieldCanvas({
     let H = window.innerHeight;
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       W = window.innerWidth;
       H = window.innerHeight;
       canvas.width = W * dpr;
