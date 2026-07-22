@@ -1,30 +1,45 @@
+"use client";
+
 import React from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import FullDashboardSkeleton from "@/components/dashboard/FullDashboardSkeleton";
 
 export default function Loading() {
-  return (
-    <DashboardLayout>
-      <div className="p-6 max-w-[1800px] mx-auto w-full h-full space-y-6 bg-[#F4F5F8]">
-        {/* Header Skeleton */}
-        <div className="h-24 w-full bg-white animate-pulse rounded-xl border border-gray-200 shadow-sm" />
-        
-        {/* Actions Skeleton */}
-        <div className="flex justify-between items-center">
-          <div className="h-10 w-48 bg-white animate-pulse rounded-lg border border-gray-200" />
-          <div className="h-10 w-64 bg-white animate-pulse rounded-lg border border-gray-200" />
-        </div>
+  const pathname = usePathname();
 
-        {/* Content Grid Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-64 w-full bg-white animate-pulse rounded-xl border border-gray-200 shadow-sm flex flex-col p-4 space-y-4">
-               <div className="h-32 bg-gray-100 rounded-lg w-full" />
-               <div className="h-4 bg-gray-200 rounded w-3/4" />
-               <div className="h-4 bg-gray-200 rounded w-1/2" />
-            </div>
-          ))}
+  // Public pages (landing, login, signup) use the neutral full-screen brand loader.
+  // All protected routes (/dashboard, /workforce, /inventory, /pos, etc.) use FullDashboardSkeleton (Sidebar + Header + Content).
+  const isPublicPage = !pathname || pathname === "/" || pathname === "/login" || pathname === "/signup";
+
+  if (!isPublicPage) {
+    return <FullDashboardSkeleton />;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0F172A] text-white">
+      {/* Top Animated Loading Line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#D3232A]/20 overflow-hidden">
+        <div className="h-full bg-[#D3232A] animate-pulse w-full origin-left" />
+      </div>
+
+      <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-300">
+        <div className="relative flex items-center justify-center">
+          <div className="h-16 w-16 rounded-2xl bg-[#D3232A]/10 animate-ping absolute" />
+          <Image
+            src="/gptlogo.png"
+            alt="Alayn Logo"
+            width={160}
+            height={40}
+            className="h-10 w-auto object-contain relative z-10"
+            priority
+          />
+        </div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <div className="h-2 w-2 rounded-full bg-[#D3232A] animate-bounce" />
+          <span>Loading Alayn...</span>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

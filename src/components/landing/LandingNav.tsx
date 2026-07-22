@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useMagnetic, springSnappy } from "./motion/primitives";
 import { useAppSelector, useAppDispatch } from "@/redux/store/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { useLogoutMutation } from "@/redux/slices/authApiSlice";
 import { LayoutGrid, User, LogOut, ChevronDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -19,6 +20,7 @@ export default function LandingNav() {
 
   const { ref: signupRef, x, y } = useMagnetic(0.2);
   const dispatch = useAppDispatch();
+  const [logoutApi] = useLogoutMutation();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -40,10 +42,16 @@ export default function LandingNav() {
 
   const initial = mounted && user?.name ? user.name.charAt(0).toUpperCase() : "O";
 
-  const handleLogout = () => {
-    dispatch(logout());
-    setDropdownOpen(false);
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      await logoutApi(undefined).unwrap();
+    } catch {
+      // ignore
+    } finally {
+      dispatch(logout());
+      setDropdownOpen(false);
+      window.location.reload();
+    }
   };
 
   return (

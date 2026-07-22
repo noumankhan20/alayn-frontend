@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useGetMeQuery } from "@/redux/slices/authApiSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/store/hooks";
 import { logout, setCredentials } from "@/redux/slices/authSlice";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
+import FullDashboardSkeleton from "@/components/dashboard/FullDashboardSkeleton";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -48,13 +47,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     return <>{children}</>;
   }
 
-  // On fresh cold load when user is not populated yet, display DashboardSkeleton layout
+  // On fresh cold load when user is not populated yet, display FullDashboardSkeleton layout
   if (isLoading) {
-    return (
-      <DashboardLayout>
-        <DashboardSkeleton />
-      </DashboardLayout>
-    );
+    return <FullDashboardSkeleton />;
   }
 
   // If session validation failed or unauthenticated, return null while redirecting

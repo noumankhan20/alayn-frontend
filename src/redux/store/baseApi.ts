@@ -60,6 +60,8 @@ const baseQueryWithReauth: BaseQueryFn<
             return result;
         }
 
+        console.info(`[AUTH REFRESH FRONTEND] 401 received for endpoint: ${urlStr}. Triggering token refresh via cookie...`);
+
         if (isRefreshing) {
             return new Promise((resolve) => {
                 subscribeTokenRefresh(async () => {
@@ -85,6 +87,8 @@ const baseQueryWithReauth: BaseQueryFn<
                 const refreshData = (refreshResult.data as any)?.data || refreshResult.data;
                 const user = refreshData?.user;
 
+                console.info(`[AUTH REFRESH FRONTEND SUCCESS] Token refresh succeeded for user: "${user?.name || user?.email || 'Authenticated User'}"`);
+
                 if (user) {
                     api.dispatch(setCredentials({ user }));
                 }
@@ -95,12 +99,14 @@ const baseQueryWithReauth: BaseQueryFn<
                 // Retry original query with normalized args
                 result = await baseQuery(normalizedArgs, api, extraOptions);
             } else {
+                console.warn('[AUTH REFRESH FRONTEND FAILED] Token refresh endpoint failed:', refreshResult.error);
                 isRefreshing = false;
                 refreshSubscribers = [];
                 // Refresh failed - log out user
                 api.dispatch(logout());
             }
-        } catch {
+        } catch (err) {
+            console.error('[AUTH REFRESH FRONTEND ERROR] Unexpected error during refresh:', err);
             isRefreshing = false;
             refreshSubscribers = [];
             api.dispatch(logout());
