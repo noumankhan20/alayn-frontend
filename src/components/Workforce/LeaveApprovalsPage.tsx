@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useAppSelector } from "@/redux/store/hooks";
 
+import { useBranch } from "@/lib/BranchContext";
+
 const DEMO_LEAVE_REQUESTS = [
   {
     id: "leave-1",
@@ -44,14 +46,17 @@ const DEMO_LEAVE_REQUESTS = [
 ];
 
 export default function LeaveApprovalsPage() {
+  const { activeBranch } = useBranch();
+  const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
+
   const user = useAppSelector((state) => state.auth.user);
   const isManagerOrOwner =
     user?.role === "BUSINESS_OWNER" ||
     user?.role === "MANAGER" ||
     user?.role === "SUPER_ADMIN";
 
-  const { data: leaveApiData, isLoading: isLeavesLoading } = useGetLeaveRequestsQuery(undefined);
-  const { data: empApiData } = useGetEmployeesQuery(undefined);
+  const { data: leaveApiData, isLoading: isLeavesLoading } = useGetLeaveRequestsQuery(outletId ? { outletId } : undefined);
+  const { data: empApiData } = useGetEmployeesQuery(outletId ? { outletId } : undefined);
   const [createLeaveRequest, { isLoading: isSubmitting }] = useCreateLeaveRequestMutation();
   const [updateLeaveStatus, { isLoading: isUpdating }] = useUpdateLeaveStatusMutation();
 

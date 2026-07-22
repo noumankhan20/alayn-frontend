@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useGetOutletsQuery, Outlet } from "@/redux/slices/outletApiSlice";
-import { useAppSelector } from "@/redux/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/store/hooks";
+import { baseApi } from "@/redux/store/baseApi";
 
 export interface Branch {
   id: string;
@@ -79,6 +80,8 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
     }
   }, [branches.length, isDemo]);
 
+  const dispatch = useAppDispatch();
+
   const setActiveBranch = (branch: Branch | null) => {
     setActiveBranchState(branch);
     if (branch && typeof window !== "undefined") {
@@ -86,6 +89,7 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
     } else if (typeof window !== "undefined") {
       localStorage.removeItem("alayn_active_branch_id");
     }
+    dispatch(baseApi.util.resetApiState());
   };
 
   const refreshBranches = async () => {

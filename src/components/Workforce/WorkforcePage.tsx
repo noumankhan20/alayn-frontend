@@ -11,6 +11,7 @@ import {
   useBulkUploadEmployeesMutation,
 } from "@/redux/slices/employeeApiSlice";
 import { useGetOutletsQuery } from "@/redux/slices/outletApiSlice";
+import { useBranch } from "@/lib/BranchContext";
 import {
   Users,
   UserCheck,
@@ -80,7 +81,9 @@ const DEMO_EMPLOYEES = [
 ];
 
 export default function WorkforcePage() {
-  const { data: apiData, isLoading } = useGetEmployeesQuery(undefined);
+  const { activeBranch } = useBranch();
+  const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
+  const { data: apiData, isLoading } = useGetEmployeesQuery(outletId ? { outletId } : undefined);
   const { data: outletsData } = useGetOutletsQuery();
   const [createEmployee, { isLoading: isCreating }] = useCreateEmployeeMutation();
   const [updateEmployee, { isLoading: isUpdating }] = useUpdateEmployeeMutation();

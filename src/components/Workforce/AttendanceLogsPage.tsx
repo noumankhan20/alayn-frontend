@@ -19,6 +19,8 @@ import {
   UserCheck,
 } from "lucide-react";
 
+import { useBranch } from "@/lib/BranchContext";
+
 const DEMO_ATTENDANCE_LOGS = [
   {
     id: "att-1",
@@ -47,7 +49,9 @@ const DEMO_ATTENDANCE_LOGS = [
 ];
 
 export default function AttendanceLogsPage() {
-  const { data: apiLogsData, isLoading } = useGetAttendanceLogsQuery(undefined);
+  const { activeBranch } = useBranch();
+  const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
+  const { data: apiLogsData, isLoading } = useGetAttendanceLogsQuery(outletId ? { outletId } : undefined);
   const [clockIn, { isLoading: isClockingIn }] = useClockInMutation();
   const [clockOut, { isLoading: isClockingOut }] = useClockOutMutation();
 

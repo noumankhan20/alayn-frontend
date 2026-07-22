@@ -40,9 +40,9 @@ export default function MasterDashboardPage() {
   const { activeBranch, branches, loading, isDemo, refreshBranches } = useBranch();
   const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
 
-  const { data: kpiData, isLoading: isKpiLoading, refetch } = useGetKpisQuery({ outletId });
-  const { data: salesData, isLoading: isSalesLoading } = useGetSalesForecastQuery({ outletId });
-  const { data: inventoryData, isLoading: isInventoryLoading } = useGetInventoryForecastQuery({ outletId });
+  const { data: kpiData, isLoading: isKpiLoading, refetch } = useGetKpisQuery({ outletId }, { skip: !outletId });
+  const { data: salesData, isLoading: isSalesLoading } = useGetSalesForecastQuery({ outletId }, { skip: !outletId });
+  const { data: inventoryData, isLoading: isInventoryLoading } = useGetInventoryForecastQuery({ outletId }, { skip: !outletId });
 
   const [createOutlet, { isLoading: isSubmitting }] = useCreateOutletMutation();
 

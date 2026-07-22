@@ -454,7 +454,7 @@ export default function SignupComponent() {
                                         required
                                         value={formData.locationsCount}
                                         onChange={handleChange("locationsCount")}
-                                        className={fieldErrors.locationsCount ? errorInputClasses.replace("pl-9", "pl-3") : inputClasses.replace("pl-9", "pl-3")}
+                                        className={fieldErrors.locationsCount ? errorInputClasses : inputClasses}
                                     >
                                         <option value="">Select location range</option>
                                         <option value="1">1 Location</option>
@@ -471,7 +471,7 @@ export default function SignupComponent() {
                                         required
                                         value={formData.businessType}
                                         onChange={handleChange("businessType")}
-                                        className={fieldErrors.businessType ? errorInputClasses.replace("pl-9", "pl-3") : inputClasses.replace("pl-9", "pl-3")}
+                                        className={fieldErrors.businessType ? errorInputClasses : inputClasses}
                                     >
                                         <option value="">Select business type</option>
                                         <option value="restaurant">Restaurant</option>

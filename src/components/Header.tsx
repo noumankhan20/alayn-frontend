@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/store/hooks";
 import { logout } from "@/redux/slices/authSlice";
-import { useGetOutletsQuery } from "@/redux/slices/outletApiSlice";
+import { useBranch } from "@/lib/BranchContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -20,12 +20,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  // Read outlets directly from RTK Query Redux cache — no re-fetch, no localStorage
-  const { data: outlets = [], isLoading: outletsLoading } = useGetOutletsQuery(undefined, {
-    skip: !isAuthenticated,
-  });
+  const { activeBranch, setActiveBranch, branches, loading: branchesLoading } = useBranch();
 
-  const [activeOutletId, setActiveOutletId] = useState<string>("");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -41,24 +37,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Sync active outlet: prefer saved id, fall back to first outlet
-  useEffect(() => {
-    if (outlets.length === 0) return;
-    const savedId = typeof window !== "undefined" ? localStorage.getItem("alayn_active_branch_id") : null;
-    const matched = savedId ? outlets.find((o) => o.id === savedId) : null;
-    const next = matched || outlets[0];
-    setActiveOutletId(next.id);
-    localStorage.setItem("alayn_active_branch_id", next.id);
-  }, [outlets]);
-
   const handleOutletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     if (val === "__CREATE__") {
       window.location.href = "/outlets/create";
       return;
     }
-    setActiveOutletId(val);
-    localStorage.setItem("alayn_active_branch_id", val);
+    const selected = branches.find((b) => b.id === val) || null;
+    setActiveBranch(selected);
   };
 
   const handleLogout = () => {
@@ -68,7 +54,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   const initial = mounted && user?.name ? user.name.charAt(0).toUpperCase() : "O";
-  const isLoadingOutlets = !mounted || (isAuthenticated && outletsLoading && outlets.length === 0);
+  const isLoadingOutlets = !mounted || (isAuthenticated && branchesLoading && branches.length === 0);
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
@@ -103,15 +89,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <MapPin className="h-4 w-4 text-[#D3232A]" />
               {isLoadingOutlets ? (
                 <Skeleton width={140} height={28} borderRadius={8} />
-              ) : outlets.length > 0 ? (
+              ) : branches.length > 0 ? (
                 <select
-                  value={activeOutletId}
+                  value={activeBranch?.id || ""}
                   onChange={handleOutletChange}
                   className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm focus:border-[#D3232A] focus:outline-none focus:ring-1 focus:ring-[#D3232A] cursor-pointer"
                 >
-                  {outlets.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
                     </option>
                   ))}
                   <option value="__CREATE__">+ Add New Outlet</option>
