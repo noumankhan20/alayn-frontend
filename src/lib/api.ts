@@ -352,3 +352,119 @@ export async function adjustInventoryStock(
   if (result.ok) return { ok: true };
   return { ok: false, error: result.error };
 }
+
+// ── Table Management APIs ───────────────────────────────────────────────────
+
+export interface TableItem {
+  id: string;
+  tableNumber: number;
+  tableType: "AC" | "NON_AC";
+  status: "AVAILABLE" | "OCCUPIED";
+  currentToken: string | null;
+  tokenExpiresAt: string | null;
+  createdAt: string;
+}
+
+export async function fetchTables(
+  outletId: string
+): Promise<{ ok: boolean; tables?: TableItem[]; error?: string }> {
+  const result = await apiRequest<TableItem[]>("/tables", { outletId });
+  if (result.ok) return { ok: true, tables: result.data };
+  return { ok: false, error: result.error };
+}
+
+export async function createBulkTables(
+  outletId: string,
+  acCount: number,
+  nonAcCount: number
+): Promise<{ ok: boolean; tables?: TableItem[]; error?: string }> {
+  const result = await apiRequest<TableItem[]>("/tables", {
+    method: "POST",
+    body: { acCount, nonAcCount },
+    outletId,
+  });
+  if (result.ok) return { ok: true, tables: result.data };
+  return { ok: false, error: result.error };
+}
+
+export async function updateTable(
+  outletId: string,
+  tableId: string,
+  data: { tableType?: "AC" | "NON_AC"; status?: "AVAILABLE" | "OCCUPIED" }
+): Promise<{ ok: boolean; error?: string }> {
+  const result = await apiRequest(`/tables/${tableId}`, {
+    method: "PATCH",
+    body: data,
+    outletId,
+  });
+  if (result.ok) return { ok: true };
+  return { ok: false, error: result.error };
+}
+
+export async function regenerateTableQRToken(
+  outletId: string,
+  tableId: string
+): Promise<{ ok: boolean; token?: string; error?: string }> {
+  const result = await apiRequest<{ token: string }>(`/tables/${tableId}/regenerate-qr`, {
+    method: "POST",
+    outletId,
+  });
+  if (result.ok) return { ok: true, token: result.data.token };
+  return { ok: false, error: result.error };
+}
+
+export async function deleteTable(
+  outletId: string,
+  tableId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const result = await apiRequest(`/tables/${tableId}`, {
+    method: "DELETE",
+    outletId,
+  });
+  if (result.ok) return { ok: true };
+  return { ok: false, error: result.error };
+}
+
+// ── Customer QR Ordering APIs ─────────────────────────────────────────────
+
+export interface CustomerMenuItem {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string | null;
+  pricePaise: number;
+  isVeg: boolean;
+  isActive: boolean;
+}
+
+export interface CustomerMenuCategory {
+  id: string;
+  name: string;
+  description: string;
+  menuItems: CustomerMenuItem[];
+}
+
+export async function fetchTableMenu(
+  token: string
+): Promise<{ ok: boolean; categories?: CustomerMenuCategory[]; error?: string }> {
+  const result = await apiRequest<CustomerMenuCategory[]>(`/orders/tables/${token}/menu`);
+  if (result.ok) return { ok: true, categories: result.data };
+  return { ok: false, error: result.error };
+}
+
+export async function createQROrder(
+  tableToken: string,
+  items: Array<{ menuItemId: string; quantity: number }>
+): Promise<{ ok: boolean; order?: unknown; error?: string }> {
+  const result = await apiRequest<{ id: string }>("/orders", {
+    method: "POST",
+    body: {
+      source: "QR",
+      tableToken,
+      items,
+    },
+  });
+  if (result.ok) return { ok: true, order: result.data };
+  return { ok: false, error: result.error };
+}
+

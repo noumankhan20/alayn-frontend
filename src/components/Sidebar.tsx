@@ -23,6 +23,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/redux/store/hooks";
@@ -47,6 +48,7 @@ const ownerNavItems: NavItem[] = [
   { name: "Workforce", icon: Users, href: "/workforce" },
   { name: "Smart Inventory", icon: Package, href: "/inventory" },
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
+  { name: "Table Management", icon: QrCode, href: "/tables" },
   { name: "POS Terminal", icon: CreditCard, href: "/pos" },
   { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support & Tickets", icon: MessageSquare, href: "/support" },
@@ -59,6 +61,7 @@ const managerNavItems: NavItem[] = [
   { name: "Workforce Directory", icon: Users, href: "/workforce" },
   { name: "Inventory", icon: Package, href: "/inventory" },
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
+  { name: "Table Management", icon: QrCode, href: "/tables" },
   { name: "POS Terminal", icon: CreditCard, href: "/pos" },
   { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support Tickets", icon: MessageSquare, href: "/support" },

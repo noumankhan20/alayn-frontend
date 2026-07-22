@@ -15,10 +15,15 @@ import {
   Receipt,
   CheckCircle2,
   Utensils,
-  Image as ImageIcon,
+  LayoutGrid,
+  List,
+  Leaf,
+  Flame,
 } from "lucide-react";
 import DashboardLayout from "../layout/DashboardLayout";
 import { getImageUrl } from "@/lib/utils";
+
+import { useAppSelector } from "@/redux/store/hooks";
 
 interface CartItem {
   menuItem: MenuItem;
@@ -27,10 +32,19 @@ interface CartItem {
 }
 
 export default function PosTerminalComponent() {
+  const user = useAppSelector((state) => state.auth.user);
+  const isStaffRole = user?.role === "STAFF";
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"COMPACT_GRID" | "LIST">("COMPACT_GRID");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 24; // High density for fast billing & scalability
+
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orderSource, setOrderSource] = useState<"COUNTER" | "QR" /* | "DELIVERY" */>("COUNTER");
+  const [orderSource, setOrderSource] = useState<"COUNTER" | "QR">(
+    isStaffRole ? "QR" : "COUNTER"
+  );
   const [tableNo, setTableNo] = useState<string>("");
   const [discount, setDiscount] = useState<number>(0);
   const [taxPercent, setTaxPercent] = useState<number>(5);
@@ -127,7 +141,7 @@ export default function PosTerminalComponent() {
         <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pb-3 border-b border-gray-100">
           {/* Order Source Switcher */}
           <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 w-full sm:w-auto">
-            {(["COUNTER", "QR" /* , "DELIVERY" */] as const).map((src) => (
+            {(isStaffRole ? (["QR"] as const) : (["COUNTER", "QR"] as const)).map((src) => (
               <button
                 key={src}
                 onClick={() => setOrderSource(src)}
@@ -137,40 +151,77 @@ export default function PosTerminalComponent() {
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {src}
+                {src === "COUNTER" ? "Counter Direct" : "QR / Table Order"}
               </button>
             ))}
           </div>
 
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search POS items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-xs focus:outline-none focus:border-[#D3232A]"
-            />
+          {/* Right side controls: Search + View Mode Switcher */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search POS items..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-xs focus:outline-none focus:border-[#D3232A]"
+              />
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 shrink-0">
+              <button
+                onClick={() => setViewMode("COMPACT_GRID")}
+                title="Grid View"
+                className={`p-1.5 rounded transition ${
+                  viewMode === "COMPACT_GRID"
+                    ? "bg-white text-[#1B2A4A] shadow-xs font-bold"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("LIST")}
+                title="List View (Fast Billing)"
+                className={`p-1.5 rounded transition ${
+                  viewMode === "LIST"
+                    ? "bg-white text-[#1B2A4A] shadow-xs font-bold"
+                    : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Categories Bar */}
-        <div className="py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none border-b border-gray-100">
+        <div className="py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none border-b border-gray-100 shrink-0">
           <button
-            onClick={() => setSelectedCategoryId("ALL")}
+            onClick={() => {
+              setSelectedCategoryId("ALL");
+              setCurrentPage(1);
+            }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition border ${
               selectedCategoryId === "ALL"
                 ? "bg-[#D3232A] text-white border-[#D3232A]"
                 : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
             }`}
           >
-            All Items
+            All Items ({filteredItems.length})
           </button>
           {categories.map((c) => (
             <button
               key={c.id}
-              onClick={() => setSelectedCategoryId(c.id)}
+              onClick={() => {
+                setSelectedCategoryId(c.id);
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition border flex items-center gap-1.5 ${
                 selectedCategoryId === c.id
                   ? "bg-[#D3232A] text-white border-[#D3232A]"
@@ -192,60 +243,127 @@ export default function PosTerminalComponent() {
           ))}
         </div>
 
-        {/* Product Catalog Grid */}
-        <div className="flex-1 overflow-y-auto pt-3 pr-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        {/* Product Catalog Display (Scalable Grid / Fast List) */}
+        <div className="flex-1 overflow-y-auto pt-3 pr-1">
           {isLoading ? (
-            [1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-32 bg-gray-100 animate-pulse rounded-lg border border-gray-200" />
-            ))
+            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-2.5">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                <div key={n} className="h-20 bg-gray-100 animate-pulse rounded-lg border border-gray-200" />
+              ))}
+            </div>
           ) : filteredItems.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
               <Utensils className="w-10 h-10 mb-2 opacity-40" />
               <p className="text-xs font-semibold">No available menu items match filter</p>
             </div>
+          ) : viewMode === "COMPACT_GRID" ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5">
+              {filteredItems
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => addToCart(item)}
+                    className="bg-white hover:bg-gray-50/90 border border-gray-200 hover:border-[#D3232A]/40 rounded-xl p-3 flex flex-col justify-between cursor-pointer transition group select-none shadow-2xs hover:shadow-xs active:scale-95"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-gray-400 truncate">
+                          {item.category?.name || "General"}
+                        </span>
+                        {item.isVeg !== undefined && (
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              item.isVeg ? "bg-emerald-500" : "bg-rose-500"
+                            }`}
+                            title={item.isVeg ? "Veg" : "Non-Veg"}
+                          />
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-[#1B2A4A] group-hover:text-[#D3232A] transition line-clamp-2 leading-snug">
+                        {item.name}
+                      </h4>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-gray-100">
+                      <span className="text-xs font-extrabold text-[#1B2A4A]">
+                        ₹{Number(item.price).toFixed(2)}
+                      </span>
+                      <span className="w-5 h-5 rounded-md bg-[#D3232A]/10 border border-[#D3232A]/20 flex items-center justify-center text-[#D3232A] group-hover:bg-[#D3232A] group-hover:text-white transition">
+                        <Plus className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
           ) : (
-            filteredItems.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => addToCart(item)}
-                className="bg-white hover:bg-gray-50/80 border border-gray-200 hover:border-gray-300 rounded-xl overflow-hidden flex flex-col justify-between cursor-pointer transition group select-none shadow-sm hover:shadow active:scale-95"
-              >
-                {/* Optional Image thumbnail in POS grid */}
-                {item.imageUrl && (
-                  <div className="h-24 w-full bg-gray-100 relative overflow-hidden">
-                    <img
-                      src={getImageUrl(item.imageUrl)}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLElement).style.display = "none";
-                      }}
-                    />
+            /* FAST BILLING LIST VIEW */
+            <div className="space-y-1.5">
+              {filteredItems
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => addToCart(item)}
+                    className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-[#D3232A]/40 rounded-lg p-2.5 flex items-center justify-between gap-3 cursor-pointer transition group select-none shadow-2xs active:scale-98"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          item.isVeg ? "bg-emerald-500" : "bg-rose-500"
+                        }`}
+                      />
+                      <span className="text-xs font-bold text-[#1B2A4A] truncate">
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-medium truncate">
+                        • {item.category?.name || "General"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs font-extrabold text-[#1B2A4A]">
+                        ₹{Number(item.price).toFixed(2)}
+                      </span>
+                      <span className="px-2 py-1 rounded bg-[#D3232A]/10 text-[#D3232A] group-hover:bg-[#D3232A] group-hover:text-white text-[11px] font-bold transition flex items-center gap-1">
+                        <Plus className="w-3 h-3" />
+                        <span>Add</span>
+                      </span>
+                    </div>
                   </div>
-                )}
-                
-                <div className="p-3 flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">
-                      {item.category?.name || "General"}
-                    </span>
-                    <h4 className="text-xs font-bold text-[#1B2A4A] group-hover:text-[#D3232A] transition mt-0.5 line-clamp-1">
-                      {item.name}
-                    </h4>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
-                    <span className="text-xs font-extrabold text-[#1B2A4A]">
-                      ₹{Number(item.price).toFixed(2)}
-                    </span>
-                    <span className="w-6 h-6 rounded-md bg-[#D3232A]/10 border border-[#D3232A]/20 flex items-center justify-center text-[#D3232A] group-hover:bg-[#D3232A] group-hover:text-white transition">
-                      <Plus className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
+                ))}
+            </div>
           )}
         </div>
+
+        {/* Scalable Pagination Controls */}
+        {filteredItems.length > pageSize && (
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs text-gray-500 shrink-0">
+            <span>
+              Showing {(currentPage - 1) * pageSize + 1} -{" "}
+              {Math.min(currentPage * pageSize, filteredItems.length)} of {filteredItems.length} items
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="px-2.5 py-1 rounded border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 font-bold"
+              >
+                Prev
+              </button>
+              <span className="px-2 font-bold text-[#1B2A4A]">
+                {currentPage} / {Math.ceil(filteredItems.length / pageSize)}
+              </span>
+              <button
+                disabled={currentPage >= Math.ceil(filteredItems.length / pageSize)}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="px-2.5 py-1 rounded border border-gray-200 bg-gray-50 hover:bg-gray-100 disabled:opacity-40 font-bold"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* RIGHT: POS Order Cart Sidebar */}
@@ -337,11 +455,21 @@ export default function PosTerminalComponent() {
           </div>
 
           <button
-            disabled={cart.length === 0}
-            onClick={() => setIsCheckoutOpen(true)}
-            className="w-full mt-2 btn-primary py-2.5 text-xs font-bold"
+            disabled={cart.length === 0 || isSubmitting}
+            onClick={orderSource === "QR" ? handleProcessCheckout : () => setIsCheckoutOpen(true)}
+            className="w-full mt-2 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-2"
           >
-            <Receipt className="w-4 h-4" /> Proceed to Checkout
+            {orderSource === "QR" ? (
+              <>
+                <Utensils className="w-4 h-4" />
+                {isSubmitting ? "Sending to Kitchen..." : "Create Order & Send to Kitchen"}
+              </>
+            ) : (
+              <>
+                <Receipt className="w-4 h-4" />
+                Proceed to Checkout
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -421,9 +549,12 @@ export default function PosTerminalComponent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white border border-gray-200 rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-xl text-center space-y-4">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <h3 className="text-base font-bold text-[#1B2A4A]">Order Placed Successfully!</h3>
+            <h3 className="text-base font-bold text-[#1B2A4A]">Order Sent to Kitchen!</h3>
             <p className="text-xs text-gray-500">
-              Order Ref: <span className="font-mono text-[#D3232A] font-bold">{completedOrder.id || "ORD-DONE"}</span>
+              Order ID: <span className="font-mono text-[#D3232A] font-extrabold text-sm">{completedOrder.orderNumber || completedOrder.id || "ORD-DONE"}</span>
+            </p>
+            <p className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 py-1.5 px-3 rounded-lg">
+              Dish tickets dispatched directly to Kitchen Dispatch
             </p>
             <button
               onClick={() => setCompletedOrder(null)}
