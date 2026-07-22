@@ -1,6 +1,8 @@
 // Frontend API Client — Alayn Backend
 // All branch-scoped calls accept outletId explicitly (from BranchContext).
 
+import { showToast } from "./toast";
+
 const RAW_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_VERSION = "v1";
 const BASE_DOMAIN = RAW_URL.replace(/\/$/, "").replace(/\/api\/v\d+$/, "");
@@ -362,7 +364,11 @@ export async function createInventoryItem(
     body: itemData,
     outletId,
   });
-  if (result.ok) return { ok: true, item: result.data };
+  if (result.ok) {
+    showToast.success("Inventory Item Created", `"${itemData.name}" added to inventory.`);
+    return { ok: true, item: result.data };
+  }
+  showToast.error("Failed to Create Item", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -378,7 +384,11 @@ export async function adjustInventoryStock(
     body: { change, reason, idempotencyKey },
     outletId,
   });
-  if (result.ok) return { ok: true };
+  if (result.ok) {
+    showToast.success("Stock Adjusted", `Inventory stock updated (${reason}).`);
+    return { ok: true };
+  }
+  showToast.error("Stock Adjustment Failed", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -421,7 +431,12 @@ export async function createBulkTables(
     body: { acCount, nonAcCount },
     outletId,
   });
-  if (result.ok) return { ok: true, tables: result.data };
+  if (result.ok) {
+    const total = acCount + nonAcCount;
+    showToast.success("Tables Created Successfully", `${total} table${total !== 1 ? "s" : ""} added with QR tokens.`);
+    return { ok: true, tables: result.data };
+  }
+  showToast.error("Table Creation Failed", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -435,7 +450,11 @@ export async function updateTable(
     body: data,
     outletId,
   });
-  if (result.ok) return { ok: true };
+  if (result.ok) {
+    showToast.success("Table Updated", "Table details updated successfully.");
+    return { ok: true };
+  }
+  showToast.error("Table Update Failed", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -447,7 +466,11 @@ export async function regenerateTableQRToken(
     method: "POST",
     outletId,
   });
-  if (result.ok) return { ok: true, token: result.data.token };
+  if (result.ok) {
+    showToast.success("QR Token Regenerated", "New QR code token is active.");
+    return { ok: true, token: result.data.token };
+  }
+  showToast.error("QR Regeneration Failed", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -459,7 +482,11 @@ export async function deleteTable(
     method: "DELETE",
     outletId,
   });
-  if (result.ok) return { ok: true };
+  if (result.ok) {
+    showToast.success("Table Deleted", "Table removed from dining floor.");
+    return { ok: true };
+  }
+  showToast.error("Table Deletion Failed", result.error);
   return { ok: false, error: result.error };
 }
 
@@ -502,7 +529,11 @@ export async function createQROrder(
       items,
     },
   });
-  if (result.ok) return { ok: true, order: result.data };
+  if (result.ok) {
+    showToast.success("Order Placed!", "Your order has been sent to the kitchen.");
+    return { ok: true, order: result.data };
+  }
+  showToast.error("Order Failed", result.error);
   return { ok: false, error: result.error };
 }
 

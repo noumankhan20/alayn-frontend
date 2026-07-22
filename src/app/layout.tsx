@@ -3,6 +3,7 @@ import { Outfit, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/redux/store/provider";
 import { BranchProvider } from "@/lib/BranchContext";
+import GlobalToastContainer from "@/components/toast/GlobalToastContainer";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ReduxProvider>
           <BranchProvider>
             {children}
+            <GlobalToastContainer />
           </BranchProvider>
         </ReduxProvider>
       </body>
