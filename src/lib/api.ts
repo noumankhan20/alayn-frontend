@@ -394,11 +394,20 @@ export async function adjustInventoryStock(
 
 // ── Table Management APIs ───────────────────────────────────────────────────
 
+export interface TableStaff {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export interface TableItem {
   id: string;
   tableNumber: number;
   tableType: "AC" | "NON_AC";
   status: "AVAILABLE" | "OCCUPIED";
+  assignedStaffId?: string | null;
+  assignedStaff?: TableStaff | null;
   currentToken: string | null;
   tokenExpiresAt: string | null;
   createdAt: string;
@@ -434,7 +443,7 @@ export async function createBulkTables(
 export async function updateTable(
   outletId: string,
   tableId: string,
-  data: { tableType?: "AC" | "NON_AC"; status?: "AVAILABLE" | "OCCUPIED" }
+  data: { tableType?: "AC" | "NON_AC"; status?: "AVAILABLE" | "OCCUPIED"; assignedStaffId?: string | null }
 ): Promise<{ ok: boolean; error?: string }> {
   const result = await apiRequest(`/tables/${tableId}`, {
     method: "PATCH",
