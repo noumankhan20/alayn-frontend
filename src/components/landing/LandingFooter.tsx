@@ -56,7 +56,7 @@ export default function LandingFooter() {
               lineHeight: 1.5,
             }}
           >
-            The operating system for Indian businesses.
+           Alayn — The All-in-One Operating System for Modern Businesses
           </p>
         </div>
 

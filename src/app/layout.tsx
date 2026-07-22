@@ -21,7 +21,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Alayn — The Operating System for Indian Cafés",
+  title: "Alayn — The All-in-One Operating System for Modern Businesses",
   description: "Alayn connects staff, inventory, orders, waste, analytics and feedback into one AI-powered platform built specifically for café owners in India.",
 };
 
