@@ -399,6 +399,7 @@ export interface TableStaff {
   name: string;
   email: string;
   role: string;
+  userId?: string | null;
 }
 
 export interface TableItem {

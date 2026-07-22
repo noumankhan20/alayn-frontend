@@ -9,33 +9,35 @@ export default function FullDashboardSkeleton() {
     <SkeletonTheme baseColor="#E2E8F0" highlightColor="#F8FAFC">
       <div className="flex h-screen overflow-hidden bg-[#F4F7F9]">
         {/* ─── Sidebar Skeleton ─── */}
-        <div className="hidden lg:flex w-64 flex-col justify-between border-r border-gray-200 bg-white p-4 shrink-0">
-          <div className="space-y-6">
-            {/* Sidebar Logo Skeleton */}
-            <div className="flex items-center gap-3 px-2 py-2">
+        <div className="hidden lg:flex w-64 flex-col justify-between border-r border-white/[0.05] bg-[#0B1221] p-4 shrink-0">
+          <SkeletonTheme baseColor="#1E293B" highlightColor="#334155">
+            <div className="space-y-6">
+              {/* Sidebar Logo Skeleton */}
+              <div className="flex items-center gap-3 px-2 py-2">
+                <Skeleton circle width={36} height={36} />
+                <Skeleton width={120} height={24} borderRadius={6} />
+              </div>
+
+              {/* Sidebar Menu Nav Items Skeletons */}
+              <div className="space-y-2.5 pt-2">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <Skeleton circle width={20} height={20} />
+                    <Skeleton width={110} height={16} borderRadius={4} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sidebar Bottom User Profile Skeleton */}
+            <div className="border-t border-white/[0.05] pt-4 flex items-center gap-3 px-2">
               <Skeleton circle width={36} height={36} />
-              <Skeleton width={120} height={24} borderRadius={6} />
+              <div className="space-y-1">
+                <Skeleton width={100} height={14} borderRadius={4} />
+                <Skeleton width={70} height={12} borderRadius={4} />
+              </div>
             </div>
-
-            {/* Sidebar Menu Nav Items Skeletons */}
-            <div className="space-y-2.5 pt-2">
-              {[...Array(7)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50/60 border border-gray-100">
-                  <Skeleton circle width={20} height={20} />
-                  <Skeleton width={110} height={16} borderRadius={4} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sidebar Bottom User Profile Skeleton */}
-          <div className="border-t border-gray-100 pt-4 flex items-center gap-3 px-2">
-            <Skeleton circle width={36} height={36} />
-            <div className="space-y-1">
-              <Skeleton width={100} height={14} borderRadius={4} />
-              <Skeleton width={70} height={12} borderRadius={4} />
-            </div>
-          </div>
+          </SkeletonTheme>
         </div>
 
         {/* ─── Main Section (Header + Content) Skeleton ─── */}
