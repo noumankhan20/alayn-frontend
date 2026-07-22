@@ -96,7 +96,9 @@ const authSlice = createSlice({
         builder.addMatcher(
             isGetMeFulfilled,
             (state, action: any) => {
-                const user = action.payload?.data || action.payload;
+                const payload = action.payload?.data || action.payload;
+                const user = payload?.user || payload;
+
                 state.isAuthenticated = true;
                 state.user = user;
                 try {

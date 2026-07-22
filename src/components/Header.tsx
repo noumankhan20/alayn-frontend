@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/store/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { useLogoutMutation } from "@/redux/slices/authApiSlice";
 import { useBranch } from "@/lib/BranchContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -17,6 +18,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const dispatch = useAppDispatch();
+  const [logoutApi] = useLogoutMutation();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
@@ -47,10 +49,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
     setActiveBranch(selected);
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    setProfileDropdownOpen(false);
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    try {
+      await logoutApi(undefined).unwrap();
+    } catch {
+      // ignore network errors on logout
+    } finally {
+      dispatch(logout());
+      setProfileDropdownOpen(false);
+      window.location.href = "/login";
+    }
   };
 
   const initial = mounted && user?.name ? user.name.charAt(0).toUpperCase() : "O";
@@ -79,6 +87,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               alt="ALAYN Logo"
               width={224}
               height={64}
+              style={{ width: "auto", height: "auto" }}
               className="max-h-16 w-auto object-contain"
               priority
             />

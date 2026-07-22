@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, use } from "react";
 import AuthGuard from "@/components/auth/AuthGuard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import KPIWidget from "@/components/dashboard/KPIWidget";
@@ -35,7 +35,14 @@ import {
   useGetInventoryForecastQuery,
 } from "@/redux/slices/dashboardApiSlice";
 
-export default function MasterDashboardPage() {
+interface PageProps {
+  params?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default function MasterDashboardPage(props?: PageProps) {
+  if (props?.params) use(props.params);
+  if (props?.searchParams) use(props.searchParams);
 
   const { activeBranch, branches, loading, isDemo, refreshBranches } = useBranch();
   const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
