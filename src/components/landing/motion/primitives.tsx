@@ -13,12 +13,11 @@ export const springSnappy: Transition = { type: "spring", stiffness: 320, dampin
  * with `stagger`.
  */
 const assembleVariants: Variants = {
-  hidden: { opacity: 0, y: 26, scale: 0.98, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 26, scale: 0.98 },
   visible: (delay: number = 0) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: "blur(0px)",
     transition: { ...springSettle, delay },
   }),
 };

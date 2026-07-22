@@ -7,26 +7,26 @@ import { useCountUp } from "../motion/primitives";
 
 const BRIEFING_LINES = [
   { 
-    label: "Sales Intelligence", 
-    text: "Revenue is up ₹18,400 vs last Tuesday. Cold beverages are driving 34% of morning ticket sizes.", 
+    label: "REVENUE INTELLIGENCE", 
+    text: "Revenue is trending ahead of forecast, with AI identifying the products and customer behaviours driving growth.", 
     color: "#C41E2A", // Brand Crimson
     action: "Promote cold brews on self-checkout screen"
   },
   { 
-    label: "Inventory Alert", 
-    text: "Oat milk supplies will deplete by 3:15 PM under current consumption pace. Draft purchase order ready.", 
+    label: "INVENTORY INTELLIGENCE", 
+    text: "Predictive inventory monitoring ensures critical stock is replenished before shortages affect service.", 
     color: "#C41E2A", // Brand Crimson
     action: "Approve restocking order (1-click)"
   },
   {
-    label: "Staff Coordination",
-    text: "Evening kitchen shift is short-staffed. Arjun is flagged as available for roster adjustment.",
+    label: "WORKFORCE INTELLIGENCE",
+    text: "AI continuously monitors staffing levels and recommends schedule adjustments to maintain operational efficiency.Review Recommendation",
     color: "#ffff", // Brand Navy — was off-palette indigo
     action: "Send automated availability invite"
   },
   {
-    label: "Waste Optimization",
-    text: "Waste cost reached ₹2,140 yesterday, concentrated in morning prep. Standardizing prep portions recommended.",
+    label: "OPERATIONAL INTELLIGENCE",
+    text: "Identify inefficiencies, reduce waste and improve profitability through continuous AI-powered operational analysis.",
     color: "#ffff", // Brand Navy — was off-palette purple
     action: "Adjust kitchen prep metrics"
   },
@@ -166,9 +166,20 @@ export default function RunningScene() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px", width: "100%" }}>
         
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "60px", alignItems: "center" }}>
-          
-          {/* Left Column: Context & Global Pulse */}
+                {/* Left Column: Context & Global Pulse */}
           <div>
+            <span style={{
+              display: "inline-block",
+              fontSize: "0.6875rem",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--amber)",
+              marginBottom: "16px",
+            }}>
+              INTELLIGENT OPERATIONS
+            </span>
+
             <h2 style={{
               fontFamily: "var(--font-playfair), Georgia, serif",
               fontWeight: 800,
@@ -178,9 +189,9 @@ export default function RunningScene() {
               color: "var(--cream-light)",
               marginBottom: "24px",
             }}>
-              Then the business
+              Run your business
               <br />
-              <span style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: "400" }}>runs itself.</span>
+              <span style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: "400" }}>with confidence.</span>
             </h2>
             <p style={{
               fontSize: "1.15rem",
@@ -189,7 +200,7 @@ export default function RunningScene() {
               marginBottom: "40px",
               maxWidth: "480px"
             }}>
-              Instead of swimming in spreadsheets, get a clean, proactive feed of decisions. What went wrong, why it happened, and how to fix it in one click.
+              Replace fragmented reports and manual analysis with real-time insights, proactive recommendations and AI-powered decision support—all from a single intelligent platform.
             </p>
 
             {/* Glowing Tracker Box */}
@@ -201,15 +212,20 @@ export default function RunningScene() {
               padding: "24px 32px",
               backdropFilter: "blur(12px)"
             }}>
-              <span style={{ display: "block", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)", marginBottom: "4px" }}>
-                Active Operations Layer
+              <span style={{ display: "block", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.7)", fontWeight: 700, marginBottom: "4px" }}>
+                ACTIVE OPERATIONS
               </span>
-              <span style={{ fontSize: "2rem", fontWeight: 700, color: "#FFFFFF", fontFamily: "var(--font-mono), monospace" }}>
-                {displaySignals}
-              </span>
-              <span style={{ fontSize: "0.875rem", color: "var(--amber)", marginLeft: "8px", fontWeight: 500 }}>
-                signals/min
-              </span>
+              <p style={{ margin: "0 0 12px 0", fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" }}>
+                Processing operational insights in real time.
+              </p>
+              <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+                <span style={{ fontSize: "2rem", fontWeight: 700, color: "#FFFFFF", fontFamily: "var(--font-mono), monospace" }}>
+                  {displaySignals}
+                </span>
+                <span style={{ fontSize: "0.875rem", color: "var(--amber)", fontWeight: 500 }}>
+                  AI insights processed every minute
+                </span>
+              </div>
             </div>
           </div>
 

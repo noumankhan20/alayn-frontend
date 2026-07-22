@@ -18,7 +18,7 @@ const VERTICALS = [
     data: { metric1: "3.2 mins", label1: "Avg. Service Time", metric2: "₹82K", label2: "Morning Rush Gross" }
   },
   { 
-    name: "QSR", 
+    name: "Quick Service Restaurants (QSRs)", 
     labels: ["Orders", "Speed", "Stock", "Staff", "Delivery", "Payments"], 
     outcome: "Optimize drive-thrus, manage third-party delivery dispatch, and coordinate payments.",
     data: { metric1: "90s", label1: "Order-to-Pack Time", metric2: "4.8/5.0", label2: "Delivery Dispatch Rating" }
@@ -36,7 +36,7 @@ const VERTICALS = [
     data: { metric1: "₹420", label1: "Wholesale Margin Peak", metric2: "2% target", label2: "Daily Bread Waste" }
   },
   { 
-    name: "Hotel Dining", 
+    name: "Hotel Restaurants", 
     labels: ["Reservations", "Housekeeping", "F&B", "Staff", "Guests", "Payments"], 
     outcome: "Link room folios to restaurant tabs, automate morning room service, and coordinate staff.",
     data: { metric1: "0.4s", label1: "Room Tab Verification", metric2: "98%", label2: "Room Service Sync Rate" }
@@ -79,10 +79,11 @@ export default function VerticalsScene() {
             color: "var(--espresso)",
             marginBottom: "24px",
           }}>
-            One operating system.
+            One intelligent platform.
             <br />
             <span style={{ fontStyle: "italic", color: "var(--amber)", fontWeight: "400" }}>
-              Every kind of business.
+             Built for every hospitality business.
+
             </span>
           </h2>
         </div>

@@ -89,7 +89,7 @@ export default function HeroScene() {
         <div className="hero-aurora hero-aurora-c" />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: "1280px", margin: "0 auto", width: "100%" }}>
         <div
           style={{
             display: "grid",
@@ -185,122 +185,188 @@ export default function HeroScene() {
               We&apos;re  introducing Alayn AI to a select group of forward-thinking organisations. Arrange a demonstration to discover how intelligent automation can transform your operations.            </Assemble>
           </div>
 
-          {/* Right — floating product surface (Stripe pattern).
-              MOCK UI — this whole block is the swap point for a real product
-              screenshot once the pilot build exists (~2 weeks out). Replace
-              the panel's contents with an <Image> of the actual app; keep
-              the floating alert card as an annotation over it if it still reads well. */}
-          <Assemble as="div" delay={0.16} style={{ display: "flex", justifyContent: "center" }}>
-            <div style={{ position: "relative", width: "100%", maxWidth: "440px" }}>
-              {/* Main panel */}
-              <div
+            {/* Right — Product Showcase with Laptop and Overlapping Mobile Phone Mockup Containers */}
+          <Assemble as="div" delay={0.16} style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+            <div style={{ position: "relative", width: "100%", maxWidth: "720px", paddingBottom: "36px", paddingTop: "12px" }}>
+              
+              {/* LAPTOP / BROWSER CONTAINER MOCKUP */}
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 style={{
-                  background: "rgba(255,255,255,0.82)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.9)",
-                  borderRadius: "20px",
-                  padding: "22px",
-                  boxShadow: "0 24px 70px rgba(27,42,74,0.13), 0 2px 8px rgba(27,42,74,0.04)",
+                  position: "relative",
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                  background: "#0f172a",
+                  border: "1px solid rgba(15, 23, 42, 0.12)",
+                  boxShadow: "0 25px 65px -12px rgba(15, 23, 42, 0.25), 0 4px 16px rgba(15, 23, 42, 0.12)",
+                  width: "100%",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
-                  <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--espresso)" }}>
-                    Today
-                  </span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.6875rem", color: "var(--muted)" }}>
-                    <motion.span
-                      animate={{ opacity: [1, 0.25, 1] }}
-                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                      style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#1FA97C" }}
-                    />
-                    Live
-                  </span>
-                </div>
+                {/* Laptop / Browser Chrome Header */}
+                <div
+                  style={{
+                    height: "36px",
+                    background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 14px",
+                    gap: "8px",
+                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                    position: "relative",
+                    zIndex: 10,
+                  }}
+                >
+                  {/* Window action dots */}
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ff5f56", display: "inline-block" }} />
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ffbd2e", display: "inline-block" }} />
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#27c93f", display: "inline-block" }} />
+                  </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                  {SNAPSHOT.map((row, i) => {
-                    const isAttention = row.state === "attention";
-                    return (
-                      <div
-                        key={row.label}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: "12px",
-                          padding: "12px 14px",
-                          borderRadius: "11px",
-                          background: isAttention ? "rgba(196,30,42,0.06)" : "rgba(244,245,248,0.75)",
-                          border: `1px solid ${isAttention ? "rgba(196,30,42,0.18)" : "transparent"}`,
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                          <motion.span
-                            animate={syncing === i ? { scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] } : { scale: 1, opacity: 0.45 }}
-                            transition={{ duration: 1.2, ease: "easeInOut" }}
-                            style={{
-                              width: "6px",
-                              height: "6px",
-                              borderRadius: "50%",
-                              background: isAttention ? "var(--amber)" : "var(--espresso)",
-                              flexShrink: 0,
-                            }}
-                          />
-                          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--espresso)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {row.label}
-                          </span>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                          {isAttention && (
-                            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--amber)" }}>
-                              {row.detail}
-                            </span>
-                          )}
-                          <span style={{ fontSize: "0.8125rem", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
-                            {row.value}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Floating alert card — the "before it becomes a problem" proof.
-                  Sized with min()/clamp() so it never overflows on phones,
-                  which is the primary surface this page is opened on. */}
-              <AnimatePresence>
-                {showAlert && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 14, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 150, damping: 20 }}
+                  {/* Browser address bar pill */}
+                  <div
                     style={{
-                      position: "absolute",
-                      bottom: "clamp(-22px, -4vw, -30px)",
-                      left: "clamp(-8px, -3vw, -26px)",
-                      width: "min(270px, 78vw)",
-                      background: "#FFFFFF",
-                      border: "1px solid var(--border-warm)",
-                      borderRadius: "14px",
-                      padding: "14px 16px",
-                      boxShadow: "0 18px 44px rgba(27,42,74,0.16)",
+                      margin: "0 auto",
+                      background: "rgba(255, 255, 255, 0.08)",
+                      borderRadius: "6px",
+                      padding: "3px 16px",
+                      fontSize: "0.6875rem",
+                      color: "rgba(255, 255, 255, 0.65)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontWeight: 500,
+                      letterSpacing: "0.02em",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-                      <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--amber)" }} />
-                      <span style={{ fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--amber)" }}>
-                        AI Predictive Autopilot
-                      </span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    alayn.com/dashboard
+                  </div>
+                </div>
+
+                {/* Laptop Screen Content (Website Preview Image) */}
+                <div style={{ position: "relative", width: "100%", backgroundColor: "#f8fafc", overflow: "hidden" }}>
+                  <img
+                    src="/websitepreview.png"
+                    alt="Alayn Web Dashboard Interface"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                      objectFit: "cover",
+                      objectPosition: "top",
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* MOBILE PHONE CONTAINER MOCKUP */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, x: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: [0, -6, 0], x: 0, scale: 1 }}
+                transition={{
+                  opacity: { duration: 0.8, delay: 0.3 },
+                  scale: { duration: 0.8, delay: 0.3 },
+                  y: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1.1 }
+                }}
+                style={{
+                  position: "absolute",
+                  bottom: "-30px",
+                  left: "-50px", // Moved to left side
+                  width: "clamp(180px, 28%, 260px)", // Increased width slightly
+                  borderRadius: "36px",
+                  padding: "8px",
+                  background: "linear-gradient(160deg, #374151 0%, #111827 50%, #000000 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)",
+                  zIndex: 20,
+                }}
+              >
+                {/* Left Hardware Buttons */}
+                <div style={{ position: "absolute", left: "-3px", top: "70px", width: "3px", height: "20px", background: "#475569", borderRadius: "2px 0 0 2px" }} />
+                <div style={{ position: "absolute", left: "-3px", top: "105px", width: "3px", height: "40px", background: "#475569", borderRadius: "2px 0 0 2px" }} />
+                <div style={{ position: "absolute", left: "-3px", top: "155px", width: "3px", height: "40px", background: "#475569", borderRadius: "2px 0 0 2px" }} />
+
+                {/* Right Hardware Button */}
+                <div style={{ position: "absolute", right: "-3px", top: "115px", width: "3px", height: "55px", background: "#475569", borderRadius: "0 2px 2px 0" }} />
+
+                {/* Display Screen Container */}
+                <div
+                  style={{
+                    borderRadius: "28px",
+                    overflow: "hidden",
+                    position: "relative",
+                    width: "100%",
+                    aspectRatio: "73 / 128", // Exact aspect ratio of mobilepreview.jpeg to prevent cropping
+                    backgroundColor: "#f8fafc",
+                    boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.15)",
+                  }}
+                >
+                  {/* Original Mobile Screen Image */}
+                  <img
+                    src="/mobilepreview.jpeg"
+                    alt="Alayn Mobile App Interface"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "top", // Ensures top is visible
+                      display: "block",
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Floating Alert / Live Sync Badge */}
+              {/* <AnimatePresence>
+                {showAlert && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 14, scale: 0.94 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 160, damping: 18 }}
+                    style={{
+                      position: "absolute",
+                      top: "-14px",
+                      right: "-12px",
+                      background: "rgba(15, 23, 42, 0.92)",
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      border: "1px solid rgba(255, 255, 255, 0.18)",
+                      borderRadius: "14px",
+                      padding: "10px 14px",
+                      boxShadow: "0 16px 36px rgba(0,0,0,0.25)",
+                      zIndex: 25,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        background: "#10b981",
+                        boxShadow: "0 0 10px #10b981",
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontSize: "0.6875rem", fontWeight: 700, color: "#ffffff", letterSpacing: "0.03em" }}>
+                        Live POS &amp; Inventory Sync
+                      </div>
+                      <div style={{ fontSize: "0.625rem", color: "rgba(255,255,255,0.7)" }}>
+                        Multi-outlet telemetry active
+                      </div>
                     </div>
-                    <p style={{ margin: 0, fontSize: "0.8125rem", lineHeight: 1.5, color: "var(--espresso)" }}>
-                      Dinner rush forecasted +38%. AI auto-drafted your supplier PO and optimized staff roster for 1-click approval.
-                    </p>
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </AnimatePresence> */}
+
             </div>
           </Assemble>
         </div>

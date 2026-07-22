@@ -28,9 +28,9 @@ export default function CalmScene() {
             opacity: 0.85,
           }}
         >
-          The business becomes predictable.
+          Predictable operations.
           <br />
-          You become calm.
+          Confident decisions.
         </Assemble>
       </div>
     </FieldScene>
