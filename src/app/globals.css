@@ -189,10 +189,11 @@ html {
 .hero-aurora {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
+  filter: blur(55px);
   opacity: 0.5;
   pointer-events: none;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .hero-aurora-a {

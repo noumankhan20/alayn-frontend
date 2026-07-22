@@ -119,7 +119,7 @@ export function FieldScene({
           unregister(id);
         }
       },
-      { threshold: Array.from({ length: 21 }, (_, i) => i / 20) }
+      { threshold: [0, 0.25, 0.5, 0.75, 1.0] }
     );
     io.observe(el);
     return () => {

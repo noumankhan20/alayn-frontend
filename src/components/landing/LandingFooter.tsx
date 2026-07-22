@@ -97,7 +97,7 @@ export default function LandingFooter() {
             textAlign: "center",
           }}
         >
-          © {new Date().getFullYear()} Alayn. Built for India.
+          © {new Date().getFullYear()} Alayn. All Rights Reserved.
         </p>
       </div>
     </footer>
