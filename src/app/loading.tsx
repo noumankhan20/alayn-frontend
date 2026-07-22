@@ -8,8 +8,8 @@ import FullDashboardSkeleton from "@/components/dashboard/FullDashboardSkeleton"
 export default function Loading() {
   const pathname = usePathname();
 
-  // Public pages (landing, login, signup) use the neutral full-screen brand loader.
-  // All protected routes (/dashboard, /workforce, /inventory, /pos, etc.) use FullDashboardSkeleton (Sidebar + Header + Content).
+  // Public pages (landing, login, signup) use the minimalist Facebook-style light brand loader.
+  // All protected routes (/dashboard, /workforce, /inventory, /pos, etc.) use FullDashboardSkeleton.
   const isPublicPage = !pathname || pathname === "/" || pathname === "/login" || pathname === "/signup";
 
   if (!isPublicPage) {
@@ -17,28 +17,30 @@ export default function Loading() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0F172A] text-white">
-      {/* Top Animated Loading Line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-[#D3232A]/20 overflow-hidden">
-        <div className="h-full bg-[#D3232A] animate-pulse w-full origin-left" />
-      </div>
+    <div className="fixed inset-0 z-50 flex flex-col justify-between items-center bg-[#F4F6F9] select-none">
+      {/* Top spacer for vertical balance */}
+      <div className="h-12 w-full" />
 
-      <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-300">
-        <div className="relative flex items-center justify-center">
-          <div className="h-16 w-16 rounded-2xl bg-[#D3232A]/10 animate-ping absolute" />
+      {/* Center Brand Emblem — Minimalist Facebook Style */}
+      <div className="flex flex-col items-center justify-center animate-pulse">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-md shadow-slate-200/70 border border-slate-100 p-3">
           <Image
-            src="/gptlogo.png"
-            alt="Alayn Logo"
-            width={160}
-            height={40}
-            className="h-10 w-auto object-contain relative z-10"
+            src="/justlogo.png"
+            alt="Alayn Emblem"
+            width={72}
+            height={72}
+            className="h-14 w-auto object-contain"
             priority
           />
         </div>
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-          <div className="h-2 w-2 rounded-full bg-[#D3232A] animate-bounce" />
-          <span>Loading Alayn...</span>
-        </div>
+      </div>
+
+      {/* Bottom Branding — Facebook 'from Meta' Style */}
+      <div className="pb-10 flex flex-col items-center gap-0.5 text-center font-sans">
+        <span className="text-[11px] font-medium text-slate-400 tracking-wider">from</span>
+        <span className="text-xs font-extrabold tracking-widest text-[#D3232A] uppercase">
+          ALAYN AI
+        </span>
       </div>
     </div>
   );
