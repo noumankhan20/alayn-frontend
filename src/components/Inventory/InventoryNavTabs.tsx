@@ -20,10 +20,10 @@ const tabs = [
     desc: "Record Usage / Count Audit",
   },
   {
-    name: "Procurement & POs",
+    name: "Order Stock & Suppliers",
     href: "/inventory/procurement",
     icon: Truck,
-    desc: "Suppliers & Purchase Orders",
+    desc: "Order stock & manage suppliers",
   },
 ];
 
