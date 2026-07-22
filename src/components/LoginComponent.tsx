@@ -113,7 +113,10 @@ export default function LoginComponent() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError("");
+                  }}
                   placeholder="name@alayn.com"
                   className={inputClasses}
                 />
@@ -143,7 +146,10 @@ export default function LoginComponent() {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError("");
+                  }}
                   placeholder="••••••••"
                   className={inputClasses.replace("pr-3", "pr-8")}
                 />

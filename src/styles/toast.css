@@ -1,0 +1,80 @@
+/* ─── Alayn Premium Toast · Light Theme ─── */
+
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  width: 400px !important;
+  max-width: calc(100vw - 2rem) !important;
+  padding: 0 !important;
+}
+
+.Toastify__toast-container--top-right {
+  top: 1.25rem !important;
+  right: 1.25rem !important;
+}
+
+.Toastify__toast {
+  font-family: var(--font-outfit), "Inter", system-ui, -apple-system, sans-serif !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  margin-bottom: 10px !important;
+  min-height: unset !important;
+  overflow: hidden !important;
+
+  /* Strong layered shadow — clearly visible on any background color */
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.07),
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 10px 24px -4px rgba(15, 23, 42, 0.15),
+    0 24px 48px -8px rgba(15, 23, 42, 0.10) !important;
+}
+
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  font-size: 0.875rem !important;
+}
+
+/* ─── Progress bar ─── */
+.Toastify__progress-bar {
+  height: 2px !important;
+  bottom: 0 !important;
+}
+
+.Toastify__progress-bar--success {
+  background: linear-gradient(90deg, #10B981, #34D399) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: linear-gradient(90deg, #D3232A, #F87171) !important;
+}
+
+.Toastify__progress-bar--info {
+  background: linear-gradient(90deg, #0891B2, #38BDF8) !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: linear-gradient(90deg, #F59E0B, #FCD34D) !important;
+}
+
+/* ─── Close button ─── */
+.Toastify__close-button {
+  color: #94A3B8 !important;
+  opacity: 1 !important;
+  align-self: flex-start !important;
+  position: absolute !important;
+  top: 16px !important;
+  right: 14px !important;
+  transition: color 0.15s ease !important;
+}
+
+.Toastify__close-button:hover {
+  color: #0F172A !important;
+}
+
+.Toastify__close-button > svg {
+  width: 14px !important;
+  height: 14px !important;
+}
