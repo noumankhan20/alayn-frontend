@@ -33,7 +33,14 @@ export default function LoginComponent() {
       const payload = response?.data || response;
       dispatch(setCredentials(payload));
 
-      router.replace("/dashboard");
+      const role = payload?.user?.role;
+      if (role === "STAFF") {
+        router.replace("/pos");
+      } else if (role === "KITCHEN") {
+        router.replace("/kitchen");
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (err: any) {
       setError(
         err?.data?.error?.message ||

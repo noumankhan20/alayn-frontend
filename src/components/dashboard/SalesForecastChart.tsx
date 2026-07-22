@@ -37,10 +37,15 @@ const DEFAULT_SALES_DATA: SalesDataPoint[] = [
 ];
 
 export default function SalesForecastChart({
-  data = DEFAULT_SALES_DATA,
+  data = [],
   isLoading = false,
 }: SalesForecastChartProps) {
   const [timeframe, setTimeframe] = useState<"7d" | "30d" | "90d">("7d");
+
+  // Calculate actual revenue sum to see if we have valid sales data
+  const totalActual = data.reduce((sum, item) => sum + (item.actual || 0), 0);
+  const totalProjected = data.reduce((sum, item) => sum + (item.projected || 0), 0);
+  const hasData = data.length > 0 && (totalActual > 0 || totalProjected > 0);
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-xs border border-gray-200/80 flex flex-col justify-between h-full">
@@ -58,35 +63,37 @@ export default function SalesForecastChart({
         </div>
 
         {/* Timeframe & Custom Legend */}
-        <div className="flex items-center gap-4 self-start sm:self-auto flex-wrap">
-          {/* Custom Clean HTML Legend (Prevents Recharts circle clipping) */}
-          <div className="flex items-center gap-3 text-xs font-semibold">
-            <div className="flex items-center gap-1.5 text-blue-700">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB] shrink-0" />
-              <span>Actual</span>
+        {hasData && (
+          <div className="flex items-center gap-4 self-start sm:self-auto flex-wrap">
+            {/* Custom Clean HTML Legend (Prevents Recharts circle clipping) */}
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              <div className="flex items-center gap-1.5 text-blue-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB] shrink-0" />
+                <span>Actual</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#D97706] shrink-0" />
+                <span>Forecasted</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-amber-700">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D97706] shrink-0" />
-              <span>Forecasted</span>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 border border-gray-200/60">
-            {(["7d", "30d", "90d"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTimeframe(t)}
-                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
-                  timeframe === t
-                    ? "bg-white text-gray-900 shadow-2xs border border-gray-200"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                {t.toUpperCase()}
-              </button>
-            ))}
+            <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 border border-gray-200/60">
+              {(["7d", "30d", "90d"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTimeframe(t)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                    timeframe === t
+                      ? "bg-white text-gray-900 shadow-2xs border border-gray-200"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  {t.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Chart */}
@@ -94,6 +101,12 @@ export default function SalesForecastChart({
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          </div>
+        ) : !hasData ? (
+          <div className="flex flex-col h-full w-full items-center justify-center text-center p-4">
+            <LineChart className="h-10 w-10 text-gray-300 mb-2" />
+            <p className="text-xs font-semibold text-gray-400">No sales transactions tracked yet</p>
+            <p className="text-[10px] text-gray-400 max-w-[200px] mt-0.5">Sales graphs and demand forecasts will populate once orders are received.</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -161,11 +174,18 @@ export default function SalesForecastChart({
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs font-semibold text-gray-500">
-        <div className="flex items-center gap-1.5 text-blue-700 font-semibold">
+        <div className={`flex items-center gap-1.5 font-semibold ${
+          hasData ? "text-blue-700" : "text-gray-400"
+        }`}>
           <TrendingUp className="h-4 w-4" />
-          <span>Expected +12.4% weekend demand surge</span>
+          <span>
+            {hasData 
+              ? "Predictive demand trends active"
+              : "Awaiting sufficient sales telemetry to compile demand surge triggers"
+            }
+          </span>
         </div>
-        <span className="text-gray-400">Confidence: 94.8%</span>
+        {hasData && <span className="text-gray-400">Confidence: 94.8%</span>}
       </div>
     </div>
   );

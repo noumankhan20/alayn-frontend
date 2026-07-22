@@ -31,11 +31,11 @@ export default function KPIWidget({
               <Icon className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 truncate">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 leading-tight">
                 {title}
               </p>
               {badge && (
-                <span className="inline-block rounded-md bg-blue-50 px-1.5 py-0.2 text-[9px] font-semibold text-blue-700 border border-blue-100">
+                <span className="inline-block rounded-md bg-blue-50 px-1.5 py-0.2 text-[9px] font-semibold text-blue-700 border border-blue-100 mt-0.5">
                   {badge}
                 </span>
               )}
@@ -61,14 +61,14 @@ export default function KPIWidget({
         </div>
 
         <div className="mt-3">
-          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 truncate">
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 leading-none">
             {value}
           </h3>
         </div>
       </div>
 
       {subtext && (
-        <p className="mt-2 text-[11px] font-medium text-gray-500 truncate">
+        <p className="mt-2 text-[11px] font-medium text-gray-500 leading-normal">
           {subtext}
         </p>
       )}

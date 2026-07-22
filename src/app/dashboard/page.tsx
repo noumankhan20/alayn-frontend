@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/store/hooks";
 import AuthGuard from "@/components/auth/AuthGuard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import KPIWidget from "@/components/dashboard/KPIWidget";
@@ -44,8 +46,19 @@ export default function MasterDashboardPage(props?: PageProps) {
   if (props?.params) use(props.params);
   if (props?.searchParams) use(props.searchParams);
 
+  const user = useAppSelector((state) => state.auth.user);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user?.role === "STAFF") {
+      router.replace("/pos");
+    } else if (user?.role === "KITCHEN") {
+      router.replace("/kitchen");
+    }
+  }, [user?.role, router]);
+
   const { activeBranch, branches, loading, isDemo, refreshBranches } = useBranch();
-  const outletId = activeBranch?.id === "all" ? undefined : activeBranch?.id;
+  const outletId = activeBranch?.id || undefined;
 
   const { data: kpiData, isLoading: isKpiLoading, refetch } = useGetKpisQuery({ outletId }, { skip: !outletId });
   const { data: salesData, isLoading: isSalesLoading } = useGetSalesForecastQuery({ outletId }, { skip: !outletId });
@@ -65,11 +78,11 @@ export default function MasterDashboardPage(props?: PageProps) {
   const [submitError, setSubmitError] = useState("");
 
   const kpis = {
-    totalRevenue: kpiData?.totalRevenue || { value: "₹14,89,200", change: "+14.2%", isPositive: true },
-    cogs: kpiData?.cogs || { value: "₹4,17,000", change: "-2.8%", isPositive: true },
-    grossProfit: kpiData?.grossProfit || { value: "₹10,72,200", change: "+18.5%", isPositive: true },
-    laborCosts: kpiData?.laborCosts || { value: "₹3,24,000", change: "+4.1%", isPositive: false },
-    netMargin: kpiData?.netMargin || { value: "31.4%", change: "+3.2%", isPositive: true },
+    totalRevenue: kpiData?.totalRevenue || { value: "₹0", change: "0.0%", isPositive: true },
+    cogs: kpiData?.cogs || { value: "₹0", change: "0.0%", isPositive: true },
+    grossProfit: kpiData?.grossProfit || { value: "₹0", change: "0.0%", isPositive: true },
+    laborCosts: kpiData?.laborCosts || { value: "₹0", change: "0.0%", isPositive: true },
+    netMargin: kpiData?.netMargin || { value: "0.0%", change: "0.0%", isPositive: true },
   };
 
   const isInitialLoading = loading || isKpiLoading;
@@ -317,45 +330,44 @@ export default function MasterDashboardPage(props?: PageProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
               <KPIWidget
-                title="Total Revenue"
+                title="Total Sales"
                 value={kpis.totalRevenue.value}
                 change={kpis.totalRevenue.change}
                 isPositive={kpis.totalRevenue.isPositive}
-                subtext="Gross sales across channels"
+                subtext="Total customer billing before tax"
                 icon={IndianRupee}
               />
               <KPIWidget
-                title="COGS"
+                title="Ingredient Cost"
                 value={kpis.cogs.value}
                 change={kpis.cogs.change}
                 isPositive={kpis.cogs.isPositive}
-                subtext="28% of total revenue"
+                subtext="Money spent on food & kitchen stock"
                 icon={ShoppingBag}
               />
               <KPIWidget
-                title="Gross Profit"
+                title="Sales Profit"
                 value={kpis.grossProfit.value}
                 change={kpis.grossProfit.change}
                 isPositive={kpis.grossProfit.isPositive}
-                subtext="Margin after direct costs"
+                subtext="Sales money left after food costs"
                 icon={TrendingUp}
               />
               <KPIWidget
-                title="Labor Costs"
+                title="Active Staff"
                 value={kpis.laborCosts.value}
                 change={kpis.laborCosts.change}
                 isPositive={kpis.laborCosts.isPositive}
-                subtext="Hourly & salaried shifts"
+                subtext="Active employees registered"
                 icon={Users}
               />
               <KPIWidget
-                title="Net Margins"
+                title="Profit Margin"
                 value={kpis.netMargin.value}
                 change={kpis.netMargin.change}
                 isPositive={kpis.netMargin.isPositive}
-                subtext="Target: >30.0%"
+                subtext="Percent of sales kept as profit"
                 icon={Percent}
-                badge="Top 5%"
               />
             </div>
           </div>
@@ -367,51 +379,78 @@ export default function MasterDashboardPage(props?: PageProps) {
           </div>
 
           {/* Real-time Insights & Activity Feed */}
-          <div className="rounded-xl bg-white p-5 shadow-xs border border-gray-200/80">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-50 text-amber-700">
-                  <Lightbulb className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">Operational Insights</h3>
-                  <p className="text-xs text-gray-500 font-medium">Automated revenue and cost optimization recommendations</p>
-                </div>
-              </div>
-            </div>
+          {(() => {
+            const lowStockItems = inventoryData ? inventoryData.filter(item => item.currentStock <= item.threshold) : [];
+            const lowStockCount = lowStockItems.length;
+            const hasNoRevenue = !kpiData || kpiData.totalRevenue.value === "₹0";
+            const hasNoLabor = !kpiData || kpiData.laborCosts.value === "₹0";
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70">
-                <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
-                  <Clock className="h-4 w-4 text-blue-600" />
-                  Shift Staffing Adjustment
+            return (
+              <div className="rounded-xl bg-white p-5 shadow-xs border border-gray-200/80">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-50 text-amber-700">
+                      <Lightbulb className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">Operational Insights</h3>
+                      <p className="text-xs text-gray-500 font-medium">Automated revenue and cost optimization recommendations</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                  Friday dinner rush predicted to be 18% higher than average. Recommend scheduling 2 extra line cooks for the 6 PM - 10 PM shift.
-                </p>
-              </div>
 
-              <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70">
-                <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
-                  <ShoppingBag className="h-4 w-4 text-[#D3232A]" />
-                  Menu Margin Optimization
-                </div>
-                <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                  Ingredient costs increased 4.2%. Increasing menu price by ₹20 will preserve net margin without impacting order volume.
-                </p>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Insight 1: Inventory */}
+                  <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
+                        <ShoppingBag className="h-4 w-4 text-[#D3232A]" />
+                        Inventory Alert
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                        {lowStockCount > 0
+                          ? `"${lowStockItems[0].item}" is currently below safety stock threshold. Register a purchase order to prevent menu item unavailability.`
+                          : "All tracked ingredients are currently above safety stock thresholds. Inventory levels are stable and stockout risk is minimal."
+                        }
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70">
-                <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
-                  <Zap className="h-4 w-4 text-emerald-600" />
-                  Waste Reduction Trigger
+                  {/* Insight 2: Finance */}
+                  <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
+                        <IndianRupee className="h-4 w-4 text-emerald-600" />
+                        Margin Optimization
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                        {hasNoRevenue
+                          ? "No sales transactions logged for this period yet. Real-time profitability recommendations will update once POS billing or table orders start."
+                          : `Gross profit is at ${kpis.grossProfit.value} with a Net Margin of ${kpis.netMargin.value}. Standardizing portion weights will preserve margins against raw cost variances.`
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Insight 3: Staffing */}
+                  <div className="rounded-lg bg-gray-50 p-4 border border-gray-200/70 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 text-gray-900 font-bold text-xs mb-1.5">
+                        <Users className="h-4 w-4 text-blue-600" />
+                        Staffing Analysis
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                        {hasNoLabor
+                          ? `No active employee roster registered under "${activeBranch?.name || "this outlet"}". Configure shift schedules in the Workforce section to track attendance.`
+                          : "Active shift coverage is currently optimal. Scheduled staff levels align with dining room capacity and active POS order volume."
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                  Fresh produce spoilage risk low due to weekend promo. Estimated waste savings: ₹28,000.
-                </p>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       )}
       </DashboardLayout>
