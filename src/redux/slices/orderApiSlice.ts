@@ -15,7 +15,7 @@ export interface OrderItem {
 
 export interface CreateOrderPayload {
   outletId?: string;
-  orderSource: "COUNTER" | "QR" | "DELIVERY";
+  orderSource: "TABLE" | "COUNTER" | "QR" | "DELIVERY";
   tableNo?: string;
   items: {
     menuItemId: string;
@@ -32,9 +32,9 @@ export interface Order {
   id: string;
   orderNo: string;
   outletId: string;
-  orderSource: "COUNTER" | "QR" | "DELIVERY";
+  orderSource: "TABLE" | "COUNTER" | "QR" | "DELIVERY";
   tableNo?: string;
-  status: "RECEIVED" | "PREPARING" | "READY" | "SERVED" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
+  status: "SENT_TO_KITCHEN" | "PREPARING" | "READY" | "SERVED" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
   totalAmount: number;
   subtotal: number;
   taxAmount: number;
@@ -54,6 +54,7 @@ export const orderApi = baseApi.injectEndpoints({
         method: "GET",
         params: params || undefined,
       }),
+      transformResponse: (response: any) => response?.data ?? response ?? [],
       providesTags: ["Orders"],
     }),
 
@@ -62,6 +63,7 @@ export const orderApi = baseApi.injectEndpoints({
         url: "/kitchen/tickets",
         method: "GET",
       }),
+      transformResponse: (response: any) => response?.data ?? response ?? [],
       providesTags: ["KitchenTickets"],
     }),
 
@@ -71,14 +73,15 @@ export const orderApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      transformResponse: (response: any) => response?.data || response,
       invalidatesTags: ["Orders", "KitchenTickets"],
     }),
 
-    updateOrderStatus: builder.mutation<Order, { id: string; status: Order["status"] }>({
-      query: ({ id, status }) => ({
+    updateOrderStatus: builder.mutation<Order, { id: string; status: Order["status"]; comment?: string; paymentMethod?: "CASH" | "CARD" | "UPI" }>({
+      query: ({ id, status, comment, paymentMethod }) => ({
         url: `/orders/${id}/status`,
         method: "PATCH",
-        body: { status },
+        body: { status, comment, paymentMethod },
       }),
       invalidatesTags: ["Orders", "KitchenTickets"],
     }),

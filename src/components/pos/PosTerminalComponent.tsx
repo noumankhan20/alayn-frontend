@@ -62,8 +62,8 @@ export default function PosTerminalComponent() {
   const pageSize = 24; // High density for fast billing & scalability
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orderSource, setOrderSource] = useState<"COUNTER" | "QR">(
-    isStaffRole ? "QR" : "COUNTER"
+  const [orderSource, setOrderSource] = useState<"TABLE" | "COUNTER" | "QR">(
+    isStaffRole ? "TABLE" : "COUNTER"
   );
   const [tableNo, setTableNo] = useState<string>("");
   const [discount, setDiscount] = useState<number>(0);
@@ -74,17 +74,21 @@ export default function PosTerminalComponent() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<any>(null);
 
-  // Load assigned tables — filter by current user's Employee.id (assignedStaffId FK → Employee.id)
+  // Load assigned tables — filter by current user's Employee.id or User.id
   useEffect(() => {
     async function loadTables() {
       if (!currentOutletId) return;
       setLoadingTables(true);
       const res = await fetchTables(currentOutletId);
       if (res.ok && res.tables) {
-        if (myEmployee?.id) {
-          // Match Table.assignedStaffId directly against Employee.id
+        const userId = user?.id;
+        const empId = myEmployee?.id;
+        if (userId || empId) {
           const assigned = res.tables.filter(
-            (t) => t.assignedStaffId === myEmployee.id
+            (t) =>
+              (empId && t.assignedStaffId === empId) ||
+              (userId && t.assignedStaff?.userId === userId) ||
+              (empId && t.assignedStaff?.id === empId)
           );
           setAssignedTables(assigned);
         } else {
@@ -94,7 +98,7 @@ export default function PosTerminalComponent() {
       setLoadingTables(false);
     }
     loadTables();
-  }, [currentOutletId, myEmployee?.id]);
+  }, [currentOutletId, myEmployee?.id, user?.id]);
 
   // RTK Query
   const { data: categories = [] } = useGetCategoriesQuery();
@@ -153,6 +157,11 @@ export default function PosTerminalComponent() {
 
     const parsedTableNo = parseInt(tableNo.replace(/\D/g, ""), 10);
 
+    if (orderSource === "TABLE" && (isNaN(parsedTableNo) || !tableNo.trim())) {
+      alert("Please select a table number before placing a table order!");
+      return;
+    }
+
     const payload: CreateOrderPayload = {
       orderSource,
       tableNo: isNaN(parsedTableNo) ? undefined : (parsedTableNo as any),
@@ -185,7 +194,7 @@ export default function PosTerminalComponent() {
         <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pb-3 border-b border-gray-100">
           {/* Order Source Switcher */}
           <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 w-full sm:w-auto">
-            {(isStaffRole ? (["QR"] as const) : (["COUNTER", "QR"] as const)).map((src) => (
+            {(isStaffRole ? (["TABLE"] as const) : (["TABLE", "COUNTER"/* , "QR" */] as const)).map((src) => (
               <button
                 key={src}
                 onClick={() => setOrderSource(src)}
@@ -195,7 +204,7 @@ export default function PosTerminalComponent() {
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {src === "COUNTER" ? "Counter Direct" : "QR / Table Order"}
+                {src === "TABLE" ? "Table Order" : "Counter Direct"}
               </button>
             ))}
           </div>
@@ -545,20 +554,30 @@ export default function PosTerminalComponent() {
             <span className="text-[#D3232A]">₹{grandTotal.toFixed(2)}</span>
           </div>
 
+          {orderSource === "TABLE" && (!tableNo || tableNo.trim() === "") && (
+            <p className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg p-2 text-center mt-2">
+              ⚠️ Please select an assigned table before confirming order
+            </p>
+          )}
+
           <button
-            disabled={cart.length === 0 || isSubmitting}
-            onClick={orderSource === "QR" ? handleProcessCheckout : () => setIsCheckoutOpen(true)}
-            className="w-full mt-2 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-2"
+            disabled={
+              cart.length === 0 ||
+              isSubmitting ||
+              (orderSource === "TABLE" && (!tableNo || tableNo.trim() === ""))
+            }
+            onClick={orderSource === "COUNTER" ? () => setIsCheckoutOpen(true) : handleProcessCheckout}
+            className="w-full mt-2 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {orderSource === "QR" ? (
-              <>
-                <Utensils className="w-4 h-4" />
-                {isSubmitting ? "Sending to Kitchen..." : "Create Order & Send to Kitchen"}
-              </>
-            ) : (
+            {orderSource === "COUNTER" ? (
               <>
                 <Receipt className="w-4 h-4" />
                 Proceed to Checkout
+              </>
+            ) : (
+              <>
+                <Utensils className="w-4 h-4" />
+                {isSubmitting ? "Sending to Kitchen..." : "Confirm Order & Send to Kitchen"}
               </>
             )}
           </button>
@@ -636,26 +655,30 @@ export default function PosTerminalComponent() {
       )}
 
       {/* Completed Order Modal */}
-      {completedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <div className="bg-white border border-gray-200 rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-xl text-center space-y-4">
-            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <h3 className="text-base font-bold text-[#1B2A4A]">Order Sent to Kitchen!</h3>
-            <p className="text-xs text-gray-500">
-              Order ID: <span className="font-mono text-[#D3232A] font-extrabold text-sm">{completedOrder.orderNumber || completedOrder.id || "ORD-DONE"}</span>
-            </p>
-            <p className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 py-1.5 px-3 rounded-lg">
-              Dish tickets dispatched directly to Kitchen Dispatch
-            </p>
-            <button
-              onClick={() => setCompletedOrder(null)}
-              className="w-full btn-primary py-2 text-xs"
-            >
-              Next Order
-            </button>
+      {completedOrder && (() => {
+        const orderObj = completedOrder?.data || completedOrder;
+        const displayOrderId = orderObj?.orderNumber || orderObj?.orderNo || orderObj?.id || "ORD-DONE";
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+            <div className="bg-white border border-gray-200 rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-xl text-center space-y-4">
+              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+              <h3 className="text-base font-bold text-[#1B2A4A]">Order Sent to Kitchen!</h3>
+              <p className="text-xs text-gray-500">
+                Order ID: <span className="font-mono text-[#D3232A] font-extrabold text-sm">{displayOrderId}</span>
+              </p>
+              <p className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 py-1.5 px-3 rounded-lg">
+                Dish tickets dispatched directly to Kitchen Dispatch
+              </p>
+              <button
+                onClick={() => setCompletedOrder(null)}
+                className="w-full btn-primary py-2 text-xs"
+              >
+                Next Order
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
     </DashboardLayout>
   );

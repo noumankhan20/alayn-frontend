@@ -54,8 +54,8 @@ export default function TableManagementComponent() {
 
   // Add tables modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [acCount, setAcCount] = useState<string | number>(5);
-  const [nonAcCount, setNonAcCount] = useState<string | number>(5);
+  const [acCount, setAcCount] = useState<string | number>(0);
+  const [nonAcCount, setNonAcCount] = useState<string | number>(0);
   const [submittingAdd, setSubmittingAdd] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -340,8 +340,8 @@ export default function TableManagementComponent() {
             )}
             <button
               onClick={() => {
-                setAcCount(5);
-                setNonAcCount(5);
+                setAcCount(0);
+                setNonAcCount(0);
                 setAddError(null);
                 setShowAddModal(true);
               }}
