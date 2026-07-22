@@ -7,6 +7,7 @@ import { useBranch } from "@/lib/BranchContext";
 import {
   useGetSuppliersQuery,
   useCreateSupplierMutation,
+  useDeleteSupplierMutation,
   useGetPurchaseOrdersQuery,
   useCreatePurchaseOrderMutation,
   useReceivePOItemMutation,
@@ -25,6 +26,8 @@ import {
   AlertCircle,
   X,
   Zap,
+  Trash2,
+  Search,
 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import SmartPOModal from "@/components/Inventory/SmartPOModal";
@@ -43,26 +46,43 @@ export default function ProcurementPage() {
 
   // Mutations
   const [createSupplier, { isLoading: isCreatingSupplier }] = useCreateSupplierMutation();
-  const [createPO, { isLoading: isCreatingPO }] = useCreatePurchaseOrderMutation();
+  const [deleteSupplier, { isLoading: isDeletingSupplier }] = useDeleteSupplierMutation();
   const [receivePOItem, { isLoading: isReceiving }] = useReceivePOItemMutation();
 
   // Modals state
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
-  const [showCreatePOModal, setShowCreatePOModal] = useState(false);
   const [showSmartPOModal, setShowSmartPOModal] = useState(false);
   const [receivingPO, setReceivingPO] = useState<PurchaseOrderApi | null>(null);
+  const [deletingSupplier, setDeletingSupplier] = useState<SupplierApi | null>(null);
+
+  // Supplier Search & Category Filter states
+  const [supplierSearchQuery, setSupplierSearchQuery] = useState("");
+  const [selectedSupplierCategoryFilter, setSelectedSupplierCategoryFilter] = useState("ALL");
 
   const lowStockItems = React.useMemo(() => {
     return items.filter((i) => (i.currentStock || 0) <= i.reorderThreshold);
   }, [items]);
 
+  const filteredSuppliers = React.useMemo(() => {
+    return suppliers.filter((s) => {
+      const q = supplierSearchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        s.name.toLowerCase().includes(q) ||
+        s.contactPerson.toLowerCase().includes(q) ||
+        s.phone.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q);
+
+      const matchesCategory =
+        selectedSupplierCategoryFilter === "ALL" ||
+        (s.category && s.category.toLowerCase().trim() === selectedSupplierCategoryFilter.toLowerCase().trim());
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [suppliers, supplierSearchQuery, selectedSupplierCategoryFilter]);
 
   // Form states
-  const [supplierForm, setSupplierForm] = useState({ name: "", contactPerson: "", phone: "", email: "", address: "" });
-  const [poSupplierId, setPoSupplierId] = useState("");
-  const [poLineItems, setPoLineItems] = useState<{ itemId: string; orderedQuantity: number; unitCostPaise: number }[]>([
-    { itemId: "", orderedQuantity: 1, unitCostPaise: 0 },
-  ]);
+  const [supplierForm, setSupplierForm] = useState({ name: "", contactPerson: "", phone: "", email: "", address: "", category: "Dairy" });
 
   // Receiving Form state
   const [receiveItemInputs, setReceiveItemInputs] = useState<{ [itemId: string]: { receivedQuantity: number; batchNumber: string; expiryDate: string } }>({});
@@ -72,60 +92,19 @@ export default function ProcurementPage() {
     try {
       await createSupplier(supplierForm).unwrap();
       setShowAddSupplierModal(false);
-      setSupplierForm({ name: "", contactPerson: "", phone: "", email: "", address: "" });
+      setSupplierForm({ name: "", contactPerson: "", phone: "", email: "", address: "", category: "Dairy" });
     } catch (err: any) {
       alert(err?.data?.message || "Failed to create supplier");
     }
   };
 
-  const handleAddPOLine = () => {
-    setPoLineItems((prev) => [...prev, { itemId: "", orderedQuantity: 1, unitCostPaise: 0 }]);
-  };
-
-  const handlePOLineChange = (index: number, field: string, val: any) => {
-    setPoLineItems((prev) =>
-      prev.map((item, idx) => {
-        if (idx !== index) return item;
-        const updated = { ...item, [field]: val };
-        if (field === "itemId") {
-          const invItem = items.find((i) => i.id === val);
-          if (invItem) updated.unitCostPaise = invItem.unitCostPaise;
-        }
-        return updated;
-      })
-    );
-  };
-
-  const handleCreatePO = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!poSupplierId) return alert("Please select a supplier.");
-
-    for (const line of poLineItems) {
-      if (!line.itemId) return alert("Please select an item for all line items.");
-      const qty = Number(line.orderedQuantity);
-      if (!Number.isFinite(qty) || qty <= 0) {
-        return alert("Ordered quantity for each item must be a valid positive number.");
-      }
-      const cost = Number(line.unitCostPaise);
-      if (!Number.isFinite(cost) || cost <= 0) {
-        return alert("Unit cost for each item must be greater than ₹0.00.");
-      }
-    }
-
-    const validLines = poLineItems.map((line) => ({
-      itemId: line.itemId,
-      orderedQuantity: Number(line.orderedQuantity),
-      unitCostPaise: Math.round(Number(line.unitCostPaise)),
-    }));
-
+  const handleDeleteSupplierConfirm = async () => {
+    if (!deletingSupplier) return;
     try {
-      await createPO({ supplierId: poSupplierId, items: validLines }).unwrap();
-      setShowCreatePOModal(false);
-      setPoSupplierId("");
-      setPoLineItems([{ itemId: "", orderedQuantity: 1, unitCostPaise: 0 }]);
-      refetchPOs();
+      await deleteSupplier(deletingSupplier.id).unwrap();
+      setDeletingSupplier(null);
     } catch (err: any) {
-      alert(err?.data?.message || "Failed to create purchase order");
+      alert(err?.data?.message || "Failed to delete supplier");
     }
   };
 
@@ -190,23 +169,14 @@ export default function ProcurementPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-zinc-900">
-              Procurement & Purchase Orders — <span className="text-[#D3232A]">{activeBranch?.name || "Branch"}</span>
+              Stock Orders & Suppliers — <span className="text-[#D3232A]">{activeBranch?.name || "Branch"}</span>
             </h1>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Manage suppliers, purchase orders, and receive incoming inventory batches
+              Order stock from suppliers, track incoming stock, and manage vendor details
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            {lowStockItems.length > 0 && (
-              <button
-                id="smart-po-procurement-btn"
-                onClick={() => setShowSmartPOModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-[#D3232A] px-3.5 py-2 text-xs font-bold text-white hover:opacity-95 transition-opacity shadow-xs"
-              >
-                <Zap className="h-3.5 w-3.5 fill-current" /> 1-Click Smart PO ({lowStockItems.length})
-              </button>
-            )}
             <button
               id="add-supplier-btn"
               onClick={() => setShowAddSupplierModal(true)}
@@ -215,11 +185,11 @@ export default function ProcurementPage() {
               <Plus className="h-3.5 w-3.5" /> Add Supplier
             </button>
             <button
-              id="create-po-btn"
-              onClick={() => setShowCreatePOModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#D3232A] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#b01e23] transition-colors shadow-xs"
+              id="smart-po-procurement-btn"
+              onClick={() => setShowSmartPOModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-[#D3232A] to-red-600 px-4 py-2 text-xs font-bold text-white hover:opacity-95 transition-opacity shadow-xs"
             >
-              <Truck className="h-3.5 w-3.5" /> Create PO
+              <Zap className="h-3.5 w-3.5 fill-current" /> Quick Restock Order {lowStockItems.length > 0 ? `(${lowStockItems.length} Low)` : ''}
             </button>
           </div>
 
@@ -233,7 +203,7 @@ export default function ProcurementPage() {
               activeTab === "POS" ? "border-[#D3232A] text-[#D3232A]" : "border-transparent text-zinc-500 hover:text-zinc-800"
             }`}
           >
-            Purchase Orders ({purchaseOrders.length})
+            Stock Orders ({purchaseOrders.length})
           </button>
           <button
             onClick={() => setActiveTab("SUPPLIERS")}
@@ -257,12 +227,12 @@ export default function ProcurementPage() {
             ) : purchaseOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-zinc-400 gap-2">
                 <Truck className="h-8 w-8 text-zinc-300" />
-                <p className="text-sm font-medium text-zinc-600">No Purchase Orders yet</p>
+                <p className="text-sm font-medium text-zinc-600">No Stock Orders placed yet</p>
                 <button
-                  onClick={() => setShowCreatePOModal(true)}
-                  className="text-xs text-[#D3232A] font-semibold underline hover:text-[#b01e23]"
+                  onClick={() => setShowSmartPOModal(true)}
+                  className="text-xs text-[#D3232A] font-semibold underline hover:text-[#b01e23] flex items-center gap-1"
                 >
-                  Create your first PO
+                  <Zap className="h-3 w-3" /> Create Restock Order
                 </button>
               </div>
             ) : (
@@ -337,45 +307,123 @@ export default function ProcurementPage() {
 
         {/* TAB 2: SUPPLIERS */}
         {activeTab === "SUPPLIERS" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(isLoadingSuppliers || branchLoading) ? (
-
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs">
-                  <Skeleton height={20} width="60%" className="mb-2" />
-                  <Skeleton height={14} width="40%" className="mb-3" />
-                  <Skeleton count={3} height={12} className="mb-1" />
-                </div>
-              ))
-            ) : suppliers.length === 0 ? (
-
-              <div className="col-span-full flex flex-col items-center justify-center h-48 text-zinc-400 gap-2">
-                <Building2 className="h-8 w-8 text-zinc-300" />
-                <p className="text-sm font-medium text-zinc-600">No suppliers registered</p>
-                <button
-                  onClick={() => setShowAddSupplierModal(true)}
-                  className="text-xs text-[#D3232A] font-semibold underline hover:text-[#b01e23]"
-                >
-                  Add your first supplier contact
-                </button>
+          <div className="space-y-4">
+            {/* Search & Category Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs">
+              {/* Search Box */}
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="Search suppliers by name, contact, phone..."
+                  value={supplierSearchQuery}
+                  onChange={(e) => setSupplierSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-200 pl-9 pr-3 py-1.5 text-xs text-zinc-800 focus:border-[#D3232A] focus:outline-none"
+                />
               </div>
-            ) : (
-              suppliers.map((s) => (
-                <div key={s.id} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-zinc-900 text-base flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-[#D3232A]" /> {s.name}
-                    </h3>
-                    <p className="text-xs font-medium text-zinc-500 mt-1">Contact: {s.contactPerson}</p>
-                    <div className="mt-3 space-y-1 text-xs text-zinc-600">
-                      <p><strong>Phone:</strong> {s.phone}</p>
-                      <p><strong>Email:</strong> {s.email}</p>
-                      <p className="truncate"><strong>Address:</strong> {s.address}</p>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                {[
+                  "ALL",
+                  "Dairy",
+                  "Frozen Goods",
+                  "Meat & Poultry",
+                  "Produce",
+                  "Beverages",
+                  "Bakery",
+                  "Syrups & Sauces",
+                  "Packaging",
+                  "General",
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedSupplierCategoryFilter(cat)}
+                    className={`rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition-all whitespace-nowrap ${
+                      selectedSupplierCategoryFilter.toLowerCase() === cat.toLowerCase()
+                        ? "bg-[#D3232A] text-white shadow-2xs"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Grid of Suppliers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(isLoadingSuppliers || branchLoading) ? (
+
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs">
+                    <Skeleton height={20} width="60%" className="mb-2" />
+                    <Skeleton height={14} width="40%" className="mb-3" />
+                    <Skeleton count={3} height={12} className="mb-1" />
+                  </div>
+                ))
+              ) : filteredSuppliers.length === 0 ? (
+
+                <div className="col-span-full flex flex-col items-center justify-center h-48 text-zinc-400 gap-2 bg-white rounded-xl border border-zinc-200 p-6">
+                  <Building2 className="h-8 w-8 text-zinc-300" />
+                  <p className="text-sm font-medium text-zinc-600">
+                    {suppliers.length === 0
+                      ? "No suppliers registered yet"
+                      : "No suppliers match your search filter"}
+                  </p>
+                  {suppliers.length === 0 ? (
+                    <button
+                      onClick={() => setShowAddSupplierModal(true)}
+                      className="text-xs text-[#D3232A] font-semibold underline hover:text-[#b01e23]"
+                    >
+                      Add your first supplier contact
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSupplierSearchQuery("");
+                        setSelectedSupplierCategoryFilter("ALL");
+                      }}
+                      className="text-xs text-[#D3232A] font-semibold underline"
+                    >
+                      Clear search filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredSuppliers.map((s) => (
+                  <div key={s.id} className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:border-zinc-300 transition-colors">
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold text-zinc-900 text-base flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-[#D3232A]" /> {s.name}
+                          </h3>
+                          <p className="text-xs font-medium text-zinc-500 mt-0.5">Contact: {s.contactPerson}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="inline-flex items-center rounded-full bg-red-50 text-[#D3232A] border border-red-200 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide shrink-0">
+                            {s.category || "General"}
+                          </span>
+                          <button
+                            onClick={() => setDeletingSupplier(s)}
+                            className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                            title="Delete Supplier"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-1 text-xs text-zinc-600 border-t border-zinc-100 pt-2.5">
+                        <p><strong>Phone:</strong> {s.phone}</p>
+                        <p><strong>Email:</strong> {s.email}</p>
+                        <p className="truncate"><strong>Address:</strong> {s.address}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         )}
 
@@ -402,6 +450,25 @@ export default function ProcurementPage() {
                     onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-[#D3232A] focus:outline-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-700 mb-1">Supplier Product Category</label>
+                  <select
+                    required
+                    value={supplierForm.category}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, category: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-[#D3232A] focus:outline-none font-medium bg-white"
+                  >
+                    <option value="Dairy">Dairy (Milk, Cheese, Butter, etc.)</option>
+                    <option value="Frozen Goods">Frozen Goods (Frozen Chicken, Ice Cream, etc.)</option>
+                    <option value="Meat & Poultry">Meat & Poultry (Chicken, Mutton, Fish)</option>
+                    <option value="Produce">Produce / Vegetables & Fruits</option>
+                    <option value="Beverages">Beverages & Soft Drinks</option>
+                    <option value="Bakery">Bakery & Bread</option>
+                    <option value="Syrups & Sauces">Syrups, Sauces & Spices</option>
+                    <option value="Packaging">Packaging & Containers</option>
+                    <option value="General">General / All Categories</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-zinc-700 mb-1">Contact Person</label>
@@ -456,95 +523,6 @@ export default function ProcurementPage() {
                   className="w-full rounded-lg bg-[#D3232A] py-2.5 text-sm font-semibold text-white hover:bg-[#b01e23] transition-colors mt-2"
                 >
                   {isCreatingSupplier ? "Saving Supplier…" : "Save Supplier"}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* MODAL 2: CREATE PURCHASE ORDER */}
-        {showCreatePOModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-            <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
-              <button
-                onClick={() => setShowCreatePOModal(false)}
-                className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <h2 className="text-lg font-bold text-zinc-900 mb-4">Create Purchase Order</h2>
-
-              <form onSubmit={handleCreatePO} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-700 mb-1">Select Supplier</label>
-                  <select
-                    required
-                    value={poSupplierId}
-                    onChange={(e) => setPoSupplierId(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-[#D3232A] focus:outline-none"
-                  >
-                    <option value="">-- Choose Supplier --</option>
-                    {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.contactPerson})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-semibold text-zinc-700">Order Items</label>
-                    <button
-                      type="button"
-                      onClick={handleAddPOLine}
-                      className="text-xs text-[#D3232A] font-semibold flex items-center gap-1 hover:underline"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add Item Line
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {poLineItems.map((line, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <select
-                          className="col-span-6 rounded-lg border border-zinc-300 px-3 py-2 text-xs focus:outline-none"
-                          value={line.itemId}
-                          onChange={(e) => handlePOLineChange(idx, "itemId", e.target.value)}
-                        >
-                          <option value="">-- Select Item --</option>
-                          {items.map((i) => (
-                            <option key={i.id} value={i.id}>
-                              {i.name} ({i.unit})
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="number"
-                          placeholder="Qty"
-                          min="1"
-                          className="col-span-3 rounded-lg border border-zinc-300 px-3 py-2 text-xs focus:outline-none"
-                          value={line.orderedQuantity}
-                          onChange={(e) => handlePOLineChange(idx, "orderedQuantity", Number(e.target.value))}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Unit Cost (₹)"
-                          className="col-span-3 rounded-lg border border-zinc-300 px-3 py-2 text-xs focus:outline-none"
-                          value={line.unitCostPaise ? line.unitCostPaise / 100 : ""}
-                          onChange={(e) => handlePOLineChange(idx, "unitCostPaise", Math.round(Number(e.target.value) * 100))}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isCreatingPO}
-                  className="w-full rounded-lg bg-[#D3232A] py-2.5 text-sm font-semibold text-white hover:bg-[#b01e23] transition-colors mt-4"
-                >
-                  {isCreatingPO ? "Generating PO…" : "Submit Purchase Order"}
                 </button>
               </form>
             </div>
@@ -647,12 +625,71 @@ export default function ProcurementPage() {
             <SmartPOModal
               outletId={activeBranch.id}
               lowStockItems={lowStockItems}
+              allItems={items}
               onClose={() => setShowSmartPOModal(false)}
               onSuccess={() => {
                 setShowSmartPOModal(false);
                 refetchPOs();
               }}
             />
+          </div>
+        )}
+
+        {/* MODAL 5: DELETE SUPPLIER CONFIRMATION */}
+        {deletingSupplier && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl relative border border-zinc-200">
+              <button
+                onClick={() => setDeletingSupplier(null)}
+                className="absolute right-4 top-4 text-zinc-400 hover:text-zinc-600 p-1 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="flex items-center gap-3 text-red-600 mb-3">
+                <div className="rounded-xl bg-red-100 p-2.5 text-red-600">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-zinc-900">Delete Supplier</h2>
+                  <p className="text-xs text-zinc-500">Confirm permanent vendor removal</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 py-2">
+                <p className="text-sm text-zinc-700">
+                  Are you sure you want to delete supplier <strong>"{deletingSupplier.name}"</strong>?
+                </p>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800">
+                  <strong>Notice:</strong> Removing this supplier will remove their contact profile from active vendors. Existing purchase orders and historical stock logs will be preserved.
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-5 pt-3 border-t border-zinc-100">
+                <button
+                  type="button"
+                  onClick={() => setDeletingSupplier(null)}
+                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteSupplierConfirm}
+                  disabled={isDeletingSupplier}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 transition-colors disabled:opacity-50 shadow-xs"
+                >
+                  {isDeletingSupplier ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 className="h-3.5 w-3.5" /> Delete Supplier
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ export interface SupplierApi {
   phone: string;
   email: string;
   address: string;
+  category?: string;
   outletId?: string;
   createdAt?: string;
 }
@@ -48,6 +49,13 @@ export const procurementApiSlice = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Supplier"],
     }),
+    deleteSupplier: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/purchase-orders/suppliers/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Supplier"],
+    }),
     getPurchaseOrders: builder.query<PurchaseOrderApi[], void>({
       query: () => "/purchase-orders",
       providesTags: ["PurchaseOrder"],
@@ -84,6 +92,7 @@ export const procurementApiSlice = baseApi.injectEndpoints({
 export const {
   useGetSuppliersQuery,
   useCreateSupplierMutation,
+  useDeleteSupplierMutation,
   useGetPurchaseOrdersQuery,
   useCreatePurchaseOrderMutation,
   useReceivePOItemMutation,
