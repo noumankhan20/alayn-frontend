@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGetMenuItemsQuery, useGetCategoriesQuery, MenuItem } from "@/redux/slices/menuApiSlice";
+import { useGetEmployeesQuery } from "@/redux/slices/employeeApiSlice";
 import { useCreateOrderMutation, CreateOrderPayload } from "@/redux/slices/orderApiSlice";
 import {
   ShoppingCart,
@@ -24,6 +25,8 @@ import DashboardLayout from "../layout/DashboardLayout";
 import { getImageUrl } from "@/lib/utils";
 
 import { useAppSelector } from "@/redux/store/hooks";
+import { useBranch } from "@/lib/BranchContext";
+import { fetchTables, TableItem } from "@/lib/api";
 
 interface CartItem {
   menuItem: MenuItem;
@@ -33,7 +36,24 @@ interface CartItem {
 
 export default function PosTerminalComponent() {
   const user = useAppSelector((state) => state.auth.user);
+  const { activeBranch } = useBranch();
+  const currentOutletId = activeBranch?.id && activeBranch.id !== "all" ? activeBranch.id : null;
   const isStaffRole = user?.role === "STAFF";
+
+  // Get all employees to find the current user's employee record
+  const { data: employeesRaw } = useGetEmployeesQuery(
+    currentOutletId ? { outletId: currentOutletId, limit: 200, offset: 0 } : undefined,
+    { skip: !currentOutletId }
+  );
+  const allEmployees: any[] = Array.isArray(employeesRaw)
+    ? employeesRaw
+    : (employeesRaw as any)?.data || [];
+  // Find the Employee record that belongs to the currently logged-in user
+  const myEmployee = allEmployees.find((e: any) => e.userId === user?.id);
+
+  // Tables state for staff assignment filtering
+  const [assignedTables, setAssignedTables] = useState<TableItem[]>([]);
+  const [loadingTables, setLoadingTables] = useState(false);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +73,28 @@ export default function PosTerminalComponent() {
   // Modals & States
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<any>(null);
+
+  // Load assigned tables — filter by current user's Employee.id (assignedStaffId FK → Employee.id)
+  useEffect(() => {
+    async function loadTables() {
+      if (!currentOutletId) return;
+      setLoadingTables(true);
+      const res = await fetchTables(currentOutletId);
+      if (res.ok && res.tables) {
+        if (myEmployee?.id) {
+          // Match Table.assignedStaffId directly against Employee.id
+          const assigned = res.tables.filter(
+            (t) => t.assignedStaffId === myEmployee.id
+          );
+          setAssignedTables(assigned);
+        } else {
+          setAssignedTables([]);
+        }
+      }
+      setLoadingTables(false);
+    }
+    loadTables();
+  }, [currentOutletId, myEmployee?.id]);
 
   // RTK Query
   const { data: categories = [] } = useGetCategoriesQuery();
@@ -109,9 +151,11 @@ export default function PosTerminalComponent() {
   const handleProcessCheckout = async () => {
     if (cart.length === 0) return;
 
+    const parsedTableNo = parseInt(tableNo.replace(/\D/g, ""), 10);
+
     const payload: CreateOrderPayload = {
       orderSource,
-      tableNo: orderSource === "COUNTER" ? tableNo || "Counter Direct" : tableNo,
+      tableNo: isNaN(parsedTableNo) ? undefined : (parsedTableNo as any),
       items: cart.map((ci) => ({
         menuItemId: ci.menuItem.id,
         quantity: ci.quantity,
@@ -387,14 +431,61 @@ export default function PosTerminalComponent() {
           )}
         </div>
 
+        {/* My Assigned Tables Banner */}
+        <div className="p-3 bg-gray-50 border-b border-gray-100 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-[#1B2A4A] flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              My Assigned Tables ({assignedTables.length})
+            </span>
+            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+              {user?.name || "Staff"}
+            </span>
+          </div>
+
+          {assignedTables.length === 0 ? (
+            <p className="text-[11px] text-gray-400 italic">
+              No tables assigned yet. Ask admin to assign tables in Table Management.
+            </p>
+          ) : (
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
+              {assignedTables.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTableNo(String(t.tableNumber))}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border shrink-0 ${
+                    tableNo === String(t.tableNumber)
+                      ? "bg-[#D3232A] text-white border-[#D3232A] shadow-xs"
+                      : t.status === "OCCUPIED"
+                      ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                      : "bg-white text-[#1B2A4A] border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  <span>T{t.tableNumber}</span>
+                  <span
+                    className={`text-[9px] px-1 py-0.2 rounded ${
+                      t.tableType === "AC"
+                        ? "bg-cyan-100 text-cyan-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {t.tableType}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Table/Notes Input */}
         <div className="px-4 py-2.5 bg-gray-50/30 border-b border-gray-100 flex gap-2">
           <input
             type="text"
-            placeholder="Table / Reference Tag..."
+            placeholder="Selected Table Number..."
             value={tableNo}
             onChange={(e) => setTableNo(e.target.value)}
-            className="input text-xs"
+            className="input text-xs font-semibold"
           />
         </div>
 
