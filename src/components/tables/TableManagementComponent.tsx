@@ -296,7 +296,11 @@ export default function TableManagementComponent() {
         {error && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm">
             <AlertCircle className="w-5 h-5 shrink-0" />
-            <p className="flex-1">{error}</p>
+            <p className="flex-1">
+              {typeof error === "string"
+                ? error
+                : (error as any)?.message || (error as any)?.code || JSON.stringify(error)}
+            </p>
             <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-600 transition-colors">
               <X className="w-4 h-4" />
             </button>
@@ -434,7 +438,11 @@ export default function TableManagementComponent() {
               {addError && (
                 <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  {addError}
+                  <span>
+                    {typeof addError === "string"
+                      ? addError
+                      : (addError as any)?.message || (addError as any)?.code || JSON.stringify(addError)}
+                  </span>
                 </div>
               )}
 

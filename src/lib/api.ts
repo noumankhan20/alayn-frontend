@@ -14,6 +14,38 @@ interface RequestOptions {
   outletId?: string;
 }
 
+function parseErrorMessage(json: any, status: number): string {
+  if (!json) return `Request failed (HTTP ${status})`;
+  
+  const extract = (val: any): string | null => {
+    if (!val) return null;
+    if (typeof val === "string") return val;
+    if (typeof val === "object") {
+      if (typeof val.message === "string") return val.message;
+      if (typeof val.error === "string") return val.error;
+      if (typeof val.code === "string") return val.code;
+    }
+    return null;
+  };
+
+  const msg =
+    extract(json.message) ??
+    extract(json.error) ??
+    (typeof json === "string" ? json : null);
+
+  if (msg) return msg;
+
+  try {
+    if (typeof json === "object") {
+      return JSON.stringify(json);
+    }
+  } catch {
+    // fallback
+  }
+
+  return `Request failed (HTTP ${status})`;
+}
+
 async function apiRequest<T>(
   path: string,
   opts: RequestOptions = {},
@@ -65,10 +97,7 @@ async function apiRequest<T>(
       }
       return {
         ok: false,
-        error:
-          json?.message ??
-          json?.error ??
-          `Request failed (HTTP ${res.status})`,
+        error: parseErrorMessage(json, res.status),
         status: res.status,
       };
     }
