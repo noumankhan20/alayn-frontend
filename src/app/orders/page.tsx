@@ -9,7 +9,7 @@ import {
 } from "@/redux/slices/orderApiSlice";
 import { useAppSelector } from "@/redux/store/hooks";
 import { useBranch } from "@/lib/BranchContext";
-import { fetchTables, TableItem } from "@/lib/api";
+import { fetchTables } from "@/lib/api";
 import { useGetEmployeesQuery } from "@/redux/slices/employeeApiSlice";
 import {
   Utensils,
@@ -18,42 +18,117 @@ import {
   Search,
   RefreshCw,
   ChefHat,
-  AlertCircle,
   QrCode,
   DollarSign,
   ChevronRight,
-  Filter,
   UserCheck,
   CreditCard,
   Banknote,
   Check,
+  X,
+  Layers,
+  ArrowRight,
+  Timer,
+  CheckCircle2,
+  XCircle,
+  Package,
 } from "lucide-react";
 
-const STATUS_COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
-  SENT_TO_KITCHEN: { bg: "bg-[#1B2A4A]/10", text: "text-[#1B2A4A]", border: "border-[#1B2A4A]/20" },
-  RECEIVED: { bg: "bg-[#1B2A4A]/10", text: "text-[#1B2A4A]", border: "border-[#1B2A4A]/20" },
-  PREPARING: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
-  READY: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-  SERVED: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
-  DISPATCHED: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-200" },
-  COMPLETED: { bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-300" },
-  CANCELLED: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" },
+// ── Status helpers ─────────────────────────────────────────────────────────────
+
+type StatusKey =
+  | "SENT_TO_KITCHEN"
+  | "RECEIVED"
+  | "PREPARING"
+  | "READY"
+  | "SERVED"
+  | "DISPATCHED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+const STATUS_META: Record<
+  string,
+  { label: string; bg: string; text: string; border: string; dot: string }
+> = {
+  SENT_TO_KITCHEN: {
+    label: "Sent to Kitchen",
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+    dot: "bg-blue-500",
+  },
+  RECEIVED: {
+    label: "Sent to Kitchen",
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+    dot: "bg-blue-500",
+  },
+  PREPARING: {
+    label: "Preparing",
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+    dot: "bg-amber-400",
+  },
+  READY: {
+    label: "Ready",
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  SERVED: {
+    label: "Served",
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
+    dot: "bg-purple-500",
+  },
+  DISPATCHED: {
+    label: "Dispatched",
+    bg: "bg-indigo-50",
+    text: "text-indigo-700",
+    border: "border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  COMPLETED: {
+    label: "Completed",
+    bg: "bg-gray-100",
+    text: "text-gray-600",
+    border: "border-gray-300",
+    dot: "bg-gray-400",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    bg: "bg-rose-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+    dot: "bg-rose-400",
+  },
 };
 
-const formatStatusLabel = (status: string) => {
-  if (status === "SENT_TO_KITCHEN" || status === "RECEIVED") return "SENT TO KITCHEN";
-  return status;
-};
+const getStatusMeta = (status: string) =>
+  STATUS_META[status] || STATUS_META["SENT_TO_KITCHEN"];
+
+// ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function LiveOrdersPage() {
   const user = useAppSelector((state) => state.auth.user);
   const { activeBranch } = useBranch();
-  const currentOutletId = activeBranch?.id && activeBranch.id !== "all" ? activeBranch.id : null;
+  const currentOutletId =
+    activeBranch?.id && activeBranch.id !== "all" ? activeBranch.id : null;
   const isStaffRole = user?.role === "STAFF";
+  const isManagerOrOwner =
+    user?.role === "MANAGER" ||
+    user?.role === "BUSINESS_OWNER" ||
+    user?.role === "SUPER_ADMIN";
 
-  // Workforce employee record
+  // Workforce employee record (staff only)
   const { data: employeesRaw } = useGetEmployeesQuery(
-    currentOutletId ? { outletId: currentOutletId, limit: 200, offset: 0 } : undefined,
+    currentOutletId
+      ? { outletId: currentOutletId, limit: 200, offset: 0 }
+      : undefined,
     { skip: !currentOutletId || !isStaffRole }
   );
   const allEmployees: any[] = Array.isArray(employeesRaw)
@@ -61,14 +136,13 @@ export default function LiveOrdersPage() {
     : (employeesRaw as any)?.data || [];
   const myEmployee = allEmployees.find((e: any) => e.userId === user?.id);
 
-  // Staff assigned table numbers
-  const [assignedTableNumbers, setAssignedTableNumbers] = useState<number[]>([]);
-  const [loadingTables, setLoadingTables] = useState(false);
+  const [assignedTableNumbers, setAssignedTableNumbers] = useState<number[]>(
+    []
+  );
 
   useEffect(() => {
     async function loadTables() {
       if (!currentOutletId || !isStaffRole) return;
-      setLoadingTables(true);
       const res = await fetchTables(currentOutletId);
       if (res.ok && res.tables) {
         const userId = user?.id;
@@ -76,32 +150,45 @@ export default function LiveOrdersPage() {
         if (userId || empId) {
           const assigned = res.tables.filter(
             (t) =>
-              (t.assignedStaffId && (t.assignedStaffId === userId || t.assignedStaffId === empId)) ||
-              ((t as any).staffId && ((t as any).staffId === userId || (t as any).staffId === empId))
+              (t.assignedStaffId &&
+                (t.assignedStaffId === userId ||
+                  t.assignedStaffId === empId)) ||
+              ((t as any).staffId &&
+                ((t as any).staffId === userId ||
+                  (t as any).staffId === empId))
           );
           setAssignedTableNumbers(assigned.map((t) => t.tableNumber));
         } else {
           setAssignedTableNumbers([]);
         }
       }
-      setLoadingTables(false);
     }
     loadTables();
   }, [currentOutletId, myEmployee?.id, user?.id, isStaffRole]);
 
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
+  const [selectedSourceFilter, setSelectedSourceFilter] =
+    useState<string>("ALL");
+  const [selectedStatusFilter, setSelectedStatusFilter] =
+    useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [settlingOrder, setSettlingOrder] = useState<Order | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "UPI">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "UPI">(
+    "CASH"
+  );
 
-  // Poll every 4 seconds for live kitchen updates
-  const { data: orders = [], isLoading, isFetching, refetch } = useGetOrdersQuery(
+  const {
+    data: orders = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetOrdersQuery(
     selectedStatusFilter !== "ALL" ? { status: selectedStatusFilter } : undefined,
     { pollingInterval: 4000 }
   );
 
-  const [updateOrderStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
+  const [updateOrderStatus, { isLoading: isUpdating }] =
+    useUpdateOrderStatusMutation();
 
   const handleStatusChange = async (
     orderId: string,
@@ -109,7 +196,10 @@ export default function LiveOrdersPage() {
     methodOrComment?: "CASH" | "CARD" | "UPI" | string
   ) => {
     try {
-      const isPaymentMethod = methodOrComment === "CASH" || methodOrComment === "CARD" || methodOrComment === "UPI";
+      const isPaymentMethod =
+        methodOrComment === "CASH" ||
+        methodOrComment === "CARD" ||
+        methodOrComment === "UPI";
       await updateOrderStatus({
         id: orderId,
         status: nextStatus,
@@ -117,7 +207,9 @@ export default function LiveOrdersPage() {
         paymentMethod: isPaymentMethod ? (methodOrComment as any) : undefined,
       }).unwrap();
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder((prev) => (prev ? { ...prev, status: nextStatus } : null));
+        setSelectedOrder((prev) =>
+          prev ? { ...prev, status: nextStatus } : null
+        );
       }
     } catch (err) {
       console.error("Failed to update status", err);
@@ -127,242 +219,521 @@ export default function LiveOrdersPage() {
   const orderList = Array.isArray(orders)
     ? orders
     : (orders as any)?.data && Array.isArray((orders as any).data)
-      ? (orders as any).data
-      : [];
+    ? (orders as any).data
+    : [];
+
+  const getOrderSource = (order: Order) => {
+    const tableNum =
+      order.tableNo !== undefined && order.tableNo !== null
+        ? Number(order.tableNo)
+        : (order as any).tableNumber !== undefined &&
+          (order as any).tableNumber !== null
+        ? Number((order as any).tableNumber)
+        : null;
+    const rawSource = order.orderSource || (order as any).source;
+    if (rawSource) return String(rawSource).toUpperCase();
+    return tableNum !== null ? "TABLE" : "COUNTER";
+  };
+
+  const counterOrdersCount = orderList.filter(
+    (o: Order) => getOrderSource(o) === "COUNTER"
+  ).length;
+  const tableOrdersCount = orderList.filter(
+    (o: Order) => getOrderSource(o) === "TABLE"
+  ).length;
 
   const filteredOrders = orderList.filter((order: Order) => {
-    const tableNum = order.tableNo !== undefined && order.tableNo !== null
-      ? Number(order.tableNo)
-      : (order as any).tableNumber !== undefined && (order as any).tableNumber !== null
+    const tableNum =
+      order.tableNo !== undefined && order.tableNo !== null
+        ? Number(order.tableNo)
+        : (order as any).tableNumber !== undefined &&
+          (order as any).tableNumber !== null
         ? Number((order as any).tableNumber)
         : null;
 
-    // Staff filter: STAFF users can only see orders from tables assigned to them
     if (isStaffRole) {
-      if (tableNum === null) return false; // Exclude Counter / non-table orders for staff
-      if (!assignedTableNumbers.includes(tableNum)) return false; // Exclude orders of tables assigned to other staff
+      if (tableNum === null) return false;
+      if (!assignedTableNumbers.includes(tableNum)) return false;
+    } else if (selectedSourceFilter !== "ALL") {
+      if (getOrderSource(order) !== selectedSourceFilter) return false;
     }
 
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.orderNo && order.orderNo.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      ((order as any).orderNumber && (order as any).orderNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (order.orderNo &&
+        order.orderNo.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      ((order as any).orderNumber &&
+        (order as any).orderNumber
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
       (tableNum !== null && String(tableNum).includes(searchQuery));
     return matchesSearch;
   });
 
+  const getItemPrice = (item: any) =>
+    ((item.unitPricePaise !== undefined
+      ? item.unitPricePaise
+      : item.menuItem?.price
+      ? item.menuItem.price * 100
+      : 0) /
+      100) *
+    item.quantity;
+
+  // ── Channel card config (scalable) ──────────────────────────────────────────
+  const channelTabs = [
+    {
+      id: "ALL",
+      label: "All Channels",
+      sublabel: "Every order, unified",
+      count: orderList.length,
+      icon: Layers,
+      activeGradient: "from-[#1B2A4A] to-[#2d4272]",
+      activeDot: "bg-white",
+    },
+    {
+      id: "COUNTER",
+      label: "Counter Direct",
+      sublabel: "Takeaway & quick billing",
+      count: counterOrdersCount,
+      icon: CreditCard,
+      activeGradient: "from-indigo-600 to-indigo-700",
+      activeDot: "bg-indigo-200",
+    },
+    {
+      id: "TABLE",
+      label: "Table Orders",
+      sublabel: "Dine-in floor service",
+      count: tableOrdersCount,
+      icon: Utensils,
+      activeGradient: "from-[#D3232A] to-[#b91c23]",
+      activeDot: "bg-rose-200",
+    },
+    // QR and DELIVERY can be added here when enum values are ready
+  ];
+
+  const statusFilterTabs = [
+    { id: "ALL", label: "All" },
+    { id: "SENT_TO_KITCHEN", label: "Sent" },
+    { id: "PREPARING", label: "Preparing" },
+    { id: "READY", label: "Ready" },
+    { id: "SERVED", label: "Served" },
+    { id: "COMPLETED", label: "Completed" },
+    { id: "CANCELLED", label: "Cancelled" },
+  ];
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+      <div className="p-4 sm:p-6 max-w-[1400px] mx-auto space-y-5">
+
+        {/* ── Page Header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-black text-[#1B2A4A] flex items-center gap-2">
-              <Utensils className="w-6 h-6 text-[#D3232A]" />
-              Live Orders & Kitchen Status
-            </h1>
-            <p className="text-xs text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
-              <span>Track live order statuses across tables, dishes ordered, and kitchen preparation stages.</span>
-              {isStaffRole && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
-                  <UserCheck className="w-3 h-3 text-amber-600" />
-                  My Assigned Tables Only ({assignedTableNumbers.length > 0 ? assignedTableNumbers.map((n) => `T${n}`).join(", ") : "None Assigned"})
-                </span>
-              )}
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#D3232A]/10 border border-[#D3232A]/20">
+                <ChefHat className="w-5 h-5 text-[#D3232A]" />
+              </div>
+              <div>
+                <h1 className="text-xl font-black text-[#1B2A4A] leading-tight">
+                  Live Orders
+                </h1>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  {isStaffRole
+                    ? "Your assigned table orders"
+                    : "Real-time order tracking across all channels"}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <button
-            onClick={() => refetch()}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition shadow-2xs self-start sm:self-auto"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#D3232A]" : ""}`} />
-            <span>Refresh</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            {isFetching && (
+              <span className="flex items-center gap-1.5 text-[11px] text-[#D3232A] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D3232A] animate-pulse" />
+                Live
+              </span>
+            )}
+            {isStaffRole && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
+                <UserCheck className="w-3.5 h-3.5 text-amber-600" />
+                {assignedTableNumbers.length > 0
+                  ? assignedTableNumbers.map((n) => `T${n}`).join(", ")
+                  : "No Tables Assigned"}
+              </span>
+            )}
+            <button
+              onClick={() => refetch()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition shadow-xs"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#D3232A]" : ""}`}
+              />
+              Refresh
+            </button>
+          </div>
         </div>
 
-        {/* Filters and Search Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none py-1">
-            {["ALL", "SENT_TO_KITCHEN", "PREPARING", "READY", "SERVED", "COMPLETED", "CANCELLED"].map((status) => {
-              const active = selectedStatusFilter === status;
+        {/* ── Channel Filter Cards (Manager / Owner only) ── */}
+        {!isStaffRole && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {channelTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = selectedSourceFilter === tab.id;
               return (
                 <button
-                  key={status}
-                  onClick={() => setSelectedStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border ${active
-                      ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-xs"
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                    }`}
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedSourceFilter(tab.id);
+                    setSelectedStatusFilter("ALL");
+                  }}
+                  className={`relative overflow-hidden flex items-center justify-between p-4 rounded-2xl border transition-all text-left cursor-pointer group ${
+                    isActive
+                      ? `bg-gradient-to-br ${tab.activeGradient} text-white shadow-lg border-transparent`
+                      : "bg-white text-gray-700 hover:bg-gray-50 border-gray-200 shadow-xs hover:shadow-sm hover:border-gray-300"
+                  }`}
                 >
-                  {status === "ALL" ? "All Orders" : formatStatusLabel(status)}
+                  {/* Decorative blob */}
+                  {isActive && (
+                    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/5" />
+                  )}
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div
+                      className={`p-2.5 rounded-xl transition ${
+                        isActive
+                          ? "bg-white/15"
+                          : "bg-gray-100 group-hover:bg-gray-200"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black leading-tight">
+                        {tab.label}
+                      </p>
+                      <p
+                        className={`text-[10px] font-medium mt-0.5 ${
+                          isActive ? "text-white/70" : "text-gray-400"
+                        }`}
+                      >
+                        {tab.sublabel}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="relative z-10 flex flex-col items-end gap-1">
+                    <span
+                      className={`text-2xl font-black leading-none ${
+                        isActive ? "text-white" : "text-[#1B2A4A]"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold uppercase tracking-wider ${
+                        isActive ? "text-white/60" : "text-gray-400"
+                      }`}
+                    >
+                      orders
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Status Sub-filter bar + Search ── */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white border border-gray-200 rounded-2xl p-3 shadow-xs">
+          {/* Status pill tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            {statusFilterTabs.map((tab) => {
+              const active = selectedStatusFilter === tab.id;
+              const meta = tab.id !== "ALL" ? getStatusMeta(tab.id) : null;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedStatusFilter(tab.id)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border ${
+                    active
+                      ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-xs"
+                      : "bg-transparent text-gray-600 border-transparent hover:bg-gray-100 hover:border-gray-200"
+                  }`}
+                >
+                  {meta && (
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${active ? "bg-white/70" : meta.dot}`}
+                    />
+                  )}
+                  {tab.label}
+                  {tab.id !== "ALL" && (
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-md font-black ${
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {
+                        filteredOrders.filter(
+                          (o: any) =>
+                            o.status === tab.id ||
+                            (tab.id === "SENT_TO_KITCHEN" &&
+                              o.status === "RECEIVED")
+                        ).length
+                      }
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full md:w-72 shrink-0">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+          {/* Search */}
+          <div className="relative w-full sm:w-64 shrink-0">
+            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by Table or Order #..."
+              placeholder="Table # or Order ID…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-[#D3232A]"
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1B2A4A] focus:bg-white transition"
             />
           </div>
         </div>
 
-        {/* Orders List Grid */}
+        {/* ── Results count ── */}
+        <div className="flex items-center justify-between px-1">
+          <p className="text-xs text-gray-500 font-semibold">
+            Showing{" "}
+            <span className="text-[#1B2A4A] font-black">
+              {filteredOrders.length}
+            </span>{" "}
+            order{filteredOrders.length !== 1 ? "s" : ""}
+            {selectedSourceFilter !== "ALL" && (
+              <span className="text-gray-400">
+                {" "}
+                ·{" "}
+                {
+                  channelTabs.find((c) => c.id === selectedSourceFilter)?.label
+                }
+              </span>
+            )}
+          </p>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-[11px] text-[#D3232A] font-bold hover:underline"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
+
+        {/* ── Orders Grid ── */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-44 bg-gray-100 animate-pulse rounded-2xl border border-gray-200" />
+              <div
+                key={n}
+                className="h-52 bg-gray-100 animate-pulse rounded-2xl border border-gray-200"
+              />
             ))}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400 space-y-3">
-            <ChefHat className="w-12 h-12 mx-auto opacity-30 text-gray-500" />
-            <p className="text-sm font-semibold text-gray-600">No orders found</p>
-            <p className="text-xs text-gray-400">Orders placed by staff or QR customers will appear here live.</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center space-y-3 shadow-xs">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
+              <ChefHat className="w-7 h-7 text-gray-400" />
+            </div>
+            <p className="text-sm font-bold text-gray-700">No orders found</p>
+            <p className="text-xs text-gray-400 max-w-xs mx-auto">
+              {selectedSourceFilter !== "ALL"
+                ? `No ${channelTabs.find((c) => c.id === selectedSourceFilter)?.label.toLowerCase()} orders match the current filters.`
+                : "Orders placed by staff or customers will appear here in real time."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredOrders.map((order: any) => {
-              const statusStyle = STATUS_COLOR_MAP[order.status] || STATUS_COLOR_MAP["RECEIVED"];
-              const formattedTime = new Date(order.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+              const meta = getStatusMeta(order.status);
+              const formattedTime = new Date(order.createdAt).toLocaleTimeString(
+                [],
+                { hour: "2-digit", minute: "2-digit" }
+              );
               const orderNumDisplay =
-                order.orderNo || order.orderNumber || `#${order.id.slice(0, 8)}`;
-              const orderSourceDisplay = order.orderSource || order.source || "TABLE";
+                order.orderNo ||
+                order.orderNumber ||
+                `#${order.id.slice(0, 8)}`;
               const tableNumDisplay =
                 order.tableNo !== undefined && order.tableNo !== null
                   ? order.tableNo
-                  : order.tableNumber !== undefined && order.tableNumber !== null
+                  : order.tableNumber !== undefined &&
+                    order.tableNumber !== null
                   ? order.tableNumber
                   : null;
+              const isCounter = tableNumDisplay === null;
+              const items = order.orderItems || order.items || [];
+              const totalAmt =
+                order.totalAmount !== undefined
+                  ? order.totalAmount
+                  : (order as any).totalPaise !== undefined
+                  ? (order as any).totalPaise / 100
+                  : 0;
 
               return (
                 <div
                   key={order.id}
-                  className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between space-y-4"
+                  className="bg-white rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-gray-300 transition-all flex flex-col overflow-hidden"
                 >
-                  {/* Top Bar */}
-                  <div>
-                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                      <div className="flex items-center gap-2">
-                        {tableNumDisplay !== null ? (
-                          <span className="px-2.5 py-1 bg-[#D3232A]/10 text-[#D3232A] text-xs font-black rounded-lg border border-[#D3232A]/20">
-                            Table {tableNumDisplay}
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-black rounded-lg border border-gray-200">
-                            Counter Order
-                          </span>
-                        )}
-                        <span className="text-[11px] font-bold text-gray-500">
+                  {/* Card top accent bar */}
+                  <div
+                    className={`h-1 w-full ${
+                      order.status === "CANCELLED"
+                        ? "bg-rose-400"
+                        : order.status === "COMPLETED"
+                        ? "bg-gray-300"
+                        : order.status === "READY"
+                        ? "bg-emerald-400"
+                        : order.status === "PREPARING"
+                        ? "bg-amber-400"
+                        : order.status === "SERVED"
+                        ? "bg-purple-400"
+                        : "bg-[#1B2A4A]"
+                    }`}
+                  />
+
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    {/* Header row */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {/* Source badge */}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black shrink-0 ${
+                            isCounter
+                              ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                              : "bg-[#D3232A]/10 text-[#D3232A] border border-[#D3232A]/20"
+                          }`}
+                        >
+                          {isCounter ? (
+                            <CreditCard className="w-2.5 h-2.5" />
+                          ) : (
+                            <Utensils className="w-2.5 h-2.5" />
+                          )}
+                          {isCounter ? "Counter" : `Table ${tableNumDisplay}`}
+                        </span>
+                        <span className="text-[11px] font-bold text-gray-500 truncate">
                           {orderNumDisplay}
                         </span>
                       </div>
 
+                      {/* Status pill */}
                       <span
-                        className={`px-2.5 py-1 text-[10px] font-black rounded-full border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black whitespace-nowrap shrink-0 border ${meta.bg} ${meta.text} ${meta.border}`}
                       >
-                        {formatStatusLabel(order.status)}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${meta.dot}`}
+                        />
+                        {meta.label}
                       </span>
                     </div>
 
-                    {/* Order Details Meta */}
-                    <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-500 font-medium">
+                    {/* Time & amount row */}
+                    <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-gray-400" />
                         {formattedTime}
                       </span>
-                      <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-semibold text-[10px]">
-                        Source: {orderSourceDisplay}
+                      <span className="font-black text-[#1B2A4A] text-sm">
+                        ₹{Number(totalAmt).toFixed(2)}
                       </span>
                     </div>
 
-                    {/* Dishes Breakdown List */}
-                    <div className="mt-3 bg-gray-50/70 border border-gray-100 rounded-xl p-3 space-y-1.5 max-h-36 overflow-y-auto scrollbar-none">
-                      {(order.orderItems || order.items) && (order.orderItems || order.items).length > 0 ? (
-                        (order.orderItems || order.items).map((item: any, idx: number) => (
-                          <div key={item.id || idx} className="flex justify-between items-start text-xs">
-                            <span className="font-bold text-[#1B2A4A] truncate max-w-[180px]">
-                              {item.quantity}× {item.menuItem?.name || "Dish Item"}
+                    {/* Items list */}
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-1.5 max-h-28 overflow-y-auto scrollbar-none flex-1">
+                      {items.length > 0 ? (
+                        items.map((item: any, idx: number) => (
+                          <div
+                            key={item.id || idx}
+                            className="flex justify-between items-center text-xs gap-2"
+                          >
+                            <span className="font-semibold text-[#1B2A4A] truncate">
+                              <span className="text-[#D3232A] font-black mr-1">
+                                {item.quantity}×
+                              </span>
+                              {item.menuItem?.name || "Dish Item"}
                             </span>
-                            <span className="text-gray-500 font-semibold text-[11px]">
-                              ₹
-                              {(
-                                (Number(
-                                  item.unitPricePaise !== undefined
-                                    ? item.unitPricePaise
-                                    : item.menuItem?.price
-                                    ? item.menuItem.price * 100
-                                    : 0
-                                ) /
-                                  100) *
-                                item.quantity
-                              ).toFixed(2)}
+                            <span className="text-gray-500 font-semibold shrink-0">
+                              ₹{getItemPrice(item).toFixed(2)}
                             </span>
                           </div>
                         ))
                       ) : (
-                        <p className="text-[11px] text-gray-400 italic">No item details</p>
+                        <p className="text-[11px] text-gray-400 italic">
+                          No item details
+                        </p>
                       )}
                     </div>
-                  </div>
 
-                  {/* Footer & Actions */}
-                  <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-xs font-bold text-[#1B2A4A] hover:text-[#D3232A] transition flex items-center gap-1"
-                    >
-                      View Details <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Footer actions */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="text-xs font-bold text-gray-500 hover:text-[#1B2A4A] transition flex items-center gap-1"
+                      >
+                        Details
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
 
-                    {/* Quick Status Progression Button */}
-                    {!isStaffRole && (order.status === "SENT_TO_KITCHEN" || (order.status as string) === "RECEIVED") && (
-                      <button
-                        onClick={() => handleStatusChange(order.id, "PREPARING")}
-                        disabled={isUpdating}
-                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-extrabold rounded-lg border border-amber-200 transition"
-                      >
-                        Start Prep
-                      </button>
-                    )}
-                    {!isStaffRole && order.status === "PREPARING" && (
-                      <button
-                        onClick={() => handleStatusChange(order.id, "READY")}
-                        disabled={isUpdating}
-                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-lg border border-emerald-200 transition"
-                      >
-                        Mark Ready
-                      </button>
-                    )}
-                    {order.status === "READY" && (
-                      <button
-                        onClick={() => handleStatusChange(order.id, "SERVED")}
-                        disabled={isUpdating}
-                        className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 text-[11px] font-extrabold rounded-lg border border-purple-200 transition"
-                      >
-                        Mark Served
-                      </button>
-                    )}
-                    {order.status === "SERVED" && (
-                      <button
-                        onClick={() => setSettlingOrder(order)}
-                        disabled={isUpdating}
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold rounded-lg shadow-xs transition"
-                      >
-                        Complete Order & Free Table
-                      </button>
-                    )}
+                      <div className="flex items-center gap-1.5">
+                        {!isStaffRole &&
+                          (order.status === "SENT_TO_KITCHEN" ||
+                            order.status === "RECEIVED") && (
+                            <button
+                              onClick={() =>
+                                handleStatusChange(order.id, "PREPARING")
+                              }
+                              disabled={isUpdating}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg shadow-xs transition disabled:opacity-60"
+                            >
+                              <Timer className="w-3 h-3" />
+                              Start Prep
+                            </button>
+                          )}
+                        {!isStaffRole && order.status === "PREPARING" && (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(order.id, "READY")
+                            }
+                            disabled={isUpdating}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg shadow-xs transition disabled:opacity-60"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            Mark Ready
+                          </button>
+                        )}
+                        {order.status === "READY" && (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(order.id, "SERVED")
+                            }
+                            disabled={isUpdating}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-[11px] font-bold rounded-lg shadow-xs transition disabled:opacity-60"
+                          >
+                            <Package className="w-3 h-3" />
+                            Mark Served
+                          </button>
+                        )}
+                        {order.status === "SERVED" && (
+                          <button
+                            onClick={() => setSettlingOrder(order)}
+                            disabled={isUpdating}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#1B2A4A] hover:bg-[#2d4272] text-white text-[11px] font-bold rounded-lg shadow-xs transition disabled:opacity-60"
+                          >
+                            <DollarSign className="w-3 h-3" />
+                            Settle Bill
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -370,123 +741,166 @@ export default function LiveOrdersPage() {
           </div>
         )}
 
-        {/* Modal: Full Order View */}
+        {/* ── Modal: Full Order Details ── */}
         {selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-black text-[#1B2A4A]">
-                    {selectedOrder.orderNo || (selectedOrder as any).orderNumber || `#${selectedOrder.id.slice(0, 8)}`}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    {selectedOrder.tableNo || (selectedOrder as any).tableNumber
-                      ? `Table ${selectedOrder.tableNo || (selectedOrder as any).tableNumber}`
-                      : "Counter"}{" "}
-                    • Source: {selectedOrder.orderSource || (selectedOrder as any).source || "TABLE"}
-                  </p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full shadow-2xl overflow-hidden">
+              {/* Modal header */}
+              <div className="flex justify-between items-center p-5 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2 rounded-xl ${
+                      selectedOrder.tableNo ||
+                      (selectedOrder as any).tableNumber
+                        ? "bg-[#D3232A]/10"
+                        : "bg-indigo-50"
+                    }`}
+                  >
+                    {selectedOrder.tableNo ||
+                    (selectedOrder as any).tableNumber ? (
+                      <Utensils className="w-4 h-4 text-[#D3232A]" />
+                    ) : (
+                      <CreditCard className="w-4 h-4 text-indigo-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-[#1B2A4A]">
+                      {selectedOrder.orderNo ||
+                        (selectedOrder as any).orderNumber ||
+                        `#${selectedOrder.id.slice(0, 8)}`}
+                    </h3>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {selectedOrder.tableNo ||
+                      (selectedOrder as any).tableNumber
+                        ? `Table ${selectedOrder.tableNo || (selectedOrder as any).tableNumber}`
+                        : "Counter Direct"}{" "}
+                      ·{" "}
+                      {new Date(selectedOrder.createdAt).toLocaleTimeString(
+                        [],
+                        { hour: "2-digit", minute: "2-digit" }
+                      )}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="text-gray-400 hover:text-gray-600 text-sm font-bold p-1"
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Status Banner */}
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200">
-                <span className="text-xs font-semibold text-gray-600">Kitchen Status</span>
-                <span
-                  className={`px-3 py-1 text-xs font-black rounded-full border ${
-                    STATUS_COLOR_MAP[selectedOrder.status]?.bg
-                  } ${STATUS_COLOR_MAP[selectedOrder.status]?.text} ${
-                    STATUS_COLOR_MAP[selectedOrder.status]?.border
-                  }`}
+              <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                {/* Status banner */}
+                <div
+                  className={`flex items-center justify-between p-3 rounded-xl border ${
+                    getStatusMeta(selectedOrder.status).bg
+                  } ${getStatusMeta(selectedOrder.status).border}`}
                 >
-                  {formatStatusLabel(selectedOrder.status)}
-                </span>
-              </div>
-
-              {/* Dishes List */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Ordered Items</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {(selectedOrder.orderItems || (selectedOrder as any).items)?.map((item: any, idx: number) => (
-                    <div
-                      key={item.id || idx}
-                      className="flex justify-between items-start p-2.5 bg-gray-50/80 rounded-lg border border-gray-100 text-xs"
-                    >
-                      <div>
-                        <span className="font-bold text-[#1B2A4A] block">
-                          {item.quantity}× {item.menuItem?.name || "Dish Item"}
-                        </span>
-                        {item.notes && <span className="text-[10px] text-gray-500 italic">{item.notes}</span>}
-                      </div>
-                      <span className="font-bold text-gray-800">
-                        ₹
-                        {(
-                          (Number(
-                            item.unitPricePaise !== undefined
-                              ? item.unitPricePaise
-                              : item.menuItem?.price
-                              ? item.menuItem.price * 100
-                              : 0
-                          ) /
-                            100) *
-                          item.quantity
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs">
-                <div className="flex justify-between text-gray-500 font-medium">
-                  <span>Subtotal</span>
-                  <span>
-                    ₹
-                    {(
-                      selectedOrder.subtotal !== undefined
-                        ? selectedOrder.subtotal
-                        : (selectedOrder as any).subtotalPaise !== undefined
-                        ? (selectedOrder as any).subtotalPaise / 100
-                        : 0
-                    ).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between font-black text-sm text-[#1B2A4A] pt-1">
-                  <span>Total Amount</span>
-                  <span className="text-[#D3232A]">
-                    ₹
-                    {(
-                      selectedOrder.totalAmount !== undefined
-                        ? selectedOrder.totalAmount
-                        : (selectedOrder as any).totalPaise !== undefined
-                        ? (selectedOrder as any).totalPaise / 100
-                        : 0
-                    ).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-2">
-                {selectedOrder.status !== "COMPLETED" && selectedOrder.status !== "CANCELLED" && (
-                  <button
-                    onClick={() => {
-                      setSettlingOrder(selectedOrder);
-                      setSelectedOrder(null);
-                    }}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 text-xs rounded-xl transition shadow-xs"
+                  <span
+                    className={`text-xs font-bold ${getStatusMeta(selectedOrder.status).text}`}
                   >
-                    Complete Order & Free Table
-                  </button>
-                )}
+                    Kitchen Status
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${
+                      getStatusMeta(selectedOrder.status).bg
+                    } ${getStatusMeta(selectedOrder.status).text} ${
+                      getStatusMeta(selectedOrder.status).border
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${getStatusMeta(selectedOrder.status).dot}`}
+                    />
+                    {getStatusMeta(selectedOrder.status).label}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                    Ordered Items
+                  </p>
+                  <div className="space-y-2">
+                    {(
+                      selectedOrder.orderItems ||
+                      (selectedOrder as any).items ||
+                      []
+                    ).map((item: any, idx: number) => (
+                      <div
+                        key={item.id || idx}
+                        className="flex justify-between items-start p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs"
+                      >
+                        <div>
+                          <span className="font-bold text-[#1B2A4A] block">
+                            <span className="text-[#D3232A] mr-1">
+                              {item.quantity}×
+                            </span>
+                            {item.menuItem?.name || "Dish Item"}
+                          </span>
+                          {item.notes && (
+                            <span className="text-[10px] text-gray-400 italic mt-0.5 block">
+                              {item.notes}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold text-gray-700">
+                          ₹{getItemPrice(item).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bill summary */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-2 text-xs">
+                  <div className="flex justify-between text-gray-500 font-medium">
+                    <span>Subtotal</span>
+                    <span>
+                      ₹
+                      {(
+                        selectedOrder.subtotal !== undefined
+                          ? selectedOrder.subtotal
+                          : (selectedOrder as any).subtotalPaise !== undefined
+                          ? (selectedOrder as any).subtotalPaise / 100
+                          : 0
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-black text-sm text-[#1B2A4A] pt-2 border-t border-gray-200">
+                    <span>Total</span>
+                    <span className="text-[#D3232A]">
+                      ₹
+                      {(
+                        selectedOrder.totalAmount !== undefined
+                          ? selectedOrder.totalAmount
+                          : (selectedOrder as any).totalPaise !== undefined
+                          ? (selectedOrder as any).totalPaise / 100
+                          : 0
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal footer */}
+              <div className="p-4 border-t border-gray-100 flex gap-2">
+                {selectedOrder.status !== "COMPLETED" &&
+                  selectedOrder.status !== "CANCELLED" && (
+                    <button
+                      onClick={() => {
+                        setSettlingOrder(selectedOrder);
+                        setSelectedOrder(null);
+                      }}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#1B2A4A] hover:bg-[#2d4272] text-white font-bold py-2.5 px-3 text-xs rounded-xl transition shadow-xs"
+                    >
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Settle Bill
+                    </button>
+                  )}
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="flex-1 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2 text-xs font-bold rounded-xl transition"
+                  className="flex-1 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 text-xs font-bold rounded-xl transition"
                 >
                   Close
                 </button>
@@ -495,98 +909,94 @@ export default function LiveOrdersPage() {
           </div>
         )}
 
-        {/* Modal: Settle Payment & Complete Order */}
+        {/* ── Modal: Settle Payment ── */}
         {settlingOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="p-5 border-b border-gray-100 flex justify-between items-start">
                 <div>
                   <h3 className="text-base font-black text-[#1B2A4A] flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-600" />
-                    Settle Bill & Complete Order
+                    <div className="p-1.5 rounded-lg bg-emerald-50">
+                      <DollarSign className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    Settle Bill
                   </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {settlingOrder.orderNo || (settlingOrder as any).orderNumber || `#${settlingOrder.id.slice(0, 8)}`} •{" "}
-                    {settlingOrder.tableNo || (settlingOrder as any).tableNumber
+                  <p className="text-xs text-gray-500 font-medium mt-1 ml-9">
+                    {settlingOrder.orderNo ||
+                      (settlingOrder as any).orderNumber ||
+                      `#${settlingOrder.id.slice(0, 8)}`}{" "}
+                    ·{" "}
+                    {settlingOrder.tableNo ||
+                    (settlingOrder as any).tableNumber
                       ? `Table ${settlingOrder.tableNo || (settlingOrder as any).tableNumber}`
                       : "Counter Direct"}
                   </p>
                 </div>
                 <button
                   onClick={() => setSettlingOrder(null)}
-                  className="text-gray-400 hover:text-gray-600 text-sm font-bold p-1"
+                  className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Bill Amount Summary Banner */}
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex justify-between items-center">
+              <div className="p-5 space-y-5">
+                {/* Bill amount hero */}
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-2xl p-5 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                      Total Amount Due
+                    </p>
+                    <p className="text-3xl font-black text-emerald-900 mt-1">
+                      ₹
+                      {(
+                        settlingOrder.totalAmount !== undefined
+                          ? settlingOrder.totalAmount
+                          : (settlingOrder as any).totalPaise !== undefined
+                          ? (settlingOrder as any).totalPaise / 100
+                          : 0
+                      ).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-emerald-200/60">
+                    <CheckCircle className="w-7 h-7 text-emerald-700" />
+                  </div>
+                </div>
+
+                {/* Payment method selection */}
                 <div>
-                  <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Total Bill Amount</p>
-                  <p className="text-2xl font-black text-emerald-900 mt-0.5">
-                    ₹
-                    {(
-                      settlingOrder.totalAmount !== undefined
-                        ? settlingOrder.totalAmount
-                        : (settlingOrder as any).totalPaise !== undefined
-                        ? (settlingOrder as any).totalPaise / 100
-                        : 0
-                    ).toFixed(2)}
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3">
+                    Payment Method
                   </p>
-                </div>
-                <span className="px-2.5 py-1 bg-emerald-200/60 text-emerald-900 font-extrabold text-[10px] rounded-lg uppercase">
-                  Ready for Settlement
-                </span>
-              </div>
-
-              {/* Select Payment Method */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-                  Select Customer Payment Method
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("CASH")}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition font-bold text-xs ${
-                      paymentMethod === "CASH"
-                        ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Banknote className="w-5 h-5" />
-                    Cash
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("CARD")}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition font-bold text-xs ${
-                      paymentMethod === "CARD"
-                        ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    Card / POS
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("UPI")}
-                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition font-bold text-xs ${
-                      paymentMethod === "UPI"
-                        ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    <QrCode className="w-5 h-5" />
-                    UPI / QR
-                  </button>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        { value: "CASH", label: "Cash", icon: Banknote },
+                        { value: "CARD", label: "Card / POS", icon: CreditCard },
+                        { value: "UPI", label: "UPI / QR", icon: QrCode },
+                      ] as const
+                    ).map(({ value, label, icon: Icon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setPaymentMethod(value)}
+                        className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 transition font-bold text-xs ${
+                          paymentMethod === value
+                            ? "bg-[#1B2A4A] text-white border-[#1B2A4A] shadow-sm"
+                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex gap-2">
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-100 flex gap-2">
                 <button
                   onClick={async () => {
                     const orderId = settlingOrder.id;
@@ -594,10 +1004,10 @@ export default function LiveOrdersPage() {
                     await handleStatusChange(orderId, "COMPLETED", paymentMethod);
                   }}
                   disabled={isUpdating}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 text-xs rounded-xl transition shadow-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 text-xs rounded-xl transition shadow-xs disabled:opacity-60"
                 >
                   <Check className="w-4 h-4" />
-                  Confirm Payment & Free Table
+                  Confirm Payment & Complete
                 </button>
                 <button
                   onClick={() => setSettlingOrder(null)}
