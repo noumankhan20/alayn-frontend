@@ -52,6 +52,7 @@ const ownerNavItems: NavItem[] = [
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
   { name: "Table Management", icon: QrCode, href: "/tables" },
   { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Live Orders", icon: ClipboardList, href: "/orders" },
   { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support & Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Management", icon: Trash2, href: "/waste" },
@@ -65,6 +66,7 @@ const managerNavItems: NavItem[] = [
   { name: "Menu Manager", icon: UtensilsCrossed, href: "/menu" },
   { name: "Table Management", icon: QrCode, href: "/tables" },
   { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Live Orders", icon: ClipboardList, href: "/orders" },
   { name: "Kitchen Dispatch", icon: ChefHat, href: "/kitchen" },
   { name: "Support Tickets", icon: MessageSquare, href: "/support" },
   { name: "Waste Logs", icon: Trash2, href: "/waste" },
@@ -74,6 +76,7 @@ const staffNavItems: NavItem[] = [
   { name: "Shift Calendar", icon: Calendar, href: "/workforce" },
   { name: "Leave Request", icon: FileText, href: "/workforce/leaves" },
   { name: "POS Terminal", icon: CreditCard, href: "/pos" },
+  { name: "Live Orders", icon: ClipboardList, href: "/orders" },
   { name: "Attendance Logs", icon: Clock, href: "/workforce/attendance" },
 ];
 

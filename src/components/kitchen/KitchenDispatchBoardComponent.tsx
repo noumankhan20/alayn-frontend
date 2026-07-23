@@ -11,14 +11,14 @@ import DashboardLayout from "../layout/DashboardLayout";
 
 export default function KitchenDispatchBoardComponent() {
   const { data: tickets = [], isLoading, refetch, isFetching } = useGetKitchenTicketsQuery(undefined, {
-    pollingInterval: 10000,
+    pollingInterval: 4000,
   });
 
   const [updateStatus] = useUpdateOrderStatusMutation();
 
   const handleBumpStatus = async (orderId: string, currentStatus: Order["status"]) => {
     let nextStatus: Order["status"] = "PREPARING";
-    if (currentStatus === "RECEIVED") nextStatus = "PREPARING";
+    if (currentStatus === "SENT_TO_KITCHEN" || (currentStatus as string) === "RECEIVED") nextStatus = "PREPARING";
     else if (currentStatus === "PREPARING") nextStatus = "READY";
     else if (currentStatus === "READY") nextStatus = "SERVED";
 
@@ -30,7 +30,7 @@ export default function KitchenDispatchBoardComponent() {
   };
 
   const columns: { title: string; status: Order["status"]; color: string; icon: any }[] = [
-    { title: "New Orders", status: "RECEIVED", color: "border-blue-200 text-blue-700 bg-blue-50", icon: Clock },
+    { title: "Sent to Kitchen", status: "SENT_TO_KITCHEN", color: "border-blue-200 text-blue-700 bg-blue-50", icon: Clock },
     { title: "In Preparation", status: "PREPARING", color: "border-amber-200 text-amber-700 bg-amber-50", icon: Flame },
     { title: "Ready for Pickup", status: "READY", color: "border-emerald-200 text-emerald-700 bg-emerald-50", icon: CheckCircle2 },
   ];
@@ -46,7 +46,7 @@ export default function KitchenDispatchBoardComponent() {
             Kitchen Operations Board (KOT)
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Real-time kitchen order ticket dispatch. Auto-syncs every 10 seconds.
+            Real-time kitchen order ticket dispatch. Auto-syncs every 4 seconds.
           </p>
         </div>
         <button
@@ -61,7 +61,20 @@ export default function KitchenDispatchBoardComponent() {
       {/* Kanban Board Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {columns.map((col) => {
-          const colTickets = tickets.filter((t) => t.status === col.status);
+          const colTickets = (tickets as any[])
+            .map((t) => {
+              const items = t.orderItems || t.items || [];
+              const matchingItems = items.filter((item: any) => {
+                if (!item.status) return true;
+                if (col.status === "SENT_TO_KITCHEN") {
+                  return item.status === "SENT_TO_KITCHEN" || item.status === "RECEIVED";
+                }
+                return item.status === col.status;
+              });
+              return { ...t, activeItems: matchingItems };
+            })
+            .filter((t) => t.activeItems.length > 0);
+
           const IconComponent = col.icon;
 
           return (
@@ -94,58 +107,66 @@ export default function KitchenDispatchBoardComponent() {
                     <p className="text-xs font-semibold">No tickets in this section</p>
                   </div>
                 ) : (
-                  colTickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="bg-gray-50/60 border border-gray-200 hover:border-gray-300 rounded-xl p-4 space-y-3 transition shadow-sm"
-                    >
-                      {/* Ticket Header */}
-                      <div className="flex justify-between items-start pb-2 border-b border-gray-200/60">
-                        <div>
-                          <span className="text-xs font-extrabold text-[#D3232A] font-mono">
-                            #{ticket.orderNo || ticket.id.slice(0, 6)}
-                          </span>
-                          <span className="text-xs text-gray-500 ml-2 font-medium">
-                            Table: {ticket.tableNo || "Counter Direct"}
+                  colTickets.map((ticket) => {
+                    const ticketOrderNo = ticket.orderNo || ticket.orderNumber || `#${ticket.id.slice(0, 6)}`;
+                    const ticketTableNo = ticket.tableNo || ticket.tableNumber || "Counter Direct";
+                    const ticketSource = ticket.orderSource || ticket.source || "TABLE";
+                    const ticketItems = ticket.activeItems || [];
+                    const maxKotNo = Math.max(...ticketItems.map((i: any) => i.kotNo || 1), 1);
+
+                    return (
+                      <div
+                        key={ticket.id}
+                        className="bg-gray-50/60 border border-gray-200 hover:border-gray-300 rounded-xl p-4 space-y-3 transition shadow-sm"
+                      >
+                        {/* Ticket Header */}
+                        <div className="flex justify-between items-start pb-2 border-b border-gray-200/60">
+                          <div>
+                            <span className="text-xs font-extrabold text-[#D3232A] font-mono">
+                              {ticketOrderNo} {maxKotNo > 1 ? `(KOT #${maxKotNo})` : ""}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-2 font-medium">
+                              Table: {ticketTableNo}
+                            </span>
+                          </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-bold uppercase">
+                            {ticketSource}
                           </span>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-bold uppercase">
-                          {ticket.orderSource}
-                        </span>
-                      </div>
 
-                      {/* Ticket Items List */}
-                      <div className="space-y-1 py-1">
-                        {ticket.orderItems?.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-[#1B2A4A]">
-                              <span className="text-[#D3232A] mr-1.5">{item.quantity}x</span>
-                              {item.menuItem?.name || "Item"}
-                            </span>
-                            {item.notes && (
-                              <span className="text-[10px] text-gray-500 italic">({item.notes})</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                        {/* Ticket Items List */}
+                        <div className="space-y-1 py-1">
+                          {ticketItems.map((item: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-[#1B2A4A]">
+                                <span className="text-[#D3232A] mr-1.5">{item.quantity}x</span>
+                                {item.menuItem?.name || "Item"}
+                              </span>
+                              {item.notes && (
+                                <span className="text-[10px] text-gray-500 italic">({item.notes})</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
 
-                      {/* Bottom Action Bump Button */}
-                      <div className="pt-2 border-t border-gray-200/60 flex justify-between items-center">
-                        <span className="text-[11px] text-gray-400">
-                          {new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <button
-                          onClick={() => handleBumpStatus(ticket.id, ticket.status)}
-                          className="btn-primary py-1 px-3 text-xs"
-                        >
-                          {col.status === "RECEIVED" && "Start Prep"}
-                          {col.status === "PREPARING" && "Mark Ready"}
-                          {col.status === "READY" && "Mark Served"}
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
+                        {/* Bottom Action Bump Button */}
+                        <div className="pt-2 border-t border-gray-200/60 flex justify-between items-center">
+                          <span className="text-[11px] text-gray-400">
+                            {new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <button
+                            onClick={() => handleBumpStatus(ticket.id, ticket.status)}
+                            className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
+                          >
+                            {(col.status === "SENT_TO_KITCHEN" || (col.status as string) === "RECEIVED") && "Start Prep"}
+                            {col.status === "PREPARING" && "Mark Ready"}
+                            {col.status === "READY" && "Mark Served"}
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
