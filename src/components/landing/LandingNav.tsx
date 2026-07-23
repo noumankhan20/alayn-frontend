@@ -75,8 +75,10 @@ export default function LandingNav() {
           <Image
             src="/gptlogo.png"
             alt="Alayn — AI Operating System for Hospitality"
-            width={1280}
-            height={297}
+            width={480}
+            height={111}
+            quality={80}
+            sizes="(max-width: 640px) 180px, 320px"
             style={{ 
               height: "56px", 
               width: "auto",
