@@ -9,6 +9,7 @@ import {
   TrendingUp,
   MessageSquare,
   Trash2,
+  MousePointerClick,
 } from "lucide-react";
 import { FieldScene } from "../motion/GlobalField";
 import RadialOrbitalTimeline, { TimelineItem } from "@/components/ui/radial-orbital-timeline";
@@ -148,24 +149,18 @@ export default function ConvergenceScene() {
               fontSize: "1rem",
               color: "var(--muted)",
               maxWidth: "760px",
-              margin: "0 auto 12px",
+              margin: "0 auto 16px",
               lineHeight: 1.6,
             }}
           >
             Alayn unifies orders, inventory, staffing, finance and operations into a single AI-powered operating system—providing real-time visibility, intelligent automation and complete operational control.
           </p>
-          <p
-            style={{
-              fontSize: "0.9rem",
-              color: "var(--muted)",
-              opacity: 0.85,
-              maxWidth: "680px",
-              margin: "0 auto",
-              lineHeight: 1.6,
-            }}
-          >
-            Select any module to explore how your business works as one connected system.
-          </p>
+          <div className="mt-4 flex items-center justify-center">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-rose-200 shadow-sm text-xs sm:text-sm font-bold text-[#C41E2A] tracking-wide animate-pulse">
+              <MousePointerClick className="w-4 h-4 text-[#C41E2A]" />
+              Click any module circle below to view details &amp; connected workflows
+            </span>
+          </div>
         </div>
 
         {/* Light-Themed 7-Module Radial Orbital Timeline */}

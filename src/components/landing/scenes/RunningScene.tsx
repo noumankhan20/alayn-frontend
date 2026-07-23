@@ -15,19 +15,19 @@ const BRIEFING_LINES = [
   { 
     label: "INVENTORY INTELLIGENCE", 
     text: "Predictive inventory monitoring ensures critical stock is replenished before shortages affect service.", 
-    color: "#C41E2A", // Brand Crimson
+    color: "#E11D48", // Rose Accent
     action: "Approve restocking order (1-click)"
   },
   {
     label: "WORKFORCE INTELLIGENCE",
-    text: "AI continuously monitors staffing levels and recommends schedule adjustments to maintain operational efficiency.Review Recommendation",
-    color: "#ffff", // Brand Navy — was off-palette indigo
+    text: "AI continuously monitors staffing levels and recommends schedule adjustments to maintain operational efficiency.",
+    color: "#38BDF8", // Sky Blue Accent
     action: "Send automated availability invite"
   },
   {
     label: "OPERATIONAL INTELLIGENCE",
     text: "Identify inefficiencies, reduce waste and improve profitability through continuous AI-powered operational analysis.",
-    color: "#ffff", // Brand Navy — was off-palette purple
+    color: "#10B981", // Emerald Green Accent
     action: "Adjust kitchen prep metrics"
   },
 ];
@@ -36,13 +36,26 @@ export default function RunningScene() {
   const [activeLine, setActiveLine] = useState(0);
   const [signalsProcessed, setSignalsProcessed] = useState(148209);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       setActiveLine((p) => (p + 1) % BRIEFING_LINES.length);
     }, 4500);
-    return () => clearInterval(timer);
+  };
+
+  useEffect(() => {
+    startTimer();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
+
+  const handleSelectLine = (index: number) => {
+    setActiveLine(index);
+    startTimer(); // Reset auto-advance countdown on user click
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -54,9 +67,6 @@ export default function RunningScene() {
   const displaySignals = useCountUp(signalsProcessed);
 
   // Read via ref inside the draw loop instead of closing over `activeLine`
-  // state — keeps the canvas effect's own dependency array empty below, so
-  // the particle system mounts once instead of tearing down and respawning
-  // every 4.5s (which made the particles visibly jump on every line change).
   const activeLineRef = useRef(0);
   useEffect(() => {
     activeLineRef.current = activeLine;
@@ -166,7 +176,7 @@ export default function RunningScene() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px", width: "100%" }}>
         
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "60px", alignItems: "center" }}>
-                {/* Left Column: Context & Global Pulse */}
+          {/* Left Column: Context & Global Pulse */}
           <div>
             <span style={{
               display: "inline-block",
@@ -252,47 +262,56 @@ export default function RunningScene() {
                 return (
                   <motion.div
                     key={line.label}
+                    layout
+                    initial={false}
                     animate={{
-                      scale: isActive ? 1.02 : 1,
-                      backgroundColor: isActive ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.01)",
-                      borderColor: isActive ? line.color : "rgba(255, 255, 255, 0.06)",
+                      backgroundColor: isActive ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                      borderColor: isActive ? line.color : "rgba(255, 255, 255, 0.08)",
+                      boxShadow: isActive ? `0 12px 32px -8px ${line.color}35` : "0 4px 12px rgba(0,0,0,0.1)",
                     }}
-                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    transition={{
+                      duration: 0.35,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
                     style={{
                       borderRadius: "16px",
                       border: "1px solid",
                       padding: "24px",
                       cursor: "pointer",
-                      backdropFilter: "blur(8px)",
+                      backdropFilter: "blur(12px)",
                     }}
-                    onClick={() => setActiveLine(i)}
+                    onClick={() => handleSelectLine(i)}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: line.color }}>
                         {line.label}
                       </span>
                       {isActive && (
-                        <span style={{
-                          display: "inline-block",
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          background: line.color,
-                          boxShadow: `0 0 10px ${line.color}`
-                        }} />
+                        <motion.span
+                          layoutId="active-dot"
+                          style={{
+                            display: "inline-block",
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            background: line.color,
+                            boxShadow: `0 0 12px ${line.color}`
+                          }}
+                        />
                       )}
                     </div>
-                    <p style={{ margin: 0, fontSize: "1rem", color: isActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.65)", lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: "1rem", color: isActive ? "#FFFFFF" : "rgba(255, 255, 255, 0.65)", lineHeight: 1.5, transition: "color 0.3s ease" }}>
                       {line.text}
                     </p>
 
-                    <AnimatePresence>
+                    <AnimatePresence initial={false}>
                       {isActive && (
                         <motion.div
+                          key="action-container"
                           initial={{ height: 0, opacity: 0, marginTop: 0 }}
                           animate={{ height: "auto", opacity: 1, marginTop: 16 }}
                           exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                          transition={{ duration: 0.25 }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                           style={{ overflow: "hidden" }}
                         >
                           <div style={{
@@ -304,7 +323,8 @@ export default function RunningScene() {
                             fontSize: "0.8125rem",
                             fontWeight: 600,
                             color: "#FFFFFF",
-                            border: "1px solid rgba(255,255,255,0.15)"
+                            border: `1px solid ${line.color}50`,
+                            boxShadow: `0 4px 14px ${line.color}20`
                           }}>
                             {line.action}
                           </div>
@@ -316,9 +336,7 @@ export default function RunningScene() {
               })}
             </div>
           </div>
-
         </div>
-
       </div>
     </FieldScene>
   );

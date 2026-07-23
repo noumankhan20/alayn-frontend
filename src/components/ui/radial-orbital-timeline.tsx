@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ArrowRight, Link } from "lucide-react";
+import { ArrowRight, Link, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -180,13 +180,13 @@ export default function RadialOrbitalTimeline({
       className="w-full h-[620px] flex flex-col items-center justify-center bg-[#F4F5F8] rounded-2xl overflow-hidden relative border border-slate-200/80 shadow-inner"
       ref={containerRef}
       onClick={handleContainerClick}
-      onMouseEnter={() => {
-        isHoveredRef.current = true;
-      }}
-      onMouseLeave={() => {
-        isHoveredRef.current = false;
-      }}
     >
+      {/* Floating Click Instruction Badge inside Orbit */}
+      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200/90 shadow-sm text-xs font-semibold text-slate-700 flex items-center gap-2 z-30 pointer-events-none">
+        <MousePointerClick className="w-4 h-4 text-[#C41E2A] animate-bounce" />
+        <span>Click any module circle to view details</span>
+      </div>
+
       <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
         <div
           className="absolute w-full h-full flex items-center justify-center"
@@ -196,6 +196,17 @@ export default function RadialOrbitalTimeline({
             transform: `translate(${centerOffset.x}px, ${centerOffset.y}px)`,
           }}
         >
+          {/* Interactive Circle Hover Target (480px diameter enclosing central logo & 440px orbit circle) */}
+          <div
+            className="absolute w-[480px] h-[480px] rounded-full z-0 pointer-events-auto"
+            onMouseEnter={() => {
+              isHoveredRef.current = true;
+            }}
+            onMouseLeave={() => {
+              isHoveredRef.current = false;
+            }}
+          />
+
           {/* Scaled-Up Central Hub Core with Large Logo - Lighter Theme */}
           <div className="absolute w-40 h-40 rounded-full bg-gradient-to-br from-white via-slate-50 to-slate-200 shadow-2xl flex items-center justify-center z-10 border border-slate-300 p-4">
             <div className="absolute w-44 h-44 rounded-full border border-slate-300/60 animate-ping opacity-60"></div>
@@ -214,7 +225,7 @@ export default function RadialOrbitalTimeline({
           </div>
 
           {/* Orbit Line */}
-          <div className="absolute w-[440px] h-[440px] rounded-full border border-slate-300/80 shadow-sm"></div>
+          <div className="absolute w-[440px] h-[440px] rounded-full border border-slate-300/80 shadow-sm pointer-events-none"></div>
 
           {timelineData.map((item) => {
             const isExpanded = expandedItems[item.id];
@@ -229,8 +240,14 @@ export default function RadialOrbitalTimeline({
                 ref={(el) => {
                   nodeRefs.current[item.id] = el;
                 }}
-                // Removed `transition-all duration-700` and `scale` from here to prevent CSS/JS conflict. JS handles transform, CSS handles colors.
-                className="absolute transition-colors duration-300 cursor-pointer"
+                title={`Click to inspect ${item.title} module details`}
+                className="absolute transition-colors duration-300 cursor-pointer group pointer-events-auto"
+                onMouseEnter={() => {
+                  isHoveredRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  isHoveredRef.current = false;
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleItem(item.id);
@@ -258,6 +275,7 @@ export default function RadialOrbitalTimeline({
                 <div
                   className={`
                   w-11 h-11 rounded-full flex items-center justify-center
+                  group-hover:ring-4 group-hover:ring-[#C41E2A]/25 group-hover:scale-110
                   ${
                     isExpanded
                       ? "bg-[#C41E2A] text-white"
@@ -273,7 +291,7 @@ export default function RadialOrbitalTimeline({
                       ? "border-amber-400 animate-pulse"
                       : "border-slate-200/90 shadow-sm"
                   }
-                  transition-colors duration-300
+                  transition-all duration-300
                 `}
                 >
                   <Icon size={18} />
