@@ -258,7 +258,6 @@ export default function HeroScene() {
                     width={1440}
                     height={900}
                     priority
-                    quality={85}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 720px"
                     style={{
                       width: "100%",
@@ -320,7 +319,6 @@ export default function HeroScene() {
                     width={292}
                     height={512}
                     priority
-                    quality={85}
                     sizes="(max-width: 768px) 180px, 260px"
                     style={{
                       width: "100%",
