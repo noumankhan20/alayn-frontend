@@ -361,15 +361,6 @@ export default function LiveOrdersPage() {
                   : "No Tables Assigned"}
               </span>
             )}
-            <button
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition shadow-xs"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#D3232A]" : ""}`}
-              />
-              Refresh
-            </button>
           </div>
         </div>
 
