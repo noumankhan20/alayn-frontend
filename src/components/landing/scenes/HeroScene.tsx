@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { FieldScene } from "../motion/GlobalField";
 import { Assemble, useMagnetic, springSnappy } from "../motion/primitives";
@@ -251,9 +252,14 @@ export default function HeroScene() {
 
                 {/* Laptop Screen Content (Website Preview Image) */}
                 <div style={{ position: "relative", width: "100%", backgroundColor: "#f8fafc", overflow: "hidden" }}>
-                  <img
+                  <Image
                     src="/websitepreview.png"
                     alt="Alayn Web Dashboard Interface"
+                    width={1440}
+                    height={900}
+                    priority
+                    quality={85}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 720px"
                     style={{
                       width: "100%",
                       height: "auto",
@@ -308,9 +314,14 @@ export default function HeroScene() {
                   }}
                 >
                   {/* Original Mobile Screen Image */}
-                  <img
+                  <Image
                     src="/mobilepreview.jpeg"
                     alt="Alayn Mobile App Interface"
+                    width={292}
+                    height={512}
+                    priority
+                    quality={85}
+                    sizes="(max-width: 768px) 180px, 260px"
                     style={{
                       width: "100%",
                       height: "100%",
