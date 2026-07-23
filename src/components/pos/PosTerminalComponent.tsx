@@ -65,6 +65,15 @@ export default function PosTerminalComponent() {
   const [orderSource, setOrderSource] = useState<"TABLE" | "COUNTER" | "QR">(
     isStaffRole ? "TABLE" : "COUNTER"
   );
+
+  useEffect(() => {
+    if (!isStaffRole) {
+      setOrderSource("COUNTER");
+    } else {
+      setOrderSource("TABLE");
+    }
+  }, [isStaffRole]);
+
   const [tableNo, setTableNo] = useState<string>("");
   const [discount, setDiscount] = useState<number>(0);
   const [taxPercent, setTaxPercent] = useState<number>(5);
@@ -192,21 +201,17 @@ export default function PosTerminalComponent() {
       <div className="flex-1 flex flex-col min-h-0 bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         {/* Top Controls */}
         <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pb-3 border-b border-gray-100">
-          {/* Order Source Switcher */}
+          {/* Order Source Switcher / Mode Badge */}
           <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200 w-full sm:w-auto">
-            {(isStaffRole ? (["TABLE"] as const) : (["TABLE", "COUNTER"/* , "QR" */] as const)).map((src) => (
-              <button
-                key={src}
-                onClick={() => setOrderSource(src)}
-                className={`flex-1 sm:flex-initial px-4 py-1 rounded-md text-xs font-bold transition ${
-                  orderSource === src
-                    ? "bg-[#1B2A4A] text-white shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {src === "TABLE" ? "Table Order" : "Counter Direct"}
-              </button>
-            ))}
+            {!isStaffRole ? (
+              <span className="px-4 py-1 rounded-md text-xs font-bold bg-[#1B2A4A] text-white shadow-xs">
+                Counter Direct
+              </span>
+            ) : (
+              <span className="px-4 py-1 rounded-md text-xs font-bold bg-[#1B2A4A] text-white shadow-xs">
+                Table Order
+              </span>
+            )}
           </div>
 
           {/* Right side controls: Search + View Mode Switcher */}
@@ -440,63 +445,74 @@ export default function PosTerminalComponent() {
           )}
         </div>
 
-        {/* My Assigned Tables Banner */}
-        <div className="p-3 bg-gray-50 border-b border-gray-100 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-[#1B2A4A] flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              My Assigned Tables ({assignedTables.length})
-            </span>
-            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-              {user?.name || "Staff"}
-            </span>
-          </div>
+        {/* My Assigned Tables Banner (Only for Table Orders) */}
+        {orderSource === "TABLE" && (
+          <div className="p-3 bg-gray-50 border-b border-gray-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[#1B2A4A] flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                My Assigned Tables ({assignedTables.length})
+              </span>
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                {user?.name || "Staff"}
+              </span>
+            </div>
 
-          {assignedTables.length === 0 ? (
-            <p className="text-[11px] text-gray-400 italic">
-              No tables assigned yet. Ask admin to assign tables in Table Management.
-            </p>
-          ) : (
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
-              {assignedTables.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTableNo(String(t.tableNumber))}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border shrink-0 ${
-                    tableNo === String(t.tableNumber)
-                      ? "bg-[#D3232A] text-white border-[#D3232A] shadow-xs"
-                      : t.status === "OCCUPIED"
-                      ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                      : "bg-white text-[#1B2A4A] border-gray-200 hover:bg-gray-100"
-                  }`}
-                >
-                  <span>T{t.tableNumber}</span>
-                  <span
-                    className={`text-[9px] px-1 py-0.2 rounded ${
-                      t.tableType === "AC"
-                        ? "bg-cyan-100 text-cyan-800"
-                        : "bg-amber-100 text-amber-800"
+            {assignedTables.length === 0 ? (
+              <p className="text-[11px] text-gray-400 italic">
+                No tables assigned yet. Ask admin to assign tables in Table Management.
+              </p>
+            ) : (
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
+                {assignedTables.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTableNo(String(t.tableNumber))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 border shrink-0 ${
+                      tableNo === String(t.tableNumber)
+                        ? "bg-[#D3232A] text-white border-[#D3232A] shadow-xs"
+                        : t.status === "OCCUPIED"
+                        ? "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                        : "bg-white text-[#1B2A4A] border-gray-200 hover:bg-gray-100"
                     }`}
                   >
-                    {t.tableType}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+                    <span>T{t.tableNumber}</span>
+                    <span
+                      className={`text-[9px] px-1 py-0.2 rounded ${
+                        t.tableType === "AC"
+                          ? "bg-cyan-100 text-cyan-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {t.tableType}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Table/Notes Input */}
-        <div className="px-4 py-2.5 bg-gray-50/30 border-b border-gray-100 flex gap-2">
-          <input
-            type="text"
-            placeholder="Selected Table Number..."
-            value={tableNo}
-            onChange={(e) => setTableNo(e.target.value)}
-            className="input text-xs font-semibold"
-          />
-        </div>
+        {/* Table Number Input / Counter Order Mode Banner */}
+        {orderSource === "TABLE" ? (
+          <div className="px-4 py-2.5 bg-gray-50/30 border-b border-gray-100 flex gap-2">
+            <input
+              type="text"
+              placeholder="Selected Table Number..."
+              value={tableNo}
+              onChange={(e) => setTableNo(e.target.value)}
+              className="input text-xs font-semibold"
+            />
+          </div>
+        ) : (
+          <div className="px-4 py-2.5 bg-blue-50/50 border-b border-blue-100 flex items-center justify-between text-xs text-blue-900 font-semibold">
+            <span>Order Type:</span>
+            <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] tracking-wider uppercase">
+              Counter Direct
+            </span>
+          </div>
+        )}
 
         {/* Cart Items List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
